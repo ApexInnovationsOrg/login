@@ -46,11 +46,11 @@ return [
 
 	'connections' => [
 
-		'sqlite' => [
+		/*'sqlite' => [
 			'driver'   => 'sqlite',
 			'database' => storage_path().'/database.sqlite',
 			'prefix'   => '',
-		],
+		],*/
 
 		'mysql' => [
 			'driver'    => 'mysql',
@@ -62,7 +62,7 @@ return [
 			'collation' => 'utf8_unicode_ci',
 			'prefix'    => '',
 			'strict'    => false,
-		],
+		]/*,
 
 		'pgsql' => [
 			'driver'   => 'pgsql',
@@ -82,7 +82,7 @@ return [
 			'username' => env('DB_USERNAME', 'forge'),
 			'password' => env('DB_PASSWORD', ''),
 			'prefix'   => '',
-		],
+		],*/
 
 	],
 
@@ -115,7 +115,8 @@ return [
 		'cluster' => false,
 
 		'default' => [
-			'host'     => '127.0.0.1',
+			// 'host'     => '127.0.0.1',
+			'host'     => '192.168.123.203',
 			'port'     => 6379,
 			'database' => 0,
 		],
