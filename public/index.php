@@ -5,7 +5,7 @@
  * @package  Laravel
  * @author   Taylor Otwell <taylorotwell@gmail.com>
  */
-
+// echo exec('whoami');
 /*
 |--------------------------------------------------------------------------
 | Register The Auto Loader

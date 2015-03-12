@@ -12,16 +12,11 @@
 */
 
 Route::get('/', 'LoginController@index');
-//get('songs','SongsController@index');
-get('songs','SongsController@index');
 
-get('songs/{id}', 'SongsController@show');
+Route::get('home', 'HomeController@index');
+Route::get('test', 'HomeController@test');
 
-
-// Route::get('home', 'HomeController@index');
-// Route::get('test', 'HomeController@test');
-
-// Route::controllers([
-// 	'auth' => 'Auth\AuthController',
-// 	'password' => 'Auth\PasswordController',
-// ]);
+Route::controllers([
+	'auth' => 'Auth\AuthController',
+	'password' => 'Auth\PasswordController',
+]);
