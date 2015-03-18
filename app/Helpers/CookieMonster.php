@@ -34,8 +34,15 @@ class CookieMonster extends BasicObject {
             $cookieStrArray = explode(';', $cookieStr);
             foreach ($cookieStrArray as $k => $subStr) {
                 $keyValuePair = explode('=', trim($subStr));
+
                 if($this->encrypter) {
-                    $this->__set($keyValuePair[0], $this->encrypter->decrypt(rawurldecode($keyValuePair[1])));
+                    $value = null;
+                    try {
+                        $value = $this->encrypter->decrypt(rawurldecode($keyValuePair[1]));
+                    } catch (\Exception $e) {
+                        $value = rawurldecode($keyValuePair[1]);
+                    }
+                    $this->__set($keyValuePair[0], $value);
                 }
             }
         }
