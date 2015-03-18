@@ -55,9 +55,13 @@
 							</div>
 						</div>
 					</form>
+					<hr/>
+					<div id="janrainEngageEmbed" class="col-md-6 col-centered">
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+<script async="async" src="/assets/javascript/frontend.js"></script>
 @endsection
