@@ -32,4 +32,17 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 	 */
 	protected $hidden = ['Password', 'remember_token'];
 
+    public function swapping($user) {
+        $LastSessionID   = Session::getId(); //get new session_id after user sign in
+        $last_session = Session::getHandler()->read($user->LastSessionID); // retrive last session
+
+        if ($last_session) {
+            if (Session::getHandler()->destroy(LastSessionID)) {
+                // session was destroyed
+            }
+        }
+
+        $user->LastSessionID = $new_sessid;
+        $user->save();
+    }
 }

@@ -40,6 +40,7 @@
 			<div class="content">
 				<div class="title">Laravel 5</div>
 				<div class="quote">{{ Inspiring::quote() }}</div>
+				<pre>User: {{ $user }}</pre>
 			</div>
 		</div>
 	</body>

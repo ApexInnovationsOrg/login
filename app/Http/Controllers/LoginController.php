@@ -1,9 +1,11 @@
 <?php namespace App\Http\Controllers;
 
 use App\Http\Requests;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller {
 
@@ -14,7 +16,12 @@ class LoginController extends Controller {
 	 */
 	public function index()
 	{
-		return view('auth.login');
+        $args = func_get_args();
+        // log::info('$args: '.print_r($args, true));
+        // $user = Session::get('user');
+        // dd(Session::all());
+        $user = 'stuff';
+		return view('welcome', ['user'=> $user]);
 	}
 
 	/**
