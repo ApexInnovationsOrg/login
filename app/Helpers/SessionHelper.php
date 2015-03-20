@@ -78,27 +78,32 @@ class SessionHelper extends BasicObject {
             // $GLOBALS["sessionId"] = Session::getId();
             // Do we have an active current active session?
 
+            $login = Input::get('Login');
             // Are we logging in for the first time
-            if(Input::get('Login')) {
-                Log::info('Has Login');
-                $user = User::where('Login', '=', Input::get('Login'))->first();
+            if(!empty($login)) {
+                Log::info('Has Login: '.print_r([$login], true));
+                $user = User::where('Login', '=', $login)->first();
+                Log::info('$user: '.print_r([$user], true));
                 Session::put('userId', $user->ID);
+                Session::put('userID', $userId); // bad naming convention that continues to get carried over.
 
                 // If we are logging in for the first time we stop here
                 return $response;
             } else {
-                Log::info('Has User Token');
+                // Log::info('Has User Token');
                 if(!isset($previousSession['userId'])) {
-                    Log::info('No UserId in $previousSession');
+                    // Log::info('No UserId in $previousSession');
                     // Session::put('userId', $user->ID);
+                    // Session::put('userID', $user->ID); // bad naming convention that continues to get carried over.
                 } else {
                     $userId = $cm->get('user-token');
                     $user = User::where('ID', '=', $userId)->first();
-                    Log::info('$userId: '.print_r($userId, true));
-                    Log::info('User: '.print_r($user, true));
-                    if($user->ID == $previousSession['userId']) {
+                    // Log::info('$userId: '.print_r($userId, true));
+                    // Log::info('User: '.print_r($user, true));
+                    if(!empty($user)&&($user->ID == $previousSession['userId'])) {
                         Log::info('UserId Match');
                         Session::put('userId', $user->ID);
+                        Session::put('userID', $user->ID); // bad naming convention that continues to get carried over.
                     } else if(!isset($previousSession['userId'])) {
                         // If it is not set this is the first time to check and should be added for future cases
                         Log::info('$user->ID Doesn\'t match $previousSession $user->ID: '.print_r(['$user->ID'=>$user->ID, '$previousSession'=>$previousSession], true));

@@ -21,7 +21,9 @@ class LoginController extends Controller {
         // $user = Session::get('user');
         // dd(Session::all());
         $user = 'stuff';
-		return view('welcome', ['user'=> $user]);
+		// return view('welcome', ['user'=> $user]);
+		// return redirect('//www.apexwebtest.com/MyCurriculum.php');
+		return redirect('//www.apexwebtest.com/doLogon.php');
 	}
 
 	/**
