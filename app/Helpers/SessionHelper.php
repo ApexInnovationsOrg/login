@@ -58,8 +58,6 @@ class SessionHelper extends BasicObject {
         }
         Log::info('$previousSession :'.print_r(['session.cookie'=>Config::get('session.cookie'), '$previousSessionRedisId'=>$previousSessionRedisId, '$previousSession'=>$previousSession], true));
 
-
-
         /*
          * NOTE: We have still not logged in the user
          * Now we need to check if a previous session for the user exists using the passed token.  If it exists, check
@@ -68,7 +66,6 @@ class SessionHelper extends BasicObject {
          * If it doesn't exist we add one.
          *
          */
-
 
         // If the previous session exist we check if it is also the active session for the user
         if ($previousSession) {
