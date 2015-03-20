@@ -69,11 +69,11 @@ class SocialLoginController extends Controller {
 		
 		if(Input::get('hasLicense') == "1")
 		{
-			return redirect('https://devbox/CreateAccount.php?&Acct=1' . Input::get('Email'))->withInput();
+			return redirect('https://www.apexinnovations.com/CreateAccount.php?&Acct=1' . Input::get('Email'))->withInput();
 		}
 		else
 		{
-			return redirect('https://devbox/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
+			return redirect('https://www.apexinnovations.com/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
 		}
 	}
 	/**
@@ -135,11 +135,26 @@ class SocialLoginController extends Controller {
 			//dd($authJSON);
 			if($authJSON->stat == "ok")
 			{
-				$user = User::where('Login', '=', $authJSON->profile->verifiedEmail)->first();
+
+				//this is completely undry code. yaaaay last minute fixes. 
+				$provider = Providers::where('Name', '=', $authJSON->profile->providerName)->first();
+				$socialLinkCheck = SocialLogins::where('Email', '=', $authJSON->profile->verifiedEmail)->where('Provider', '=', $provider->ID)->first();
+				if(!empty($socialLinkCheck))
+				{
+					$user = User::where('ID', '=', $socialLinkCheck->UserID)->first();
+				}
+				else 
+				{
+					$user = User::where('Login', '=', $authJSON->profile->verifiedEmail)->first();
+				}
+
+
+				
 				if(!empty($user))
 				{
 					$provider = Providers::where('Name', '=', $authJSON->profile->providerName)->first();
 					$socialLink = SocialLogins::where('Email', '=', $authJSON->profile->verifiedEmail)->where('Provider', '=', $provider->ID)->first();
+
 					if(!empty($socialLink))
 					{
 						Auth::login($user);
@@ -147,7 +162,7 @@ class SocialLoginController extends Controller {
 				        Session::put('userId', $user->ID);
 				        Session::put('_id', Session::getId());
 				        $Redis->set('User:' . $user->ID, Session::getId());
-				        $response = CookieMonster::addCookieToResponse(redirect('//apexwebtest.com/MyCurriculum.php'), 'user-token', $user->ID);
+				        $response = CookieMonster::addCookieToResponse(redirect('//www.apexinnovations.com/MyCurriculum.php'), 'user-token', $user->ID);
 				        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 				        return $response;
 					}
