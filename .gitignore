@@ -3,3 +3,5 @@
 /node_modules
 .env
 .idea
+/grunt/node_modules
+/grunt/bower_components

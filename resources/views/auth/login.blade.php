@@ -17,7 +17,6 @@
 							</ul>
 						</div>
 					@endif
-
 					<form class="form-horizontal" role="form" method="POST" action="/auth/login">
 						<input type="hidden" name="_token" value="{{ Session::token() }}">
 
@@ -55,9 +54,13 @@
 							</div>
 						</div>
 					</form>
+					<hr/>
+					<div id="janrainEngageEmbed" class="col-md-6 col-centered">
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+<script async="async" src="/assets/javascript/frontend.js"></script>
 @endsection

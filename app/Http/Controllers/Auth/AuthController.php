@@ -114,4 +114,22 @@ class AuthController extends Controller {
         return $response;
     }
 
+    public function socialAuthentication()
+    {
+
+        // if(isset($_POST['token']))
+        // {
+        //     $token = $_POST['token'];
+        //     $janrainApiKey = "ac6cd0fbe0e3710586b35343813023bf1ba570b6";
+        //     $engageUrl = 'https://rpxnow.com/api/v2/auth_info';
+        //     $curl = curl_init();
+        //     curl_setopt($curl, CURLOPT_URL, $engageUrl);
+        //     curl_setopt($curl, CURLOPT_POST, true);
+        //     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        //     curl_setopt($curl, CURLOPT_POSTFIELDS, array('token' => $token, 'apiKey' => $janrainApiKey));
+        //     $authInfo = curl_exec($curl);
+        //     curl_close($curl);
+        // }
+    }
+
 }
