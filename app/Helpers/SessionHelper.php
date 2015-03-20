@@ -96,7 +96,10 @@ class SessionHelper extends BasicObject {
                     // Session::put('userID', $user->ID); // bad naming convention that continues to get carried over.
                 } else {
                     $userId = $cm->get('user-token');
-                    $user = User::where('ID', '=', $userId)->first();
+                    // $user = User::where('ID', '=', $userId)->first();
+                    if($users = User::where('ID', '=', $userId)) {
+                        $user = $users->first();
+                    }
                     // Log::info('$userId: '.print_r($userId, true));
                     // Log::info('User: '.print_r($user, true));
                     if(!empty($user)&&($user->ID == $previousSession['userId'])) {
