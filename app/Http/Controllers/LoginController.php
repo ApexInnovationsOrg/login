@@ -29,9 +29,9 @@ class LoginController extends Controller {
 	 *
 	 * @return Response
 	 */
-	public function create()
+	public function login()
 	{
-		//
+		return view('auth/login');
 	}
 
 	/**
