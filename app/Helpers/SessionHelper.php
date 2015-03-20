@@ -82,7 +82,9 @@ class SessionHelper extends BasicObject {
                 $user = User::where('Login', '=', $login)->first();
                 Log::info('$user: '.print_r([$user], true));
                 Session::put('userId', $user->ID);
-                Session::put('userID', $userId); // bad naming convention that continues to get carried over.
+                // bad naming convention that continues to get carried over.
+                Session::put('userID', $user->ID);
+                Session::put('userName', $user->FirstName.' '.$user->LastName);
 
                 // If we are logging in for the first time we stop here
                 return $response;
@@ -100,7 +102,10 @@ class SessionHelper extends BasicObject {
                     if(!empty($user)&&($user->ID == $previousSession['userId'])) {
                         Log::info('UserId Match');
                         Session::put('userId', $user->ID);
-                        Session::put('userID', $user->ID); // bad naming convention that continues to get carried over.
+                        // bad naming convention that continues to get carried over.
+                        Session::put('userID', $user->ID);
+                        Session::put('userName', $user->FirstName.' '.$user->LastName);
+
                     } else if(!isset($previousSession['userId'])) {
                         // If it is not set this is the first time to check and should be added for future cases
                         Log::info('$user->ID Doesn\'t match $previousSession $user->ID: '.print_r(['$user->ID'=>$user->ID, '$previousSession'=>$previousSession], true));
