@@ -109,6 +109,7 @@ class AuthController extends Controller {
         // bad naming convention that continues to get carried over.
         Session::put('userID', $userId);
         Session::put('userName', $user->FirstName.' '.$user->LastName);
+        Session::put('Username', $user->FirstName.' '.$user->LastName);
         Session::put('_id', Session::getId());
         $Redis->set('User:' . $userId, Session::getId());
         Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
