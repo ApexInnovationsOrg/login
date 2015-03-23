@@ -69,11 +69,11 @@ class SocialLoginController extends Controller {
 		
 		if(Input::get('hasLicense') == "1")
 		{
-			return redirect('https://www.apexinnovations.com/CreateAccount.php?&Acct=1' . Input::get('Email'))->withInput();
+			return redirect('https://www.apexwebtest.com/CreateAccount.php?&Acct=1' . Input::get('Email'))->withInput();
 		}
 		else
 		{
-			return redirect('https://www.apexinnovations.com/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
+			return redirect('https://www.apexwebtest.com/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
 		}
 	}
 	/**
@@ -137,8 +137,16 @@ class SocialLoginController extends Controller {
 			{
 
 				//this is completely undry code. yaaaay last minute fixes. 
-				$provider = Providers::where('Name', '=', $authJSON->profile->providerName)->first();
-				$socialLinkCheck = SocialLogins::where('Email', '=', $authJSON->profile->verifiedEmail)->where('Provider', '=', $provider->ID)->first();
+
+				if(empty($authJSON->profile->verifiedEmail))
+				{
+					$authJSON->profile->verifiedEmail = $authJSON->profile->email;
+				}
+
+				$provider = Providers::firstOrCreate(['Name' => $authJSON->profile->providerName]);
+				$socialLinkCheck = SocialLogins::where('Email', '=', $authJSON->profile->verifiedEmail)
+				->where('Provider', '=', $provider->ID)
+				->first();
 				if(!empty($socialLinkCheck))
 				{
 					$user = User::where('ID', '=', $socialLinkCheck->UserID)->first();
@@ -152,7 +160,7 @@ class SocialLoginController extends Controller {
 				
 				if(!empty($user))
 				{
-					$provider = Providers::where('Name', '=', $authJSON->profile->providerName)->first();
+					$provider = Providers::firstOrCreate(['Name' => $authJSON->profile->providerName]);
 					$socialLink = SocialLogins::where('Email', '=', $authJSON->profile->verifiedEmail)->where('Provider', '=', $provider->ID)->first();
 
 					if(!empty($socialLink))
@@ -160,9 +168,12 @@ class SocialLoginController extends Controller {
 						Auth::login($user);
 						$Redis = Redis::connection();
 				        Session::put('userId', $user->ID);
+				        Session::put('userID', $user->ID);
+				        Session::put('userName', $user->FirstName.' '.$user->LastName);
 				        Session::put('_id', Session::getId());
 				        $Redis->set('User:' . $user->ID, Session::getId());
-				        $response = CookieMonster::addCookieToResponse(redirect('//www.apexinnovations.com/MyCurriculum.php'), 'user-token', $user->ID);
+				        
+				        $response = CookieMonster::addCookieToResponse(redirect('//www.apexwebtest.com/MyCurriculum.php'), 'user-token', $user->ID);
 				        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 				        return $response;
 					}
