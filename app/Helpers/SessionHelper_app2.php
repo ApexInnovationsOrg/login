@@ -152,7 +152,7 @@ class SessionHelper extends BasicObject {
                         '$cm.redis|previous redis.laravel:SessionId' => $cm->get(Config::get('session.cookie')),
                         '$cm.user' => $cm->get('user-token'),
                         '$activeSessionToken|previous SessionId' => $activeSessionToken,
-                        //'$previousSession._token|matches $cm.token?' => $previousSession['_token'] == $cm->get('xsrf-token'),
+                        '$previousSession._token|matches $cm.token?' => $previousSession['_token'] == $cm->get('xsrf-token'),
                         'sessionId|next' => Session::getId(),
                         // 'server|next' => $request->session()->token(),
                     ];
@@ -178,7 +178,7 @@ class SessionHelper extends BasicObject {
             '$cm.redis|previous redis.laravel:SessionId' => $cm->get(Config::get('session.cookie')),
             '$cm.user' => $cm->get('user-token'),
             '$activeSessionToken|previous SessionId' => $activeSessionToken,
-            //'$previousSession._token|matches $cm.token?' => $previousSession['_token'] == $cm->get('xsrf-token'),
+            '$previousSession._token|matches $cm.token?' => $previousSession['_token'] == $cm->get('xsrf-token'),
             'sessionId|next' => Session::getId(),
             // 'server|next' => $request->session()->token(),
         ];

@@ -54,10 +54,10 @@ return [
 
 		'mysql' => [
 			'driver'    => 'mysql',
-			'host'      => env('DB_HOST', '192.168.123.203'),
+			'host'      => env('DB_HOST', 'db1.apexinnovations.com'),
 			'database'  => env('DB_DATABASE', 'ApexProducts'),
-			'username'  => env('DB_USERNAME', 'phpDBaccess6'),
-			'password'  => env('DB_PASSWORD', 'stbVaJTVHQZUYG7D'),
+			'username'  => env('DB_USERNAME', 'UserName'),
+			'password'  => env('DB_PASSWORD', 'PassWord'),
 			'charset'   => 'utf8',
 			'collation' => 'utf8_unicode_ci',
 			'prefix'    => '',
