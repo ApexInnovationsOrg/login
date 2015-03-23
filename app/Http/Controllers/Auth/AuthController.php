@@ -103,12 +103,17 @@ class AuthController extends Controller {
     }
 
     public function authenticateUserSession($userId) {
+        $user = Auth::User();
         $Redis = Redis::connection();
         Session::put('userId', $userId);
+        // bad naming convention that continues to get carried over.
+        Session::put('userID', $userId);
+        Session::put('userName', $user->FirstName.' '.$user->LastName);
         Session::put('_id', Session::getId());
         $Redis->set('User:' . $userId, Session::getId());
         Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
-        $response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
+        //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
+        $response = CookieMonster::addCookieToResponse(redirect()->intended('//www.apexwebtest.com/MyCurriculum.php'), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
         return $response;
     }

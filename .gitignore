@@ -1,4 +1,5 @@
 /vendor
+/_sandbox
 /node_modules
 .env
 .idea
