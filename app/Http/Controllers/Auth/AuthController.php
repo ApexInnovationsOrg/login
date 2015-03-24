@@ -103,7 +103,7 @@ class AuthController extends Controller {
     }
 
     public function authenticateUserSession($userId) {
-        $user = Auth::User();
+        $user = $this->auth->user();
         $Redis = Redis::connection();
         Session::put('userId', $userId);
         // bad naming convention that continues to get carried over.
