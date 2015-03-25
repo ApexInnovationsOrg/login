@@ -10,6 +10,7 @@
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class CookieMonster extends BasicObject {
@@ -68,5 +69,17 @@ class CookieMonster extends BasicObject {
             new Cookie($name, null, time()-3600, $path, $domain, null, false, false)
         );
         return $response;
+    }
+
+    static public function redirectLocation(){
+        $environment = App::environment();
+        if($environment == "production")
+        {
+            return "//www.apexinnovations.com/MyCurriculum.php";
+        }
+        else 
+        {
+            return "//www.apexwebtest.com/MyCurriculum.php";
+        }
     }
 }

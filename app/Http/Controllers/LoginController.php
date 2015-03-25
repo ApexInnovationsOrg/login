@@ -16,6 +16,7 @@ class LoginController extends Controller {
 	 */
 	public function index()
 	{
+
         $args = func_get_args();
         // log::info('$args: '.print_r($args, true));
         // $user = Session::get('user');

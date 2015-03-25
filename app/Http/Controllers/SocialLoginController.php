@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
@@ -65,15 +66,13 @@ class SocialLoginController extends Controller {
 	}
 	public function register()
 	{	
-
-		
 		if(Input::get('hasLicense') == "1")
 		{
-			return redirect('https://www.apexwebtest.com/CreateAccount.php?&Acct=1' . Input::get('Email'))->withInput();
+			return redirect('https://www.apexinnovations.com/CreateAccount.php?&Acct=1' . Input::get('Email'))->withInput();
 		}
 		else
 		{
-			return redirect('https://www.apexwebtest.com/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
+			return redirect('https://www.apexinnovations.com/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
 		}
 	}
 	/**
@@ -173,7 +172,7 @@ class SocialLoginController extends Controller {
 				        Session::put('_id', Session::getId());
 				        $Redis->set('User:' . $user->ID, Session::getId());
 				        
-				        $response = CookieMonster::addCookieToResponse(redirect('//www.apexwebtest.com/MyCurriculum.php'), 'user-token', $user->ID);
+				        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
 				        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 				        return $response;
 					}
@@ -201,6 +200,7 @@ class SocialLoginController extends Controller {
 		}
 
 	}
+
 	public function linkDifferentAccount()
 	{
 		$email = Input::get('email');

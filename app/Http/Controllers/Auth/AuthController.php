@@ -114,7 +114,8 @@ class AuthController extends Controller {
         $Redis->set('User:' . $userId, Session::getId());
         Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
         //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
-        $response = CookieMonster::addCookieToResponse(redirect()->intended('//www.apexwebtest.com/MyCurriculum.php'), 'user-token', $userId);
+        
+        $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
         return $response;
     }

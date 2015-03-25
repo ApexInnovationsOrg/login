@@ -30,6 +30,11 @@
 									<button type="submit" class="btn btn-primary btn-lg top-buffer col-lg-6 col-lg-offset-3">
 									  <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> Resend email
 									</button>
+								<a href="/auth/login">
+									<button type="button" class="btn btn-primary btn-lg top-buffer col-lg-6 col-lg-offset-3">
+									  <span aria-hidden="true"></span> Back to login
+									</button>
+								</a>
 							</form>
 						</div>
 				</div>
