@@ -107,7 +107,7 @@ class SocialLoginController extends Controller {
 		});
 
 
-		return view('auth/sentEmail',['verifiedEmail' => $userEmail, 'user' => json_encode($user), 'providerName' => $provider]);
+		return view('auth/sentEmail',['verifiedEmail' => $userEmail, 'user' => Crypt::encrypt(json_encode($user)), 'providerName' => $provider]);
 	}
 
 	/**
@@ -131,7 +131,6 @@ class SocialLoginController extends Controller {
 			$authInfo = curl_exec($curl);
 			$authJSON = (object)json_decode($authInfo);
 			curl_close($curl);
-			//dd($authJSON);
 			if($authJSON->stat == "ok")
 			{
 
@@ -179,18 +178,18 @@ class SocialLoginController extends Controller {
 					else
 					{
 						//suggest account link
-						return view('auth/social',['verifiedEmail' => $authJSON->profile->verifiedEmail, 'user' => Crypt::encrypt($user), 'providerName' => $authJSON->profile->providerName]);
+						return view('/auth/social',['verifiedEmail' => $authJSON->profile->verifiedEmail, 'user' => Crypt::encrypt($user), 'providerName' => $authJSON->profile->providerName]);
 					}
 				}
 				else
 				{
 					//dd('link or create account. no suggestion');
-					return view('auth/social',['verifiedEmail' => $authJSON->profile->verifiedEmail,'providerName' => $authJSON->profile->providerName]);
+					return view('/auth/social',['verifiedEmail' => $authJSON->profile->verifiedEmail,'providerName' => $authJSON->profile->providerName]);
 				}
 			}
 			else
 			{
-				return redirect('auth/login')->withErrors($authJSON->err->msg);
+				return redirect('/auth/login')->withErrors($authJSON->err->msg);
 			}
 		} 	
 		else 
@@ -243,8 +242,8 @@ class SocialLoginController extends Controller {
 		}
 		else
 		{
-
-			return redirect()->back()->withErrors(array('User does not exist'));
+			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider])->withErrors(array('User does not exist'));
+			//return redirect()->back()->withErrors(array('User does not exist'));
 		}
 	}
 	/**
