@@ -80,14 +80,22 @@ class SessionHelper extends BasicObject {
             if(!empty($login)) {
                 // Log::info('Has Login: '.print_r([$login], true));
                 $user = User::where('Login', '=', $login)->first();
-                // Log::info('$user: '.print_r([$user], true));
-                Session::put('userId', $user->ID);
-                // bad naming convention that continues to get carried over.
-                Session::put('userID', $user->ID);
-                Session::put('userName', $user->FirstName.' '.$user->LastName);
-
-                // If we are logging in for the first time we stop here
-                return $response;
+                if($user)
+                {
+                    // Log::info('$user: '.print_r([$user], true));
+                    Session::put('userId', $user->ID);
+                    // bad naming convention that continues to get carried over.
+                    Session::put('userID', $user->ID);
+                    Session::put('userName', $user->FirstName.' '.$user->LastName);
+                    // If we are logging in for the first time we stop here
+                    return $response;
+                }
+                else
+                {
+                    return redirect()->back()
+                            ->withInput($request->only('Login'))
+                            ->withErrors(['Login' => 'Invalid login']);
+                }
             } else {
                 // Log::info('Has User Token');
                 if(!isset($previousSession['userId'])) {
