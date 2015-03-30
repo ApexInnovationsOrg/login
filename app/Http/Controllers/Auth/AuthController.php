@@ -62,7 +62,7 @@ class AuthController extends Controller {
         $credentials = $request->only('Login', 'Password');
 
         $user = User::where('Login', '=', $credentials['Login'])->first();
-        if (Hash::check($credentials['Password'],$user->Password))
+        if ($user && Hash::check($credentials['Password'],$user->Password))
         { 
             $this->auth->login($user);
             $user = $this->auth->user();
