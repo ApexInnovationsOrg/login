@@ -1,6 +1,16 @@
 <?php namespace App\Auth;
 
 use App\User;
+
+use App\Helpers\CookieMonster;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Config;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\PasswordBroker;
@@ -109,17 +119,28 @@ trait ResetsPasswords {
 		$response = $this->passwords->reset($credentials, function($user, $password)
 		{
 			$user->Password = bcrypt($password);
-			//dd($user);
 			unset($user->email);
 			$user->save();
 
-			$this->auth->login($user);
+			Auth::login($user);
+			$Redis = Redis::connection();
+	        Session::put('userId', $user->ID);
+	        Session::put('userID', $user->ID);
+	        Session::put('userName', $user->FirstName.' '.$user->LastName);
+	        Session::put('_id', Session::getId());
+	        $Redis->set('User:' . $user->ID, Session::getId());
+	        
+	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
+	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
+	        return $response;
+
+
 		});
 		
 		switch ($response)
 		{
 			case PasswordBroker::PASSWORD_RESET:
-				return redirect($this->redirectPath());
+				return redirect(CookieMonster::redirectLocation());
 
 			default:
 				// return view('auth.reset')
