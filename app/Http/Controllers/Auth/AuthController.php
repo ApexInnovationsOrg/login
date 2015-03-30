@@ -91,9 +91,9 @@ class AuthController extends Controller {
         $this->auth->logout();
         $Redis = Redis::connection();
         $user = $this->auth->user();
-        Log::info('DELETE User: '.print_r($user, true));
+        // Log::info('DELETE User: '.print_r($user, true));
         if($user){
-            Log::info('DELETE SESSION: '.$Redis->del('User:' . $user->ID));
+            // Log::info('DELETE SESSION: '.$Redis->del('User:' . $user->ID));
         }
 
         $response = redirect('/');
@@ -114,7 +114,6 @@ class AuthController extends Controller {
         $Redis->set('User:' . $userId, Session::getId());
         Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
         //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
-        
         $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
         return $response;
