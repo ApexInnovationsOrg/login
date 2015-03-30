@@ -33,7 +33,8 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 		$credentials = array_except($credentials, ['token']);
 		//['Login'=>'eddie@apex']
 		$user = User::where('Login', '=' , $credentials['Login'])->first();
-
+		//20150330EM had to do a bit of hotwiring to make the CanResetPasswordContract happy. At the time of writing this, there's not a lot of documentation on altering a contract for Laravel 5, and this PHP is simply beyond my level of comprehension. 
+		$user->email = $user->Login;
 		if ($user && ! $user instanceof CanResetPasswordContract)
 		{
 			throw new UnexpectedValueException("User must implement CanResetPassword interface.");

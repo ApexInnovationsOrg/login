@@ -2,7 +2,7 @@
 
 use App\Auth\Passwords\PasswordBroker;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Auth\Passwords\DatabaseTokenRepository as DbRepository;
+use App\Auth\Passwords\DatabaseTokenRepository as DbRepository;
 use Illuminate\Auth\Passwords\PasswordResetServiceProvider as PRS;
 
 class PasswordResetServiceProvider extends PRS {
