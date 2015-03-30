@@ -42,7 +42,7 @@ class SessionHelper extends BasicObject {
      */
     public function updateTokens($request, Closure $next)
     {
-        Log::info('SessionHelper::updateTokens');
+        // Log::info('SessionHelper::updateTokens');
         $response = $next($request);
         $response = CookieMonster::addCookieToResponse($response, 'xsrf-token', $request->session()->token());
 
@@ -56,7 +56,7 @@ class SessionHelper extends BasicObject {
         if($previousSessionRedisId) {
             $previousSession = unserialize(unserialize($Redis->get('laravel:' . $previousSessionRedisId)));
         }
-        Log::info('$previousSession :'.print_r(['session.cookie'=>Config::get('session.cookie'), '$previousSessionRedisId'=>$previousSessionRedisId, '$previousSession'=>$previousSession], true));
+        // Log::info('$previousSession :'.print_r(['session.cookie'=>Config::get('session.cookie'), '$previousSessionRedisId'=>$previousSessionRedisId, '$previousSession'=>$previousSession], true));
 
         /*
          * NOTE: We have still not logged in the user
@@ -69,7 +69,7 @@ class SessionHelper extends BasicObject {
 
         // If the previous session exist we check if it is also the active session for the user
         if ($previousSession) {
-            Log::info('Has $previousSession');
+            // Log::info('Has $previousSession');
             // Set next session id
             $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
             // $GLOBALS["sessionId"] = Session::getId();
@@ -78,9 +78,9 @@ class SessionHelper extends BasicObject {
             $login = Input::get('Login');
             // Are we logging in for the first time
             if(!empty($login)) {
-                Log::info('Has Login: '.print_r([$login], true));
+                // Log::info('Has Login: '.print_r([$login], true));
                 $user = User::where('Login', '=', $login)->first();
-                Log::info('$user: '.print_r([$user], true));
+                // Log::info('$user: '.print_r([$user], true));
                 Session::put('userId', $user->ID);
                 // bad naming convention that continues to get carried over.
                 Session::put('userID', $user->ID);
@@ -103,7 +103,7 @@ class SessionHelper extends BasicObject {
                     // Log::info('$userId: '.print_r($userId, true));
                     // Log::info('User: '.print_r($user, true));
                     if(!empty($user)&&($user->ID == $previousSession['userId'])) {
-                        Log::info('UserId Match');
+                        // Log::info('UserId Match');
                         Session::put('userId', $user->ID);
                         // bad naming convention that continues to get carried over.
                         Session::put('userID', $user->ID);
@@ -111,7 +111,7 @@ class SessionHelper extends BasicObject {
 
                     } else if(!isset($previousSession['userId'])) {
                         // If it is not set this is the first time to check and should be added for future cases
-                        Log::info('$user->ID Doesn\'t match $previousSession $user->ID: '.print_r(['$user->ID'=>$user->ID, '$previousSession'=>$previousSession], true));
+                        // Log::info('$user->ID Doesn\'t match $previousSession $user->ID: '.print_r(['$user->ID'=>$user->ID, '$previousSession'=>$previousSession], true));
                         //throw new TokenMismatchException;
                     }
                 }
@@ -119,14 +119,14 @@ class SessionHelper extends BasicObject {
 
             $activeSessionToken = $Redis->get('User:' . $userId);
 
-            Log::info('$activeSessionToken: '.print_r(['$activeSessionToken'=>$activeSessionToken],true));
+            // Log::info('$activeSessionToken: '.print_r(['$activeSessionToken'=>$activeSessionToken],true));
 
             if($activeSessionToken) {
                 // Do they match
-                Log::info('$activeSessionToken Exist: '.print_r([$activeSessionToken, $previousSession], true));
+                // Log::info('$activeSessionToken Exist: '.print_r([$activeSessionToken, $previousSession], true));
                 if((isset($previousSession['_id']))&&($activeSessionToken == $previousSession['_id'])) {
                     Auth::login($user);
-                    Log::info('Session Are Equal');
+                    // Log::info('Session Are Equal');
                     // Restore the session
                     $exclude = [];
                     foreach($previousSession as $k => $value) {
@@ -139,7 +139,7 @@ class SessionHelper extends BasicObject {
 
                     Session::put('_id', Session::getId());
                     $Redis->set('User:' . $user->ID, Session::getId());
-                    Log::info(Session::getId());
+                    // Log::info(Session::getId());
                     $response = CookieMonster::addCookieToResponse($response, 'user-token', $user->ID);
                     $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 
@@ -158,7 +158,7 @@ class SessionHelper extends BasicObject {
                     ];
 
                     // Auth::login($user);
-                    Log::info('VERIFIED!!!!! FdP!: '.print_r($dd, 1));
+                    // Log::info('VERIFIED!!!!! FdP!: '.print_r($dd, 1));
                     return $response;
                 }
             }
@@ -182,7 +182,7 @@ class SessionHelper extends BasicObject {
             'sessionId|next' => Session::getId(),
             // 'server|next' => $request->session()->token(),
         ];
-        Log::info('results updateTokens: '.print_r($dd, 1));
+        // Log::info('results updateTokens: '.print_r($dd, 1));
 
         return $response;
     }
