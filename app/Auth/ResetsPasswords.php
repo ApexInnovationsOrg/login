@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\PasswordBroker;
-use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait ResetsPasswords {
@@ -96,7 +95,6 @@ trait ResetsPasswords {
 	public function postReset(Request $request)
 	{
 
-		dd(Session::all());
 		$this->validate($request, [
 			'token' => 'required',
 			'Login' => 'required|email',
@@ -115,6 +113,7 @@ trait ResetsPasswords {
 
 			$this->auth->login($user);
 		});
+		
 		switch ($response)
 		{
 			case PasswordBroker::PASSWORD_RESET:
