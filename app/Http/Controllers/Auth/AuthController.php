@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\User;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
@@ -16,30 +17,30 @@ use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
 
 class AuthController extends Controller {
 
-	/*
-	|--------------------------------------------------------------------------
-	| Registration & Login Controller
-	|--------------------------------------------------------------------------
-	|
-	| This controller handles the registration of new users, as well as the
-	| authentication of existing users. By default, this controller uses
-	| a simple trait to add these behaviors. Why don't you explore it?
-	|
-	*/
+    /*
+    |--------------------------------------------------------------------------
+    | Registration & Login Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles the registration of new users, as well as the
+    | authentication of existing users. By default, this controller uses
+    | a simple trait to add these behaviors. Why don't you explore it?
+    |
+    */
 
-	use AuthenticatesAndRegistersUsers;
+    use AuthenticatesAndRegistersUsers;
 
-	/**
-	 * Create a new authentication controller instance.
-	 *
-	 * @param  \Illuminate\Contracts\Auth\Guard  $auth
-	 * @param  \Illuminate\Contracts\Auth\Registrar  $registrar
-	 * @return void
-	 */
+    /**
+     * Create a new authentication controller instance.
+     *
+     * @param  \Illuminate\Contracts\Auth\Guard  $auth
+     * @param  \Illuminate\Contracts\Auth\Registrar  $registrar
+     * @return void
+     */
 
-	public function __construct(Guard $auth, Registrar $registrar)
-	{
-        //Log::info('AuthController.Init');
+    public function __construct(Guard $auth, Registrar $registrar)
+    {
+        Log::info('AuthController.Init');
         $this->auth = $auth;
         $this->registrar = $registrar;
 
@@ -60,8 +61,10 @@ class AuthController extends Controller {
 
         $credentials = $request->only('Login', 'Password');
 
-        if ($this->auth->attempt($credentials, $request->has('remember')))
-        {
+        $user = User::where('Login', '=', $credentials['Login'])->first();
+        if (Hash::check($credentials['Password'],$user->Password))
+        { 
+            $this->auth->login($user);
             $user = $this->auth->user();
             return $this->authenticateUserSession($user->ID);
         } else {
@@ -112,7 +115,7 @@ class AuthController extends Controller {
         Session::put('Username', $user->FirstName.' '.$user->LastName);
         Session::put('_id', Session::getId());
         $Redis->set('User:' . $userId, Session::getId());
-        //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
+        Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
         //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
