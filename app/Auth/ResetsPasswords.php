@@ -120,7 +120,9 @@ trait ResetsPasswords {
 		{
 			$user->Password = bcrypt($password);
 			unset($user->email);
+			$user->PasswordLastChanged = date("Y-m-d H:i:s");
 			$user->save();
+
 
 			Auth::login($user);
 			$Redis = Redis::connection();

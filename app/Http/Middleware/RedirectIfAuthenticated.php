@@ -3,6 +3,7 @@
 use Closure;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Http\RedirectResponse;
+use App\Helpers\CookieMonster;
 
 class RedirectIfAuthenticated {
 
@@ -35,7 +36,7 @@ class RedirectIfAuthenticated {
 	{
 		if ($this->auth->check())
 		{
-            return new RedirectResponse(url('//devbox/MyCurriculum.php'));
+            return new RedirectResponse(CookieMonster::redirectLocation());
 		}
 
 		return $next($request);
