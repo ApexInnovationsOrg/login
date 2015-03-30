@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use App\Helpers\CookieMonster;
 
 class LoginController extends Controller {
 
@@ -34,7 +35,15 @@ class LoginController extends Controller {
 	 */
 	public function login()
 	{
-		return view('auth/login');
+
+		if(Auth::check())
+		{
+			return redirect(url(CookieMonster::redirectLocation()));
+		}
+		else
+		{
+			return view('auth/login');
+		}
 	}
 
 	/**
