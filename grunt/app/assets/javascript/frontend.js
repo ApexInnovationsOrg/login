@@ -4,7 +4,7 @@
 		    
 		    /* _______________ can edit below this line _______________ */
 
-		    janrain.settings.tokenUrl = 'http://' + document.location.hostname + '/auth/Social';
+		    janrain.settings.tokenUrl = document.location.protocol + '//'+document.location.hostname+'/auth/Social';
 		    janrain.settings.type = 'embed';
 		    janrain.settings.appId = 'indelmfedkggifiaagpp';
 		    janrain.settings.appUrl = 'https://apexinnovations.rpxnow.com';
