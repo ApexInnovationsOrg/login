@@ -108,9 +108,9 @@ trait ResetsPasswords {
 
 		$response = $this->passwords->reset($credentials, function($user, $password)
 		{
-			$user->password = bcrypt($password);
-			// unset($user->email);
-			dd($user);
+			$user->Password = bcrypt($password);
+			//dd($user);
+			unset($user->email);
 			$user->save();
 
 			$this->auth->login($user);

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 class User extends Model implements AuthenticatableContract, CanResetPasswordContract {
 
 	use Authenticatable, CanResetPassword;
-    public $timestamp = false;
+    public $timestamps = false;
 
 	/**
 	 * The database table used by the model.
@@ -30,7 +30,11 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 	 *
 	 * @var array
 	 */
-	protected $hidden = ['Password', 'remember_token'];
+	protected $hidden = ['Password'];
+
+
+	protected $primaryKey = 'ID';
+
 
     public function swapping($user) {
         $LastSessionID   = Session::getId(); //get new session_id after user sign in
@@ -45,4 +49,5 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
         $user->LastSessionID = $new_sessid;
         $user->save();
     }
+
 }
