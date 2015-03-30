@@ -1,5 +1,6 @@
 <?php namespace App\Auth;
 
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\PasswordBroker;
@@ -98,17 +99,18 @@ trait ResetsPasswords {
 		$this->validate($request, [
 			'token' => 'required',
 			'Login' => 'required|email',
-			'password' => 'required|confirmed|min:6',
+			'Password' => 'required|confirmed|min:6',
 		]);
 
 		$credentials = $request->only(
-			'Login', 'password', 'password_confirmation', 'token'
+			'Login', 'Password', 'Password_confirmation', 'token'
 		);
 
 		$response = $this->passwords->reset($credentials, function($user, $password)
 		{
 			$user->password = bcrypt($password);
-
+			// unset($user->email);
+			dd($user);
 			$user->save();
 
 			$this->auth->login($user);
