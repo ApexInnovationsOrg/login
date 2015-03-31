@@ -67,7 +67,7 @@ class AuthController extends Controller {
         { 
             $this->auth->login($user);
             $user = $this->auth->user();
-            $logInfo = ['IP'=>$_SERVER['REMOTE_ADDR'],'Password'=>'bcrypt'];
+            $logInfo = ['SERVER'=>$_SERVER,'Password'=>'bcrypt'];
             $log = new Logger(json_encode($logInfo),1,$user->ID);
             $log->SaveLog();
             return $this->authenticateUserSession($user->ID);
@@ -79,7 +79,7 @@ class AuthController extends Controller {
 
                     $this->auth->login($user);
                     $user = $this->auth->user();
-                    $logInfo = ['IP'=>$_SERVER['REMOTE_ADDR'],'Password'=>'md5'];
+                    $logInfo = ['SERVER'=>$_SERVER,'Password'=>'md5'];
                     $log = new Logger(json_encode($logInfo),1,$user->ID);
                     $log->SaveLog();
                     return $this->authenticateUserSession($user->ID);
