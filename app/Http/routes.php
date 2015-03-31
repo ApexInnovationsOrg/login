@@ -28,17 +28,17 @@ Route::get('/auth/Social/link','SocialLoginController@createLink');
 
 
 Route::get('home', ['as'=>'home', 'uses'=>'LoginController@index']);
-Route::get('test', 'HomeController@test');
+// Route::get('test', 'HomeController@test');
 
-Route::get('/test', function()
-{
-    $user = App\User::where('ID', '=', '306842')->first();
-    Illuminate\Support\Facades\Auth::login($user);
-    //dd(Illuminate\Support\Facades\Auth::user());
-    $user = Illuminate\Support\Facades\Auth::user();
-    // dd($user);
-    return Redirect::action('LoginController@index', array('user' => $user->ID));
-});
+// Route::get('/test', function()
+// {
+//     $user = App\User::where('ID', '=', '306842')->first();
+//     Illuminate\Support\Facades\Auth::login($user);
+//     //dd(Illuminate\Support\Facades\Auth::user());
+//     $user = Illuminate\Support\Facades\Auth::user();
+//     // dd($user);
+//     return Redirect::action('LoginController@index', array('user' => $user->ID));
+// });
 
 // Log::info('Route::controllers Auth\AuthController');
 Route::controllers([
