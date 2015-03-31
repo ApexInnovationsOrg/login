@@ -67,6 +67,9 @@ class AuthController extends Controller {
         { 
             $this->auth->login($user);
             $user = $this->auth->user();
+            $logInfo = ['IP'=>$_SERVER['REMOTE_ADDR'],'Password'=>'bcrypt'];
+            $log = new Logger(json_encode($logInfo),1,$user->ID);
+            $log->SaveLog();
             return $this->authenticateUserSession($user->ID);
         } else {
             $user = User::where('Login', '=', Input::get('Login'))->first();
@@ -76,10 +79,9 @@ class AuthController extends Controller {
 
                     $this->auth->login($user);
                     $user = $this->auth->user();
-                    
-                    $log = new Logger(null,1,$user->ID);
+                    $logInfo = ['IP'=>$_SERVER['REMOTE_ADDR'],'Password'=>'md5'];
+                    $log = new Logger(json_encode($logInfo),1,$user->ID);
                     $log->SaveLog();
-
                     return $this->authenticateUserSession($user->ID);
                 }
                 // return redirect()->intended($this->redirectPath());
