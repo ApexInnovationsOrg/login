@@ -15,6 +15,7 @@ Route::get('/', 'LoginController@login');
 Route::get('/auth/Social','SocialLoginController@index');
 Route::post('/auth/Social','SocialLoginController@show');
 Route::post('/auth/Social/differentAccount','SocialLoginController@linkDifferentAccount');
+Route::get('/auth/Social/differentAccount','SocialLoginController@linkDifferentAccount');
 Route::post('/auth/Social/verifyEmail','SocialLoginController@verifyEmail');
 Route::post('/auth/Social/register','SocialLoginController@register');
 
