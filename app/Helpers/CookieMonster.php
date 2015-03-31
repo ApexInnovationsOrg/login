@@ -11,6 +11,7 @@ use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\App;
+use Illuminate\Cookie\CookieJar;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class CookieMonster extends BasicObject {
