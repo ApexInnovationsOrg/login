@@ -87,6 +87,10 @@ class AuthController extends Controller {
                 // return redirect()->intended($this->redirectPath());
             }
         }
+        $userID = isset($user) ? $user->ID : 0;
+        $logInfo = ['SERVER'=>$_SERVER,'AttemptedLogin'=>$request['Login']];
+        $log = new Logger(json_encode($logInfo),4,$userID);
+        $log->SaveLog();
 
         return redirect($this->loginPath())
             ->withInput($request->only('Login', 'remember'))
