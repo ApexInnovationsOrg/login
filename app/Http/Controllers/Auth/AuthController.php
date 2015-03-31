@@ -1,6 +1,7 @@
 <?php namespace App\Http\Controllers\Auth;
 
 use App\Helpers\CookieMonster;
+use App\Helpers\Logger;
 use App\Helpers\SessionManager;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -75,6 +76,9 @@ class AuthController extends Controller {
 
                     $this->auth->login($user);
                     $user = $this->auth->user();
+                    
+                    $log = new Logger(null,1,$user->ID);
+                    $log->SaveLog();
 
                     return $this->authenticateUserSession($user->ID);
                 }
