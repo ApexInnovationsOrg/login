@@ -68,6 +68,7 @@ class CookieMonster extends BasicObject {
         $response->headers->setCookie(
             new Cookie($name, null, time()-3600, $path, $domain, null, false, false)
         );
+        Cookie::forget($name);
         return $response;
     }
 
