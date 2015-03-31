@@ -1,19 +1,6 @@
 @extends('emails.default')
 
 @section('content')
-<td colspan="2">
-  <p>Hello {{  }},</p>
-  <p>Click here to link your {{ $provider }} account: <a href="{{ url('auth/Social/link/?data=') . $encryptedLink }}">join accounts</a></p>
-  <p>Note: this link expires after 30 minutes!</p>
-</td>
-@endsection
-
-
-
-
-@extends('emails.default')
-
-@section('content')
 <td colspan="2"  style="margin-top:15px; padding:40.5pt 40.5pt 0 40.5pt;">
 <style>
 a:visited{
@@ -42,6 +29,7 @@ a{
                     </font>
                 </div>
             </td>
+            <p>Note: this link expires after 30 minutes!</p>
         </tr>
     </tbody>
 </table>
