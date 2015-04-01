@@ -57,12 +57,12 @@ class AuthController extends Controller {
     public function postLogin(Request $request)
     {
         $this->validate($request, [
-            'Login' => 'required|email', 'Password' => 'required',
+            'EmailLogin' => 'required|email', 'Password' => 'required',
         ]);
 
-        $credentials = $request->only('Login', 'Password');
+        $credentials = $request->only('EmailLogin', 'Password');
 
-        $user = User::where('Login', '=', $credentials['Login'])->first();
+        $user = User::where('Login', '=', $credentials['EmailLogin'])->first();
         if ($user && Hash::check($credentials['Password'],$user->Password))
         { 
             $this->auth->login($user);
@@ -72,7 +72,7 @@ class AuthController extends Controller {
             $log->SaveLog();
             return $this->authenticateUserSession($user->ID);
         } else {
-            $user = User::where('Login', '=', Input::get('Login'))->first();
+            $user = User::where('Login', '=', Input::get('EmailLogin'))->first();
 
             if(isset($user)) {
                 if($user->Password == md5("6#pR8@" . Input::get('Password'))) { // If their Password is still the MD5 mess
@@ -88,14 +88,14 @@ class AuthController extends Controller {
             }
         }
         $userID = isset($user) ? $user->ID : 0;
-        $logInfo = ['SERVER'=>$_SERVER,'AttemptedLogin'=>$request['Login']];
+        $logInfo = ['SERVER'=>$_SERVER,'AttemptedLogin'=>$request['EmailLogin']];
         $log = new Logger(json_encode($logInfo),4,$userID);
         $log->SaveLog();
 
         return redirect($this->loginPath())
-            ->withInput($request->only('Login', 'remember'))
+            ->withInput($request->only('EmailLogin', 'remember'))
             ->withErrors([
-                'Login' => $this->getFailedLoginMesssage(),
+                'EmailLogin' => $this->getFailedLoginMesssage(),
             ]);
     }
 
