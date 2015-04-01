@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Config;
 
 class SocialLoginController extends Controller {
@@ -45,6 +44,7 @@ class SocialLoginController extends Controller {
 		$encryptedString = Input::get('data');
 		$decryptedString = (object)Crypt::decrypt($encryptedString);
 		//{"UserID":"362645","provider":"Yahoo!","email":"eddimull@yahoo.com"}
+		//dd($decryptedString);
 		$Provider = Providers::firstOrCreate(['Name' => $decryptedString->provider]);
 		$socialLink = SocialLogins::where('UserID', '=', $decryptedString->UserID)->where('Provider', '=', $Provider->ID)->first();
 		$expired = strtotime($decryptedString->datetime) < strtotime("-30 minutes") ? true : false;
@@ -60,8 +60,14 @@ class SocialLoginController extends Controller {
 		}
 		else
 		{
-
-			return view('auth/linked',['successful' => false, 'provider' => $decryptedString->provider])->withErrors(array('Already linked or link expired'));
+			if($expired)
+			{
+				return view('auth/linked',['successful' => false, 'provider' => $decryptedString->provider])->withErrors(array('Your link has expired'));
+			}
+			else
+			{
+				return view('auth/linked',['successful' => false, 'provider' => $decryptedString->provider])->withErrors(array('Accounts already linked'));
+			}
 		}
 		
 	}
@@ -102,6 +108,9 @@ class SocialLoginController extends Controller {
 		$provider = Input::get('providerName');
 
 		$encrypted = Crypt::encrypt(['UserID' => $user->ID, 'provider' => $provider, 'email' => $email, 'datetime' => $datetime]);
+
+
+
 		Mail::send('emails.socialMediaLink', array('encryptedLink' => $encrypted, 'name' => $name, 'provider' => $provider), function($message) use ($userEmail,$provider,$datetime) 
 		{
 		    $message->to($userEmail)->subject('Link your ' . $provider . ' account');
@@ -134,7 +143,6 @@ class SocialLoginController extends Controller {
 			curl_close($curl);
 			if($authJSON->stat == "ok")
 			{
-
 				//this is completely undry code. yaaaay last minute fixes. 
 
 				if(empty($authJSON->profile->verifiedEmail))
@@ -159,6 +167,7 @@ class SocialLoginController extends Controller {
 				
 				if(!empty($user))
 				{
+
 					$provider = Providers::firstOrCreate(['Name' => $authJSON->profile->providerName]);
 					$socialLink = SocialLogins::where('Email', '=', $authJSON->profile->verifiedEmail)->where('Provider', '=', $provider->ID)->first();
 
@@ -243,8 +252,10 @@ class SocialLoginController extends Controller {
 		}
 		else
 		{
+			//dd(['email'=>$email,'provider'=>$provider]);
+			//dd(Input::all());
 			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider])->withErrors(array('User does not exist'));
-			//return redirect()->back()->withErrors(array('User does not exist'));
+			//return redirect()->back()->withInput()->withErrors(array('User does not exist'));
 		}
 	}
 	/**
