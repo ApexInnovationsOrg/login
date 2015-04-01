@@ -55,7 +55,7 @@ class CookieMonster extends BasicObject {
     {
         $domain = Config::get('session.domain');
         $path = Config::get('session.path');
-        Log::info(Config::get('session.domain'));
+        //Log::info(Config::get('session.domain'));
         $time = time() + 60 * Config::get('session.lifetime');
         $response->headers->setCookie(
             new Cookie($name, $value, $time, $path, $domain, null, false, false)

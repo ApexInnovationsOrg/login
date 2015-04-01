@@ -101,19 +101,19 @@ class AuthController extends Controller {
 
     public function getLogout()
     {
-        $this->auth->logout();
         $Redis = Redis::connection();
         $user = $this->auth->user();
-        // Log::info('DELETE User: '.print_r($user, true));
-        if($user){
-            // Log::info('DELETE SESSION: '.$Redis->del('User:' . $user->ID));
+        if(Session::get('_id'))
+        {
+            $Redis->del('laravel:' . Session::get('_id'));
+            Session::flush();
         }
-
         $response = redirect('/');
         $response = CookieMonster::removeCookieFromResponse($response, 'user-token');
         $response = CookieMonster::removeCookieFromResponse($response, Config::get('session.cookie'));
         return $response;
     }
+
 
     public function authenticateUserSession($userId) {
         $user = $this->auth->user();
