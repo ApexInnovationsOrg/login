@@ -29,10 +29,10 @@ a{
                     </font>
                 </div>
             </td>
-            <p>Note: this link expires after 30 minutes!</p>
         </tr>
     </tbody>
 </table>
+ <p style="margin:14pt 0 18.75pt 0; font-size:16px">Note: this link expires after 30 minutes!</p>
 <br/>
 <br/>
 </td>
