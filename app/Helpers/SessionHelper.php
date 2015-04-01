@@ -75,7 +75,7 @@ class SessionHelper extends BasicObject {
             // $GLOBALS["sessionId"] = Session::getId();
             // Do we have an active current active session?
 
-            $login = Input::get('Login');
+            $login = Input::get('EmailLogin');
             // Are we logging in for the first time
             if(!empty($login)) {
                 // Log::info('Has Login: '.print_r([$login], true));
@@ -93,8 +93,8 @@ class SessionHelper extends BasicObject {
                 else
                 {
                     return redirect()->back()
-                            ->withInput($request->only('Login'))
-                            ->withErrors(['Login' => 'Invalid login']);
+                            ->withInput($request->only('EmailLogin'))
+                            ->withErrors(['EmailLogin' => 'Invalid login']);
                 }
             } else {
                 // Log::info('Has User Token');
