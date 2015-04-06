@@ -11,7 +11,9 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 {
     public function emailResetLink(CanResetPasswordContract $user, $token, Closure $callback = null)
     {
-        $view = $this->emailView;
+        //$view = $this->emailView;
+        $view = ['emails.password','emails.passwordText'];
+
         // edit whatever here
         return $this->mailer->send($view, compact('token', 'user'), function($m) use ($user, $token, $callback)
         {
