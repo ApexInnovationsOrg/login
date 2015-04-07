@@ -180,7 +180,8 @@ class SocialLoginController extends Controller {
 				        Session::put('userName', $user->FirstName.' '.$user->LastName);
 				        Session::put('_id', Session::getId());
 				        $Redis->set('User:' . $user->ID, Session::getId());
-				        
+				        $user->LastLoginDate = date("Y-m-d H:i:s");
+				        $user->save();
 				        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
 				        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 				        return $response;

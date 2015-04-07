@@ -92,7 +92,8 @@ class AuthController extends Controller {
         $log = new Logger(json_encode($logInfo),4,$userID);
         $log->SaveLog();
 
-        return redirect($this->loginPath())
+        return redirect()
+            ->back()
             ->withInput($request->only('EmailLogin', 'remember'))
             ->withErrors([
                 'EmailLogin' => $this->getFailedLoginMesssage(),
@@ -125,7 +126,9 @@ class AuthController extends Controller {
         Session::put('Username', $user->FirstName.' '.$user->LastName);
         Session::put('_id', Session::getId());
         $Redis->set('User:' . $userId, Session::getId());
-        Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
+        $user->LastLoginDate = date("Y-m-d H:i:s");
+        $user->save();
+        //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
         //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
         $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
