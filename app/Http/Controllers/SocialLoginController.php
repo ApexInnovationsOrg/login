@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests;
-
+use App\Helpers\Logger;
 use App\Helpers\CookieMonster;
 
 use App\Providers;
@@ -209,6 +209,11 @@ class SocialLoginController extends Controller {
 				        $Redis->set('User:' . $user->ID, Session::getId());
 				        $user->LastLoginDate = date("Y-m-d H:i:s");
 				        $user->save();
+
+				        $logInfo = ['SERVER'=>$_SERVER];
+			            $log = new Logger(json_encode($logInfo),6,$user->ID);
+			            $log->SaveLog();
+
 				        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
 				        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 				        return $response;
