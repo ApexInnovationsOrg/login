@@ -39,35 +39,39 @@
 									</div>
 								</div>
 							</div>
-						</div>
+						
 
 						</form>
+
 					@else
-						<div>
 							<div class="row bottom-buffer">	
 								<div class="col-md-6 col-md-offset-2">
 								<h4>Hmmm...</h4>
 								</br>
 								It looks like you might already have an account with us.
-								Simply click the link to send an authorization email to your preexisting account at {{ $verifiedEmail }}
+								Simply click the link to login with your "{{ $providerName }}" account for {{ $verifiedEmail }}
 								</div>				
 							</div>
 							<div class="col-lg-12">
-								<form class="form-horizontal bottom-buffer" role="form" method="POST" action="Social/email">
+								<form class="form-horizontal" role="form" method="POST" action="Social/linkNow">
 									<input type="hidden" name="_token" value="{{ csrf_token() }}">
 									<input type="hidden" name="user" value="{{ $user }}">
 									<input type="hidden" name="providerName" value="{{ $providerName }}">
 									<input type="hidden" name="email" value="{{ $verifiedEmail }}">
-										<button type="submit" class="btn btn-primary btn-lg top-buffer col-centered block col-lg-offset-3 bottom-buffer">
-										  <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> send me the email!
+									<div class="row">
+										<button type="submit" class="btn btn-success btn-lg top-buffer col-centered block col-lg-offset-3 bottom-buffer">
+										  <span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span> Login
 										</button>
+									</div>
 								</form>
 							</div>
 					@endif
+
 							<div class="row">
-								<div class="col-lg-12 col-centered text-center bottom-buffer">
-									<h3>Or</h3>
-								</div>
+								
+							</div>
+							<div class="col-lg-12 col-centered text-center">
+								<h3 class="bottom-buffer">Or</h3>
 							</div>
 							<form class="form-horizontal bottom-buffer" role="form" method="POST" action="Social/differentAccount">
 								<input type="hidden" name="_token" value="{{ csrf_token() }}">
