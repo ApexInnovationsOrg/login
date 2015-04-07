@@ -71,6 +71,33 @@ class SocialLoginController extends Controller {
 		}
 		
 	}
+
+	public function linkNow()
+	{
+			$jsonUser = (object)json_decode(Crypt::decrypt(Input::get('user')));
+			$user = User::find($jsonUser->ID);
+			$Provider = Providers::firstOrCreate(['Name' => Input::get('providerName')]);
+			$socialLink = SocialLogins::firstOrCreate(['UserID' => $user->ID,'Provider' => $Provider->ID,'Email' => $user->Login]);
+			
+			Auth::login($user);
+			$Redis = Redis::connection();
+	        Session::put('userId', $user->ID);
+	        Session::put('userID', $user->ID);
+	        Session::put('userName', $user->FirstName.' '.$user->LastName);
+	        Session::put('_id', Session::getId());
+	        $Redis->set('User:' . $user->ID, Session::getId());
+	        $user->LastLoginDate = date("Y-m-d H:i:s");
+	        $user->save();
+ 			
+ 			$logInfo = ['SERVER'=>$_SERVER];
+            $log = new Logger(json_encode($logInfo),5,$user->ID);
+            $log->SaveLog();
+
+	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
+	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
+	        return $response;
+	}
+
 	public function register()
 	{	
 		if(Input::get('hasLicense') == "1")

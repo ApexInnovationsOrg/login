@@ -20,6 +20,7 @@ Route::post('/auth/Social/verifyEmail','SocialLoginController@verifyEmail');
 Route::post('/auth/Social/register','SocialLoginController@register');
 
 Route::post('/auth/Social/email','SocialLoginController@sendAuthorizationEmail');
+Route::post('/auth/Social/linkNow','SocialLoginController@linkNow');
 Route::get('/auth/Social/link','SocialLoginController@createLink');
 
 
