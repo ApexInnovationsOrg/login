@@ -47,7 +47,7 @@
 						<div class="form-group">
 							<div class="col-md-6 col-md-offset-4">
 								<p>
-									<a href="/password/email">Forgot Your Password?</a> &nbsp;|&nbsp;
+									<a href="/password/email">Forgot Your Password? hello</a> &nbsp;|&nbsp;
 									<a href="https://www.apexinnovations.com/CreateAccount.php">Create Account</a>
 								</p>
 								<button type="submit" class="btn btn-primary" style="margin-right: 15px;">
