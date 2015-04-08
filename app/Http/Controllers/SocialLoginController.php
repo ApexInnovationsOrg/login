@@ -127,6 +127,7 @@ class SocialLoginController extends Controller {
 				'Password' => '36903b4db385551b6d114d659dc37d3b',
 				'FirstName' => $firstName,
 				'LastName' => $lastName,
+				'Active' => 'Y',
 				'Address' => '3909 Ambassador Caffery Pkwy',
 				'Address2' => 'Bldg K',
 				'City' => 'Lafayette',
