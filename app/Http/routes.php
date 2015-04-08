@@ -24,8 +24,8 @@ Route::post('/auth/Social/linkNow','SocialLoginController@linkNow');
 Route::get('/auth/Social/link','SocialLoginController@createLink');
 Route::post('/gitPull',function()
 	{
-		`git pull`;
-		return 'Pulled';
+		$output = shell_exec('git pull');
+		return "<pre>$output</pre>";
 	});
 
 //going to be used when we switch the account creation process over to laravel
