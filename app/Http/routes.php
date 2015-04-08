@@ -24,7 +24,7 @@ Route::post('/auth/Social/linkNow','SocialLoginController@linkNow');
 Route::get('/auth/Social/link','SocialLoginController@createLink');
 Route::post('/gitPull',function()
 	{
-		$output = shell_exec('git pull');
+		$output = shell_exec('cd .. && git pull');
 		return "<pre>$output</pre>";
 	});
 
