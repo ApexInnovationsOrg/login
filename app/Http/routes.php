@@ -22,11 +22,7 @@ Route::post('/auth/Social/register','SocialLoginController@register');
 Route::post('/auth/Social/email','SocialLoginController@sendAuthorizationEmail');
 Route::post('/auth/Social/linkNow','SocialLoginController@linkNow');
 Route::get('/auth/Social/link','SocialLoginController@createLink');
-Route::post('/gitPull',function()
-	{
-		$output = shell_exec('cd .. && git pull');
-		return "<pre>$output</pre>";
-	});
+Route::any('/deploy','ServerController@deploy');
 
 //going to be used when we switch the account creation process over to laravel
 //Route::post('/auth/Social/register','SocialLoginController@landing');

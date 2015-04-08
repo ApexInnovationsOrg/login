@@ -19,7 +19,11 @@ class ServerController extends Controller {
     	{
 	    	SSH::into('staging')->run(array(
 			    'cd /websites/login.apexwebtest.com',
-			    'git pull origin master'
+			    'git pull origin master',
+			    'composer update',
+			    'composer dumpautoload',
+			    'php artisan cache:clear',
+			    'php artisan route:clear'
 	    	), function($line)
 	    	{
 	    		echo $line.PHP_EOL;
