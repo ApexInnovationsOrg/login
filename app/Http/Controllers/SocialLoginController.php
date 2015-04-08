@@ -106,7 +106,63 @@ class SocialLoginController extends Controller {
 		}
 		else
 		{
-			return redirect('https://www.apexinnovations.com/CreateAccount.php?NIH=1&Acct=1&Email=' . Input::get('Email'));
+			$jsonAuth = (object)json_decode(Crypt::decrypt(Input::get('auth')));
+
+			
+			$Provider = Providers::firstOrCreate(['Name' => $jsonAuth->profile->providerName]);
+			if(empty($jsonAuth->profile->name->givenName) || empty($lastName = $jsonAuth->profile->name->familyName))
+			{
+
+				$splitName = preg_split('/\s+/', $jsonAuth->profile->name->formatted);
+				$firstName = $splitname[1];
+				$lastName = $splitname[0];
+			}	
+			else
+			{
+				$firstName = $jsonAuth->profile->name->givenName;
+				$lastName = $jsonAuth->profile->name->familyName;
+			}
+			$user = User::firstOrCreate([
+				'Login' => $jsonAuth->profile->email,
+				'Password' => '36903b4db385551b6d114d659dc37d3b',
+				'FirstName' => $firstName,
+				'LastName' => $lastName,
+				'Address' => '3909 Ambassador Caffery Pkwy',
+				'Address2' => 'Bldg K',
+				'City' => 'Lafayette',
+				'StateID' => '27',
+				'CountryID' => '231',
+				'DepartmentID' => '1522',
+				'LMS' => 'N',
+				'Active' => 'N',
+				'Beta' => 'N',
+				'ShowDemoReporting' => 'N',
+				'PasswordChangedByAdmin' => 'N',
+				'Locale' => 'en-us',
+				'oldUser' => 'N'
+				]);
+
+
+
+			$socialLink = SocialLogins::firstOrCreate(['UserID' => $user->ID,'Provider' => $Provider->ID,'Email' => $user->Login]);
+			
+			Auth::login($user);
+			$Redis = Redis::connection();
+	        Session::put('userId', $user->ID);
+	        Session::put('userID', $user->ID);
+	        Session::put('userName', $user->FirstName.' '.$user->LastName);
+	        Session::put('_id', Session::getId());
+	        $Redis->set('User:' . $user->ID, Session::getId());
+	        $user->LastLoginDate = date("Y-m-d H:i:s");
+	        $user->save();
+ 			
+ 			$logInfo = ['SERVER'=>$_SERVER];
+            $log = new Logger(json_encode($logInfo),6,$user->ID);
+            $log->SaveLog();
+
+	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
+	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
+	        return $response;
 		}
 	}
 	/**
@@ -168,6 +224,8 @@ class SocialLoginController extends Controller {
 			$authInfo = curl_exec($curl);
 			$authJSON = (object)json_decode($authInfo);
 			curl_close($curl);
+
+			
 			if($authJSON->stat == "ok")
 			{
 				//this is completely undry code. yaaaay last minute fixes. 
@@ -227,7 +285,7 @@ class SocialLoginController extends Controller {
 				else
 				{
 					//dd('link or create account. no suggestion');
-					return view('/auth/social',['verifiedEmail' => $authJSON->profile->verifiedEmail,'providerName' => $authJSON->profile->providerName]);
+					return view('/auth/social',['verifiedEmail' => $authJSON->profile->verifiedEmail,'providerName' => $authJSON->profile->providerName, 'auth' => Crypt::encrypt(json_encode($authJSON))]);
 				}
 			}
 			else

@@ -22,8 +22,7 @@
 						<form class="form-horizontal" role="form" method="POST" action="Social/register">
 							<input type="hidden" name="Email" value="{{ $verifiedEmail }}">
 							<input type="hidden" name="ConfirmEmail" value="{{ $verifiedEmail }}">
-							<input type="hidden" name="hasLicense" value="0">
-
+							<input type="hidden" name="auth" value="{{ $auth }}">
 								<button id="registerNewAcct" type="button" class="btn btn-primary btn-lg top-buffer col-centered block col-lg-offset-3 bottom-buffer">
 								  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Register new account
 								</button>
