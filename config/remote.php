@@ -32,7 +32,7 @@ return array(
 			'host'      => 'apexwebtest.com',
 			'username'  => 'bwhite',
 			'password'  => '',
-			'key'       => '/var/www/html/lab/login/keys/ssh-key',
+			'key'       => '/websites/login.apexwebtest.com/keys/ssh-key',
 			'keyphrase' => '',
 			'root'      => '/websites/login.apexwebtest.com/',
 		),
