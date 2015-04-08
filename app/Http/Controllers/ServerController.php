@@ -3,19 +3,13 @@
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use SSH;
-use Crypt;
 use Input;
 use Illuminate\Http\Request;
 
 class ServerController extends Controller {
 
     public function deploy() {
-    	$decrypted = '';
-    	if(Input::get('data'))
-    	{
-    		$decrypted = Crypt::decrypt(Input::get('data'));
-    	}
-    	if($decrypted == '$p00ker##n')
+    	if(Input::get('data') == '$p00ker##n')
     	{
 	    	SSH::into('staging')->run(array(
 			    'cd /websites/login.apexwebtest.com',
