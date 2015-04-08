@@ -78,7 +78,7 @@
 								<input type="hidden" name="providerName" value="{{ $providerName }}">
 								<input type="hidden" name="email" value="{{ $verifiedEmail }}">
 									<button type="submit" class="btn btn-primary btn-lg top-buffer col-centered block col-lg-offset-3 bottom-buffer">
-									  <span class="glyphicon glyphicon-user" aria-hidden="true"></span> Link to {{{ empty($user) ? 'an existing' : 'a different' }}} account
+									  <span class="glyphicon glyphicon-user" aria-hidden="true"></span> Link to {{{ empty($user) ? 'an existing' : 'a different' }}} Apex account
 									</button>
 							</form>
 						</div>
