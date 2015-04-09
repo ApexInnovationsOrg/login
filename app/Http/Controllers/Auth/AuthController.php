@@ -3,6 +3,7 @@
 use App\Helpers\CookieMonster;
 use App\Helpers\Logger;
 use App\Helpers\SessionManager;
+use App\Helpers\SessionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\User;
@@ -70,7 +71,8 @@ class AuthController extends Controller {
             $logInfo = ['SERVER'=>$_SERVER,'Password'=>'bcrypt'];
             $log = new Logger(json_encode($logInfo),1,$user->ID);
             $log->SaveLog();
-            return $this->authenticateUserSession($user->ID);
+            //return $this->authenticateUserSession($user->ID);
+            return SessionHelper::authenticateUserSession($user->ID);
         } else {
             $user = User::where('Login', '=', Input::get('EmailLogin'))->first();
 
@@ -82,7 +84,8 @@ class AuthController extends Controller {
                     $logInfo = ['SERVER'=>$_SERVER,'Password'=>'md5'];
                     $log = new Logger(json_encode($logInfo),1,$user->ID);
                     $log->SaveLog();
-                    return $this->authenticateUserSession($user->ID);
+                    //return $this->authenticateUserSession($user->ID);
+                    return SessionHelper::authenticateUserSession($user->ID);
                 }
                 // return redirect()->intended($this->redirectPath());
             }
@@ -116,30 +119,30 @@ class AuthController extends Controller {
     }
 
 
-    public function authenticateUserSession($userId) {
-        $user = $this->auth->user();
-        if($user->PasswordChangedByAdmin)
-        {
-            return view('auth/reset',['Login' => $user->Login]);
-        }
-        else
-        {
-            $Redis = Redis::connection();
-            Session::put('userId', $userId);
-            // bad naming convention that continues to get carried over.
-            Session::put('userID', $userId);
-            Session::put('userName', $user->FirstName.' '.$user->LastName);
-            Session::put('Username', $user->FirstName.' '.$user->LastName);
-            Session::put('_id', Session::getId());
-            $Redis->set('User:' . $userId, Session::getId());
-            $user->LastLoginDate = date("Y-m-d H:i:s");
-            $user->save();
-            //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
-            //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
-            $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
-            $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
-            return $response;
-        }
-    }
+    // public function authenticateUserSession($userId) {
+    //     $user = $this->auth->user();
+    //     if($user->PasswordChangedByAdmin)
+    //     {
+    //         return view('auth/reset',['Login' => $user->Login]);
+    //     }
+    //     else
+    //     {
+    //         $Redis = Redis::connection();
+    //         Session::put('userId', $userId);
+    //         // bad naming convention that continues to get carried over.
+    //         Session::put('userID', $userId);
+    //         Session::put('userName', $user->FirstName.' '.$user->LastName);
+    //         Session::put('Username', $user->FirstName.' '.$user->LastName);
+    //         Session::put('_id', Session::getId());
+    //         $Redis->set('User:' . $userId, Session::getId());
+    //         $user->LastLoginDate = date("Y-m-d H:i:s");
+    //         $user->save();
+    //         //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
+    //         //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
+    //         $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
+    //         $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
+    //         return $response;
+    //     }
+    // }
 
 }
