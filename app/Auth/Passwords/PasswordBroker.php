@@ -32,6 +32,7 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 	 */
 	public function reset(array $credentials, Closure $callback)
 	{
+
 		// If the responses from the validate method is not a user instance, we will
 		// assume that it is a redirect and simply return it from this method and
 		// the user is properly redirected having an error message on the post.
@@ -48,10 +49,16 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 		// table and return the response from this callback so the user gets sent
 		// to the destination given by the developers from the callback return.
 		call_user_func($callback, $user, $pass);
+		if(isset($credentials['token']))
+		{
+			$this->tokens->delete($credentials['token']);
+			return PasswordBrokerContract::PASSWORD_RESET;
+		}
+		else 
+		{
+			return $this->validateOldPassword($credentials);
+		}
 
-		$this->tokens->delete($credentials['token']);
-
-		return PasswordBrokerContract::PASSWORD_RESET;
 	}
 
 	/**
@@ -72,9 +79,12 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 			return PasswordBrokerContract::INVALID_PASSWORD;
 		}
 
-		if ( ! $this->tokens->exists($user, $credentials['token']))
+		if(isset($credentials['token']))
 		{
-			return PasswordBrokerContract::INVALID_TOKEN;
+			if ( ! $this->tokens->exists($user, $credentials['token']) )
+			{
+				return PasswordBrokerContract::INVALID_TOKEN;
+			}
 		}
 
 		return $user;
@@ -127,6 +137,25 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 		return $this->validatePasswordWithDefaults($credentials);
 	}
 
+	public function validateOldPassword($credentials)
+	{
+		$user = User::where('Login', '=', $credentials['Login'])->first();
+		       
+		        if ($user && Hash::check($credentials['oldPassword'],$user->Password))
+		        { 
+		            return PasswordBrokerContract::PASSWORD_RESET;
+		        } 
+		        else 
+		        {
+		            if($user->Password == md5("6#pR8@" . $credentials['oldPassword'])) 
+		            {
+	                   	return PasswordBrokerContract::PASSWORD_RESET;
+
+		            }
+		        }
+		   
+			return PasswordBrokerContract::INVALID_PASSWORD;
+	}
 	/**
 	 * Get the user for the given credentials.
 	 *

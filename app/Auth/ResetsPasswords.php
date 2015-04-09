@@ -112,35 +112,22 @@ trait ResetsPasswords {
 			$this->validate($request, [
 				'Login' => 'required|email',
 				'oldPassword' => 'required',
-				'Password' => 'required|confirmed|min:6'
+				'Password' => 'required|confirmed|min:6',
 			]);
 
-			$credentials = $request->only('Login','oldPassword', 'Password', 'Password_confirmation');
+			$credentials = $request->only(
+				'Login', 'oldPassword', 'Password', 'Password_confirmation'
+			);
 
-	        $user = User::where('Login', '=', $credentials['Login'])->first();
-	        $passwordSuccess = false;
-	        
-	        if ($user && Hash::check($credentials['oldPassword'],$user->Password))
-	        { 
-	            $passwordSuccess = true;
-	        } 
-	        else 
-	        {
-	            if($user->Password == md5("6#pR8@" . Input::get('oldPassword'))) 
-	            {
-                   	$passwordSuccess = true;
-	            }
-	        }
-
-	        if($passwordSuccess)
-	        {
-	        	$user->Password = bcrypt($credentials['Password']);
+			$response = $this->passwords->reset($credentials, function($user, $password)
+			{
+				$user->Password = bcrypt($password);
+				unset($user->email);
 				$user->PasswordLastChanged = date("Y-m-d H:i:s");
-				$user->PasswordChangedByAdmin = 'N';
-	            $user->save();
+				$user->save();
 
 				return SessionHelper::authenticateUserSession($user->ID);
-	        }
+			});
 		}
 		else 
 		{
