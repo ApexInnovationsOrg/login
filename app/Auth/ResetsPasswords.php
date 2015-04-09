@@ -3,6 +3,7 @@
 use App\User;
 
 use App\Helpers\CookieMonster;
+use App\Helpers\SessionHelper;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\App;
@@ -105,38 +106,66 @@ trait ResetsPasswords {
 	 */
 	public function postReset(Request $request)
 	{
-		
-		$this->validate($request, [
-			'token' => 'required',
-			'Login' => 'required|email',
-			'Password' => 'required|confirmed|min:6',
-		]);
 
-		$credentials = $request->only(
-			'Login', 'Password', 'Password_confirmation', 'token'
-		);
-
-		$response = $this->passwords->reset($credentials, function($user, $password)
+		if(empty(Input::get('token')))
 		{
-			$user->Password = bcrypt($password);
-			unset($user->email);
-			$user->PasswordLastChanged = date("Y-m-d H:i:s");
-			$user->save();
+			$this->validate($request, [
+				'Login' => 'required|email',
+				'oldPassword' => 'required',
+				'Password' => 'required|confirmed|min:6'
+			]);
 
+			$credentials = $request->only('Login','oldPassword', 'Password', 'Password_confirmation');
 
-			Auth::login($user);
-			$Redis = Redis::connection();
-	        Session::put('userId', $user->ID);
-	        Session::put('userID', $user->ID);
-	        Session::put('userName', $user->FirstName.' '.$user->LastName);
-	        Session::put('_id', Session::getId());
-	        $Redis->set('User:' . $user->ID, Session::getId());
+	        $user = User::where('Login', '=', $credentials['Login'])->first();
+	        $passwordSuccess = false;
 	        
-	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
-	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
-	        return $response;
-		});
+	        if ($user && Hash::check($credentials['oldPassword'],$user->Password))
+	        { 
+	            $passwordSuccess = true;
+	        } 
+	        else 
+	        {
+	            if($user->Password == md5("6#pR8@" . Input::get('oldPassword'))) 
+	            {
+                   	$passwordSuccess = true;
+	            }
+	        }
 
+	        if($passwordSuccess)
+	        {
+	        	$user->Password = bcrypt($credentials['Password']);
+				$user->PasswordLastChanged = date("Y-m-d H:i:s");
+				$user->PasswordChangedByAdmin = 'N';
+	            $user->save();
+
+				return SessionHelper::authenticateUserSession($user->ID);
+	        }
+		}
+		else 
+		{
+
+
+			$this->validate($request, [
+				'token' => 'required',
+				'Login' => 'required|email',
+				'Password' => 'required|confirmed|min:6',
+			]);
+
+			$credentials = $request->only(
+				'Login', 'Password', 'Password_confirmation', 'token'
+			);
+
+			$response = $this->passwords->reset($credentials, function($user, $password)
+			{
+				$user->Password = bcrypt($password);
+				unset($user->email);
+				$user->PasswordLastChanged = date("Y-m-d H:i:s");
+				$user->save();
+
+				return SessionHelper::authenticateUserSession($user->ID);
+			});
+		}
 
 
 		

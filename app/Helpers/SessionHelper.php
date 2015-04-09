@@ -195,4 +195,31 @@ class SessionHelper extends BasicObject {
         return $response;
     }
 
+
+    static public function authenticateUserSession($userId) {
+        $user = User::find($userId);
+        if($user->PasswordChangedByAdmin == 'Y')
+        {
+            return view('auth/reset',['Login' => $user->Login]);
+        }
+        else
+        {
+            $Redis = Redis::connection();
+            Session::put('userId', $userId);
+            // bad naming convention that continues to get carried over.
+            Session::put('userID', $userId);
+            Session::put('userName', $user->FirstName.' '.$user->LastName);
+            Session::put('Username', $user->FirstName.' '.$user->LastName);
+            Session::put('_id', Session::getId());
+            $Redis->set('User:' . $userId, Session::getId());
+            $user->LastLoginDate = date("Y-m-d H:i:s");
+            $user->save();
+            //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
+            //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
+            $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
+            $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
+            return $response;
+        }
+    }
+
 }
