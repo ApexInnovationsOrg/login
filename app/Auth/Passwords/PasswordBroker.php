@@ -4,7 +4,7 @@ use Closure;
 use App\User;
 use Illuminate\Contracts\Auth\PasswordBroker as PasswordBrokerContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Passwords\PasswordBroker as BasePasswordBroker;
 
 class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContract
