@@ -66,8 +66,8 @@ class AuthController extends Controller {
         $user = User::where('Login', '=', $credentials['EmailLogin'])->first();
         if ($user && Hash::check($credentials['Password'],$user->Password))
         { 
-            $this->auth->login($user);
-            $user = $this->auth->user();
+            //$this->auth->login($user);
+           // $user = $this->auth->user();
             $logInfo = ['SERVER'=>$_SERVER,'Password'=>'bcrypt'];
             $log = new Logger(json_encode($logInfo),1,$user->ID);
             $log->SaveLog();
@@ -79,8 +79,8 @@ class AuthController extends Controller {
             if(isset($user)) {
                 if($user->Password == md5("6#pR8@" . Input::get('Password'))) { // If their Password is still the MD5 mess
 
-                    $this->auth->login($user);
-                    $user = $this->auth->user();
+                    //$this->auth->login($user);
+                    //$user = $this->auth->user();
                     $logInfo = ['SERVER'=>$_SERVER,'Password'=>'md5'];
                     $log = new Logger(json_encode($logInfo),1,$user->ID);
                     $log->SaveLog();
@@ -116,6 +116,34 @@ class AuthController extends Controller {
         $response = CookieMonster::removeCookieFromResponse($response, 'user-token');
         $response = CookieMonster::removeCookieFromResponse($response, Config::get('session.cookie'));
         return $response;
+    }
+
+    public function authenticateUserSession($userId) {
+        
+        $user = $this->auth->user();
+        
+        if($user->PasswordChangedByAdmin == 'Y')
+        {
+            return view('auth/reset',['Login' => $user->Login]);
+        }
+        else
+        {
+            $Redis = Redis::connection();
+            Session::put('userId', $userId);
+            // bad naming convention that continues to get carried over.
+            Session::put('userID', $userId);
+            Session::put('userName', $user->FirstName.' '.$user->LastName);
+            Session::put('Username', $user->FirstName.' '.$user->LastName);
+            Session::put('_id', Session::getId());
+            $Redis->set('User:' . $userId, Session::getId());
+            $user->LastLoginDate = date("Y-m-d H:i:s");
+            $user->save();
+            //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
+            //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
+            $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
+            $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
+            return $response;
+        }
     }
 
 }
