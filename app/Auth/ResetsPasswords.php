@@ -105,7 +105,7 @@ trait ResetsPasswords {
 	 */
 	public function postReset(Request $request)
 	{
-
+		
 		$this->validate($request, [
 			'token' => 'required',
 			'Login' => 'required|email',
@@ -135,9 +135,10 @@ trait ResetsPasswords {
 	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
 	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 	        return $response;
-
-
 		});
+
+
+
 		
 		switch ($response)
 		{

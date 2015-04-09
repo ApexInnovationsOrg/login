@@ -20,6 +20,8 @@
 
 					<form class="form-horizontal" role="form" method="POST" action="/password/reset">
 						<input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+					@if (isset($token))
 						<input type="hidden" name="token" value="{{ $token }}">
 
 						<div class="form-group">
@@ -28,6 +30,16 @@
 								<input type="email" class="form-control" name="Login" value="{{ old('Login') }}">
 							</div>
 						</div>
+					@else
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Current Password</label>
+							<div class="col-md-6">
+								<input type="password" class="form-control" name="oldPassword" value="{{ old('Password') }}">
+							</div>
+						</div>
+						
+					@endif
 
 						<div class="form-group">
 							<label class="col-md-4 control-label">New Password</label>
