@@ -120,7 +120,7 @@ class AuthController extends Controller {
         $user = $this->auth->user();
         if($user->PasswordChangedByAdmin)
         {
-            return view('reset/password',['Login' => $user->Login]);
+            return view('password/reset',['Login' => $user->Login]);
         }
         else
         {
