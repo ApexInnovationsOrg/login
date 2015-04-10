@@ -54,7 +54,7 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 		{
 			$this->tokens->delete($credentials['token']);
 		}
-		
+
 		return PasswordBrokerContract::PASSWORD_RESET;
 		
 
@@ -68,6 +68,7 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 	 */
 	protected function validateReset(array $credentials)
 	{
+
 		if (is_null($user = $this->getUser($credentials)))
 		{
 			return PasswordBrokerContract::INVALID_USER;
@@ -86,8 +87,8 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 			}
 		}
 		if(isset($credentials['oldPassword']))
-		{
-			if (! Hash::check($credentials['oldPassword'],$user->Password) && ! $user->Password == md5("6#pR8@" . $credentials['oldPassword']))
+		{	
+			if (! (Hash::check($credentials['oldPassword'],$user->Password)) && ! ($user->Password == md5("6#pR8@" . $credentials['oldPassword'])))
 	        { 
 				return PasswordBrokerContract::INVALID_PASSWORD;
 	        }
