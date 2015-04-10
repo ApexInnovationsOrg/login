@@ -66,7 +66,9 @@ class AuthController extends Controller {
         $user = User::where('Login', '=', $credentials['EmailLogin'])->first();
         if ($user && Hash::check($credentials['Password'],$user->Password))
         { 
-            //$this->auth->login($user);
+           
+
+           //  $this->auth->login($user);
            // $user = $this->auth->user();
             $logInfo = ['SERVER'=>$_SERVER,'Password'=>'bcrypt'];
             $log = new Logger(json_encode($logInfo),1,$user->ID);
@@ -79,8 +81,8 @@ class AuthController extends Controller {
             if(isset($user)) {
                 if($user->Password == md5("6#pR8@" . Input::get('Password'))) { // If their Password is still the MD5 mess
 
-                    //$this->auth->login($user);
-                    //$user = $this->auth->user();
+                    // $this->auth->login($user);
+                    // $user = $this->auth->user();
                     $logInfo = ['SERVER'=>$_SERVER,'Password'=>'md5'];
                     $log = new Logger(json_encode($logInfo),1,$user->ID);
                     $log->SaveLog();
@@ -99,7 +101,8 @@ class AuthController extends Controller {
             ->back()
             ->withInput($request->only('EmailLogin', 'remember'))
             ->withErrors([
-                'EmailLogin' => $this->getFailedLoginMesssage(),
+                //'EmailLogin' => $this->getFailedLoginMesssage(),
+                'EmailLogin' => 'These credentials do not match our records.'
             ]);
     }
 
