@@ -108,7 +108,7 @@ class AuthController extends Controller {
 
         return redirect()
             ->back()
-            ->withInput($request->only('EmailLogin', 'remember'))
+            ->withInput($request->only('EmailLogin', 'remember','providerName','email'))
             ->withErrors([
                 //'EmailLogin' => $this->getFailedLoginMesssage(),
                 'EmailLogin' => 'These credentials do not match our records.'
@@ -134,9 +134,7 @@ class AuthController extends Controller {
     {
         $providerName = Crypt::decrypt($providerName);
         $email = Crypt::decrypt($email);
-
         $Provider = Providers::firstOrCreate(['Name' => $providerName]);
-        // dd($Provider);
         $socialLink = SocialLogins::firstOrCreate(
             [
             'UserID' => $user->ID,
