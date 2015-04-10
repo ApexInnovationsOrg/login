@@ -5,8 +5,13 @@ use App\Helpers\Logger;
 use App\Helpers\SessionManager;
 use App\Helpers\SessionHelper;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\User;
+use Crypt;
+
+use App\Providers;
+use App\SocialLogins;
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -67,29 +72,33 @@ class AuthController extends Controller {
         if ($user && Hash::check($credentials['Password'],$user->Password))
         { 
            
-
-           //  $this->auth->login($user);
-           // $user = $this->auth->user();
             $logInfo = ['SERVER'=>$_SERVER,'Password'=>'bcrypt'];
             $log = new Logger(json_encode($logInfo),1,$user->ID);
             $log->SaveLog();
-            //return $this->authenticateUserSession($user->ID);
+            
+            if(Input::get('providerName') != null)
+            {
+                $this->linkSocialMedia(Input::get('providerName'),Input::get('email'),$user); 
+            }          
             return SessionHelper::authenticateUserSession($user->ID);
         } else {
             $user = User::where('Login', '=', Input::get('EmailLogin'))->first();
 
             if(isset($user)) {
-                if($user->Password == md5("6#pR8@" . Input::get('Password'))) { // If their Password is still the MD5 mess
+                if($user->Password == md5("6#pR8@" . Input::get('Password'))) 
+                { // If their Password is still the MD5 mess
 
-                    // $this->auth->login($user);
-                    // $user = $this->auth->user();
+                  
                     $logInfo = ['SERVER'=>$_SERVER,'Password'=>'md5'];
                     $log = new Logger(json_encode($logInfo),1,$user->ID);
                     $log->SaveLog();
-                    //return $this->authenticateUserSession($user->ID);
+                    if(Input::get('providerName') != null)
+                    {
+                         $this->linkSocialMedia(Input::get('providerName'),Input::get('email'),$user); 
+                    }
+
                     return SessionHelper::authenticateUserSession($user->ID);
                 }
-                // return redirect()->intended($this->redirectPath());
             }
         }
         $userID = isset($user) ? $user->ID : 0;
@@ -121,32 +130,18 @@ class AuthController extends Controller {
         return $response;
     }
 
-    public function authenticateUserSession($userId) {
-        
-        $user = $this->auth->user();
-        
-        if($user->PasswordChangedByAdmin == 'Y')
-        {
-            return view('auth/reset',['Login' => $user->Login]);
-        }
-        else
-        {
-            $Redis = Redis::connection();
-            Session::put('userId', $userId);
-            // bad naming convention that continues to get carried over.
-            Session::put('userID', $userId);
-            Session::put('userName', $user->FirstName.' '.$user->LastName);
-            Session::put('Username', $user->FirstName.' '.$user->LastName);
-            Session::put('_id', Session::getId());
-            $Redis->set('User:' . $userId, Session::getId());
-            $user->LastLoginDate = date("Y-m-d H:i:s");
-            $user->save();
-            //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
-            //$response = CookieMonster::addCookieToResponse(redirect()->intended($this->redirectPath()), 'user-token', $userId);
-            $response = CookieMonster::addCookieToResponse(redirect()->intended(CookieMonster::redirectLocation()), 'user-token', $userId);
-            $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
-            return $response;
-        }
-    }
+    public function linkSocialMedia($providerName,$email,$user)
+    {
+        $providerName = Crypt::decrypt($providerName);
+        $email = Crypt::decrypt($email);
 
+        $Provider = Providers::firstOrCreate(['Name' => $providerName]);
+        // dd($Provider);
+        $socialLink = SocialLogins::firstOrCreate(
+            [
+            'UserID' => $user->ID,
+            'Provider' => $Provider->ID,
+            'Email' =>  $email
+            ]);
+    }
 }

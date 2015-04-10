@@ -122,27 +122,13 @@ class SocialLoginController extends Controller {
 				$firstName = $jsonAuth->profile->name->givenName;
 				$lastName = $jsonAuth->profile->name->familyName;
 			}
-			$user = User::firstOrCreate([
-				'Login' => $jsonAuth->profile->email,
-				'Password' => '36903b4db385551b6d114d659dc37d3b',
-				'FirstName' => $firstName,
-				'LastName' => $lastName,
-				'Address' => '3909 Ambassador Caffery Pkwy',
-				'Address2' => 'Bldg K',
-				'City' => 'Lafayette',
-				'StateID' => '27',
-				'CountryID' => '231',
-				'DepartmentID' => '1522',
-				'LMS' => 'N',
-				'Active' => 'Y',
-				'Beta' => 'N',
-				'ShowDemoReporting' => 'N',
-				'PasswordChangedByAdmin' => 'N',
-				'Locale' => 'en-us',
-				'oldUser' => 'N'
-				]);
 
+			$user = User::firstOrNew(['Login' => $jsonAuth->profile->email,'FirstName' => $firstName,'LastName' => $lastName]);
 
+			if(!$user->ID)//this means that the user in fact does NOT exist, and needs to have the info.
+			{
+				$this->setDefaultUserInfo($user);
+			}	
 
 			$socialLink = SocialLogins::firstOrCreate(['UserID' => $user->ID,'Provider' => $Provider->ID,'Email' => $user->Login]);
 			
@@ -164,6 +150,27 @@ class SocialLoginController extends Controller {
 	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
 	        return $response;
 		}
+	}
+
+
+	private function setDefaultUserInfo($user)
+	{
+		$user->Password = bcrypt('36903b4db385551b6d114d659dc37d3');
+		$user->Address = '3909 Ambassador Caffery Pkwy';
+		$user->CreationDate = date("Y-m-d H:i:s");
+		$user->Address2 = 'Bldg K';
+		$user->City = 'Lafayette';
+		$user->StateID = '27';
+		$user->CountryID = '231';
+		$user->DepartmentID = '584';
+		$user->LMS = 'N';
+		$user->Active = 'Y';
+		$user->Beta = 'N';
+		$user->ShowDemoReporting = 'N';
+		$user->PasswordChangedByAdmin = 'N';
+		$user->Locale = 'en-us';
+		$user->oldUser = 'N';
+		$user->save();
 	}
 	/**
 	 * Store a newly created resource in storage.
@@ -303,9 +310,11 @@ class SocialLoginController extends Controller {
 
 	public function linkDifferentAccount()
 	{
+		$emailEncrypted = Crypt::encrypt(Input::get('email'));
+		$providerEncrypted = Crypt::encrypt(Input::get('providerName'));
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
-		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider]);
+		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailEncrypted'=>$emailEncrypted,'providerEncrypted'=>$providerEncrypted]);
 	}
 	public function landing(Request $request)
 	{
@@ -334,7 +343,9 @@ class SocialLoginController extends Controller {
 		$user = User::where('Login', '=', $Login)->first();
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
-
+		$emailEncrypted = Crypt::encrypt(Input::get('email'));
+		$providerEncrypted = Crypt::encrypt(Input::get('providerName'));
+	
 		if(!empty($user))
 		{
 			// return redirect('auth/Social/email','302',array('Request Method' => 'POST'))->withInput(['user' => Crypt::encrypt($user),'email'=>$email,'provider'=>$provider]);
@@ -345,7 +356,8 @@ class SocialLoginController extends Controller {
 		{
 			//dd(['email'=>$email,'provider'=>$provider]);
 			//dd(Input::all());
-			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider])->withErrors(array('User does not exist'));
+
+			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailEncrypted'=>$emailEncrypted,'providerEncrypted'=>$providerEncrypted])->withErrors(array('User does not exist'));
 			//return redirect()->back()->withInput()->withErrors(array('User does not exist'));
 		}
 	}

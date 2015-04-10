@@ -21,7 +21,6 @@
 							<div class="col-md-6 col-md-offset-2">
 								<h4>Email sent to: {{ $verifiedEmail }}</h4>
 							</div>
-
 							<form class="form-horizontal" role="form" method="POST" action="/auth/Social/email">
 								<input type="hidden" name="_token" value="{{ csrf_token() }}">
 								<input type="hidden" name="user" value="{{ $user }}">

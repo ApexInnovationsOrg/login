@@ -165,9 +165,6 @@ trait ResetsPasswords {
 				return redirect(CookieMonster::redirectLocation());
 
 			default:
-				// return view('auth.reset')
-				// 			->withInput($request->only('Login'))
-				// 			->withErrors(['Login' => trans($response)]);
 				return redirect()->back()
 							->withInput($request->only('Login'))
 							->withErrors(['Login' => trans($response)]);
