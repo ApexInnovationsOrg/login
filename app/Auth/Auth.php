@@ -24,6 +24,7 @@ class Auth extends Facade {
     public function login(UserContract $user, $remember = false)
     {
         Log::info('login');
+        $user->id = $user->ID;
         $this->updateSession($user->getAuthIdentifier());
 
         // If the user should be permanently "remembered" by the application we will
