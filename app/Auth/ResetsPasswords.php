@@ -121,13 +121,9 @@ trait ResetsPasswords {
 
 			$response = $this->passwords->reset($credentials, function($user, $password)
 			{
-				$user->Password = bcrypt($password);
-				unset($user->email);
-				$user->PasswordLastChanged = date("Y-m-d H:i:s");
-				$user->save();
-
 				return SessionHelper::authenticateUserSession($user->ID);
 			});
+			
 		}
 		else 
 		{

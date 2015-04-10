@@ -32,7 +32,7 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 	 */
 	public function reset(array $credentials, Closure $callback)
 	{
-
+		
 		// If the responses from the validate method is not a user instance, we will
 		// assume that it is a redirect and simply return it from this method and
 		// the user is properly redirected having an error message on the post.
@@ -40,9 +40,9 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 
 		if ( ! $user instanceof CanResetPasswordContract)
 		{
+
 			return $user;
 		}
-
 		$pass = $credentials['Password'];
 
 		// Once we have called this callback, we will remove this token row from the
@@ -56,7 +56,8 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 		}
 		else 
 		{
-			return $this->validateOldPassword($credentials);
+			// dd($this->validateOldPassword($credentials)); 
+			return $this->validateOldPassword($credentials, $user);
 		}
 
 	}
@@ -137,24 +138,31 @@ class PasswordBroker extends BasePasswordBroker implements PasswordBrokerContrac
 		return $this->validatePasswordWithDefaults($credentials);
 	}
 
-	public function validateOldPassword($credentials)
+	public function validateOldPassword($credentials, $user)
 	{
-		$user = User::where('Login', '=', $credentials['Login'])->first();
-		       
-		        if ($user && Hash::check($credentials['oldPassword'],$user->Password))
-		        { 
-		            return PasswordBrokerContract::PASSWORD_RESET;
-		        } 
-		        else 
-		        {
-		            if($user->Password == md5("6#pR8@" . $credentials['oldPassword'])) 
-		            {
-	                   	return PasswordBrokerContract::PASSWORD_RESET;
-
-		            }
-		        }
-		   
+        if (Hash::check($credentials['oldPassword'],$user->Password))
+        { 
+        	$user->Password = bcrypt($credentials['Password']);
+			$user->PasswordLastChanged = date("Y-m-d H:i:s");
+			$user->PasswordChangedByAdmin = 'N';
+			unset($user->email);
+			$user->save();
+            return PasswordBrokerContract::PASSWORD_RESET;
+        } 
+        else 
+        {	
+            if($user->Password == md5("6#pR8@" . $credentials['oldPassword'])) 
+            {
+	        	$user->Password = bcrypt($credentials['Password']);
+				$user->PasswordLastChanged = date("Y-m-d H:i:s");
+				$user->PasswordChangedByAdmin = 'N';
+				unset($user->email);
+				$user->save();
+               	return PasswordBrokerContract::PASSWORD_RESET;
+            }
 			return PasswordBrokerContract::INVALID_PASSWORD;
+        }
+		   
 	}
 	/**
 	 * Get the user for the given credentials.
