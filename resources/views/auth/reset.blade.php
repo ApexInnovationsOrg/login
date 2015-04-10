@@ -33,7 +33,7 @@
 					@else
 						<input type="hidden" class="form-control" name="Login" value="{{ isset($Login) ? $Login : old('Login') }}">
 						<div class="form-group">
-							<label class="col-md-4 control-label">Current Password</label>
+							<label class="col-md-4 control-label">Old Password</label>
 							<div class="col-md-6">
 								<input type="password" class="form-control" name="oldPassword" value="{{ old('Password') }}">
 							</div>
