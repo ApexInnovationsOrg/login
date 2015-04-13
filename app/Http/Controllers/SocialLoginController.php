@@ -310,8 +310,15 @@ class SocialLoginController extends Controller {
 
 	public function linkDifferentAccount()
 	{
-		$emailName = Input::get('email');
-		$providerName = Input::get('providerName');
+		$emailEncrypted = null;
+		$providerEncrypted = null;
+		
+		if(!empty(Input::get('email')))
+		{
+			$emailEncrypted = Crypt::encrypt(Input::get('email'));
+			$providerEncrypted = Crypt::encrypt(Input::get('providerName'));
+		}
+		
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
 		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName]);
