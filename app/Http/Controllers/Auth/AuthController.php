@@ -78,7 +78,7 @@ class AuthController extends Controller {
             
             if(Input::get('providerName') != null)
             {
-                $this->linkSocialMedia(Input::get('providerName'),Input::get('email'),$user); 
+                $this->linkSocialMedia(Input::get('providerName'),Input::get('emailName'),$user); 
             }          
             return SessionHelper::authenticateUserSession($user->ID);
         } else {
@@ -94,7 +94,7 @@ class AuthController extends Controller {
                     $log->SaveLog();
                     if(Input::get('providerName') != null)
                     {
-                         $this->linkSocialMedia(Input::get('providerName'),Input::get('email'),$user); 
+                         $this->linkSocialMedia(Input::get('providerName'),Input::get('emailName'),$user); 
                     }
 
                     return SessionHelper::authenticateUserSession($user->ID);
@@ -105,18 +105,23 @@ class AuthController extends Controller {
         $logInfo = ['SERVER'=>$_SERVER,'AttemptedLogin'=>$request['EmailLogin']];
         $log = new Logger(json_encode($logInfo),4,$userID);
         $log->SaveLog();
-        $redirectVars = $request->only('EmailLogin', 'remember');
-        $redirectVars['providerEncrypted'] = Input::get('providerName');
-        $redirectVars['emailEncrypted'] = Input::get('email');
+
+ 
+                    
+        // dd($redirectVars);
         return redirect()
             ->back()
-            ->withInput($redirectVars)
+            ->withInput($request->only('EmailLogin', 'remember','emailName','providerName'))
             ->withErrors([
                 //'EmailLogin' => $this->getFailedLoginMesssage(),
                 'EmailLogin' => 'These credentials do not match our records.'
             ]);
     }
 
+    public function reencrypt($decryptedInput)
+    {
+        return Crypt::encrypt($decryptedInput);
+    }
     public function getLogout()
     {
         $Redis = Redis::connection();
@@ -132,10 +137,11 @@ class AuthController extends Controller {
         return $response;
     }
 
-    public function linkSocialMedia($providerName,$email,$user)
+    public function linkSocialMedia($providerNameEncrypted,$emailEncrypted,$user)
     {
-        $providerName = Crypt::decrypt($providerName);
-        $email = Crypt::decrypt($email);
+        $providerName = Crypt::decrypt($providerNameEncrypted);
+        $email = Crypt::decrypt($emailEncrypted);
+        dd($providerName);
         $Provider = Providers::firstOrCreate(['Name' => $providerName]);
         $socialLink = SocialLogins::firstOrCreate(
             [

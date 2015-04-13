@@ -310,11 +310,11 @@ class SocialLoginController extends Controller {
 
 	public function linkDifferentAccount()
 	{
-		$emailEncrypted = Crypt::encrypt(Input::get('email'));
-		$providerEncrypted = Crypt::encrypt(Input::get('providerName'));
+		$emailName = Input::get('email');
+		$providerName = Input::get('providerName');
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
-		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailEncrypted'=>$emailEncrypted,'providerEncrypted'=>$providerEncrypted]);
+		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName]);
 	}
 	public function landing(Request $request)
 	{
@@ -343,8 +343,8 @@ class SocialLoginController extends Controller {
 		$user = User::where('Login', '=', $Login)->first();
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
-		$emailEncrypted = Crypt::encrypt(Input::get('email'));
-		$providerEncrypted = Crypt::encrypt(Input::get('providerName'));
+		$emailName = Input::get('emailName');
+		$providerName = Input::get('providerName');
 	
 		if(!empty($user))
 		{
@@ -357,7 +357,7 @@ class SocialLoginController extends Controller {
 			//dd(['email'=>$email,'provider'=>$provider]);
 			//dd(Input::all());
 
-			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailEncrypted'=>$emailEncrypted,'providerEncrypted'=>$providerEncrypted])->withErrors(array('User does not exist'));
+			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName])->withErrors(array('User does not exist'));
 			//return redirect()->back()->withInput()->withErrors(array('User does not exist'));
 		}
 	}

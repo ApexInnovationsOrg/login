@@ -24,8 +24,8 @@
 								<h3>Know your password?</h3>
 							</div>
 							<input type="hidden" name="_token" value="{{ csrf_token() }}">
-							<input type="hidden" name="email" value="{{ isset($emailEncrypted) ? $emailEncrypted : old('emailEncrypted') }}">
-							<input type="hidden" name="providerName" value="{{ isset($providerEncrypted) ? $providerEncrypted : old('providerEncrypted') }}">
+							<input type="hidden" name="emailName" value="{{ isset($emailName) ? $emailName : old('emailName') }}">
+							<input type="hidden" name="providerName" value="{{ isset($providerName) ? $providerName : old('providerName') }}">
 							<div class="form-group">
 
 								<div class="form-group">
