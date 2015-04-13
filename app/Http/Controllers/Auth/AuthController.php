@@ -105,10 +105,12 @@ class AuthController extends Controller {
         $logInfo = ['SERVER'=>$_SERVER,'AttemptedLogin'=>$request['EmailLogin']];
         $log = new Logger(json_encode($logInfo),4,$userID);
         $log->SaveLog();
-
+        $redirectVars = $request->only('EmailLogin', 'remember');
+        $redirectVars['providerEncrypted'] = Input::get('providerName');
+        $redirectVars['emailEncrypted'] = Input::get('email');
         return redirect()
             ->back()
-            ->withInput($request->only('EmailLogin', 'remember','providerName','email'))
+            ->withInput($redirectVars)
             ->withErrors([
                 //'EmailLogin' => $this->getFailedLoginMesssage(),
                 'EmailLogin' => 'These credentials do not match our records.'
