@@ -57,7 +57,6 @@ class SocialLoginController extends Controller {
 			$socialLink->Provider = $Provider->ID;
 			$socialLink->Email = $decryptedString->email;
 			$socialLink->save();
-			SessionHelper::authenticateUserSession($decryptedString->UserID);
 			return view('auth/linked',['successful'=>true,'provider'=>$decryptedString->provider]);
 		}
 		else
@@ -81,23 +80,12 @@ class SocialLoginController extends Controller {
 			$Provider = Providers::firstOrCreate(['Name' => Input::get('providerName')]);
 			$socialLink = SocialLogins::firstOrCreate(['UserID' => $user->ID,'Provider' => $Provider->ID,'Email' => $user->Login]);
 			
-			Auth::login($user);
-			$Redis = Redis::connection();
-	        Session::put('userId', $user->ID);
-	        Session::put('userID', $user->ID);
-	        Session::put('userName', $user->FirstName.' '.$user->LastName);
-	        Session::put('_id', Session::getId());
-	        $Redis->set('User:' . $user->ID, Session::getId());
-	        $user->LastLoginDate = date("Y-m-d H:i:s");
-	        $user->save();
- 			
+			Auth::login($user); 			
  			$logInfo = ['SERVER'=>$_SERVER];
             $log = new Logger(json_encode($logInfo),5,$user->ID);
             $log->SaveLog();
 
-	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
-	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
-	        return $response;
+            return SessionHelper::authenticateUserSession($user->ID);
 	}
 
 	public function register()
@@ -135,22 +123,13 @@ class SocialLoginController extends Controller {
 			$socialLink = SocialLogins::firstOrCreate(['UserID' => $user->ID,'Provider' => $Provider->ID,'Email' => $user->Login]);
 			
 			Auth::login($user);
-			$Redis = Redis::connection();
-	        Session::put('userId', $user->ID);
-	        Session::put('userID', $user->ID);
-	        Session::put('userName', $user->FirstName.' '.$user->LastName);
-	        Session::put('_id', Session::getId());
-	        $Redis->set('User:' . $user->ID, Session::getId());
-	        $user->LastLoginDate = date("Y-m-d H:i:s");
-	        $user->save();
+
  			
  			$logInfo = ['SERVER'=>$_SERVER];
             $log = new Logger(json_encode($logInfo),6,$user->ID);
             $log->SaveLog();
 
-	        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
-	        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
-	        return $response;
+			return SessionHelper::authenticateUserSession($user->ID);
 		}
 	}
 
@@ -268,22 +247,13 @@ class SocialLoginController extends Controller {
 					if(!empty($socialLink))
 					{
 						Auth::login($user);
-						$Redis = Redis::connection();
-				        Session::put('userId', $user->ID);
-				        Session::put('userID', $user->ID);
-				        Session::put('userName', $user->FirstName.' '.$user->LastName);
-				        Session::put('_id', Session::getId());
-				        $Redis->set('User:' . $user->ID, Session::getId());
-				        $user->LastLoginDate = date("Y-m-d H:i:s");
-				        $user->save();
+
 
 				        $logInfo = ['SERVER'=>$_SERVER];
 			            $log = new Logger(json_encode($logInfo),6,$user->ID);
 			            $log->SaveLog();
 
-				        $response = CookieMonster::addCookieToResponse(redirect(CookieMonster::redirectLocation()), 'user-token', $user->ID);
-				        $response = CookieMonster::addCookieToResponse($response, Config::get('session.cookie'), Session::getId());
-				        return $response;
+				        return SessionHelper::authenticateUserSession($user->ID);
 					}
 					else
 					{
