@@ -195,7 +195,7 @@ class SocialLoginController extends Controller {
 		$userEmail = $user->Login;
 		$datetime = date('Y-m-d H:i:s');
 		$email = Input::get('email');
-		$provider = Input::get('providerName');
+		$provider = Crypt::decrypt(Input::get('providerName'));
 
 		$encrypted = Crypt::encrypt(['UserID' => $user->ID, 'provider' => $provider, 'email' => $email, 'datetime' => $datetime]);
 
