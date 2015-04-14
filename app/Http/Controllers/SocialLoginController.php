@@ -356,9 +356,9 @@ class SocialLoginController extends Controller {
 		$Login = Input::get('Login');
 		$user = User::where('Login', '=', $Login)->first();
 		$email = Input::get('email');
-		$provider = Input::get('providerName');
+		$provider = Input::get('provider');
 		$emailName = Input::get('emailName');
-		$providerName = Input::get('providerName');
+		$providerName = Input::get('provider');
 
 		
 	
@@ -373,8 +373,8 @@ class SocialLoginController extends Controller {
 			//dd(['email'=>$email,'provider'=>$provider]);
 			//dd(Input::all());
 
-			return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName])->withErrors(array('User does not exist'));
-			//return redirect()->back()->withInput()->withErrors(array('User does not exist'));
+			//return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName])->withErrors(array('User does not exist'));
+			return redirect()->back()->withInput()->withErrors(array('User does not exist'));
 		}
 	}
 	/**
