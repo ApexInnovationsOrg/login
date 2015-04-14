@@ -322,7 +322,7 @@ class SocialLoginController extends Controller {
 
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
-		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName]);
+		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailEncrypted,'providerName'=>$providerEncrypted]);
 	}
 	public function landing(Request $request)
 	{
