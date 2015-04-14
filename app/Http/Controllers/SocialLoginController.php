@@ -4,6 +4,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests;
 use App\Helpers\Logger;
 use App\Helpers\CookieMonster;
+use App\Helpers\SessionHelper;
 
 use App\Providers;
 use App\SocialLogins;
@@ -56,6 +57,7 @@ class SocialLoginController extends Controller {
 			$socialLink->Provider = $Provider->ID;
 			$socialLink->Email = $decryptedString->email;
 			$socialLink->save();
+			SessionHelper::authenticateUserSession($decryptedString->UserID);
 			return view('auth/linked',['successful'=>true,'provider'=>$decryptedString->provider]);
 		}
 		else

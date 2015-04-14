@@ -21,9 +21,9 @@
 					@if($successful)
 							<h3>Success!</h3>
 							<h4>Your {{ $provider }} account is now linked with your Apex Innovations account.</h4>
-							<a href="/auth/login">
+							<a href="/">
 								<button type="button" class="btn btn-success btn-lg top-buffer col-lg-6 col-lg-offset-3">
-								  <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Back to login
+								  <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Go to courses
 								</button>
 							</a>
 					@else
