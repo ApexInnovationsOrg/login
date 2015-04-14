@@ -140,8 +140,7 @@ class AuthController extends Controller {
     public function linkSocialMedia($providerNameEncrypted,$emailEncrypted,$user)
     {
         $providerName = Crypt::decrypt($providerNameEncrypted);
-        $email = Crypt::decrypt($emailEncrypted);
-        dd($providerName);
+        $email = Crypt::decrypt($emailEncrypted);        
         $Provider = Providers::firstOrCreate(['Name' => $providerName]);
         $socialLink = SocialLogins::firstOrCreate(
             [
