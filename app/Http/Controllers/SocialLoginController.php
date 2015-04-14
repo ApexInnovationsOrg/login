@@ -313,12 +313,13 @@ class SocialLoginController extends Controller {
 		$emailEncrypted = null;
 		$providerEncrypted = null;
 		
+		//if crypt will encrypt a null string with value. The result is that 'old' array from the redirect->back()->withInput() will by overridden by the encrypted null value.
 		if(!empty(Input::get('email')))
-		{
+		{	
 			$emailEncrypted = Crypt::encrypt(Input::get('email'));
 			$providerEncrypted = Crypt::encrypt(Input::get('providerName'));
 		}
-		
+
 		$email = Input::get('email');
 		$provider = Input::get('providerName');
 		return view('auth/differentLogin',['email'=>$email,'provider'=>$provider,'emailName'=>$emailName,'providerName'=>$providerName]);
@@ -343,8 +344,14 @@ class SocialLoginController extends Controller {
 	{
 		return view('/auth/register5');
 	}
-	public function verifyEmail()
+	public function verifyEmail(Request $request)
 	{
+
+
+  		$this->validate($request, [
+            'email' => 'required|email', 
+            'provider' => 'required',
+        ]);
 
 		$Login = Input::get('Login');
 		$user = User::where('Login', '=', $Login)->first();
@@ -352,6 +359,8 @@ class SocialLoginController extends Controller {
 		$provider = Input::get('providerName');
 		$emailName = Input::get('emailName');
 		$providerName = Input::get('providerName');
+
+		
 	
 		if(!empty($user))
 		{
