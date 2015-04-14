@@ -349,7 +349,7 @@ class SocialLoginController extends Controller {
 
 
   		$this->validate($request, [
-            'email' => 'required|email', 
+            'Login' => 'required|email', 
             'provider' => 'required',
         ]);
 
