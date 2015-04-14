@@ -26,6 +26,8 @@
 							<input type="hidden" name="_token" value="{{ csrf_token() }}">
 							<input type="hidden" name="emailName" value="{{ isset($emailName) ? $emailName : old('emailName') }}">
 							<input type="hidden" name="providerName" value="{{ isset($providerName) ? $providerName : old('providerName') }}">
+							<input type="hidden" name="email" value="{{ isset($email) ? $email : old('email') }}">
+							<input type="hidden" name="provider" value="{{ isset($provider) ? $provider : old('provider') }}">
 							<div class="form-group">
 
 								<div class="form-group">
@@ -59,6 +61,8 @@
 						<input type="hidden" name="_token" value="{{ csrf_token() }}">
 						<input type="hidden" name="email" value="{{ isset($email) ? $email : old('email') }}">
 						<input type="hidden" name="provider" value="{{ isset($provider) ? $provider : old('provider') }}">
+						<input type="hidden" name="emailName" value="{{ isset($emailName) ? $emailName : old('emailName') }}">
+						<input type="hidden" name="providerName" value="{{ isset($providerName) ? $providerName : old('providerName') }}">
 						<div class="form-group">
 							<label class="col-md-4 control-label">E-mail Address</label>
 							<div class="col-md-6">

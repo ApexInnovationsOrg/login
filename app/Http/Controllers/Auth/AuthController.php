@@ -111,7 +111,7 @@ class AuthController extends Controller {
         // dd($redirectVars);
         return redirect()
             ->back()
-            ->withInput($request->only('EmailLogin', 'remember','emailName','providerName'))
+            ->withInput($request->only('EmailLogin', 'remember','emailName','providerName','email','provider'))
             ->withErrors([
                 //'EmailLogin' => $this->getFailedLoginMesssage(),
                 'EmailLogin' => 'These credentials do not match our records.'
