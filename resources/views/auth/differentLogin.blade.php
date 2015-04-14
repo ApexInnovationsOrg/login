@@ -57,8 +57,8 @@
 					</div>
 					<form class="form-horizontal" role="form" method="POST" action="/auth/Social/verifyEmail">
 						<input type="hidden" name="_token" value="{{ csrf_token() }}">
-						<input type="hidden" name="email" value="{{ $email }}">
-						<input type="hidden" name="providerName" value="{{ $provider }}">
+						<input type="hidden" name="email" value="{{ isset($email) ? $email : old('email') }}">
+						<input type="hidden" name="provider" value="{{ isset($provider) ? $provider : old('provider') }}">
 						<div class="form-group">
 							<label class="col-md-4 control-label">E-mail Address</label>
 							<div class="col-md-6">
