@@ -109,7 +109,7 @@ trait ResetsPasswords {
 
 		if(empty(Input::get('token')))
 		{
-			dd($request);
+			$request['Login'] = trim($request['Login']);
 			$this->validate($request, [
 				'Login' => 'required|email',
 				'oldPassword' => 'required',
