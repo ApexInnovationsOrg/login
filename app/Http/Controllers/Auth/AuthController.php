@@ -68,7 +68,7 @@ class AuthController extends Controller {
 
         $credentials = $request->only('EmailLogin', 'Password');
 
-        $user = User::where('Login', '=', trim($credentials['EmailLogin']))->first();
+        $user = User::where('Login', '=', $credentials['EmailLogin'])->first();
         if ($user && Hash::check($credentials['Password'],$user->Password))
         { 
            
