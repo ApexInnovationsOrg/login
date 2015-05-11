@@ -118,7 +118,7 @@ trait ResetsPasswords {
 			$credentials = $request->only(
 				'Login', 'oldPassword', 'Password', 'Password_confirmation'
 			);
-
+			dd($credentials);
 			$response = $this->passwords->reset($credentials, function($user, $password)
 			{
 				$user->Password = bcrypt($password);
