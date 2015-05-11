@@ -109,7 +109,7 @@ trait ResetsPasswords {
 
 		if(empty(Input::get('token')))
 		{
-			$request['Login'] = trim($request['Login']);
+			$request['Login'] = trim($request['Login']); //20150511JK - Need to trim the emails incase there is a space. If there is a space, email will not authenticate.
 			$this->validate($request, [
 				'Login' => 'required|email',
 				'oldPassword' => 'required',
@@ -135,7 +135,7 @@ trait ResetsPasswords {
 		else 
 		{
 
-
+			$request['Login'] = trim($request['Login']); //20150511JK - Need to trim the emails incase there is a space. If there is a space, email will not authenticate.
 			$this->validate($request, [
 				'token' => 'required',
 				'Login' => 'required|email',
