@@ -23,6 +23,7 @@ Route::post('/auth/Social/email','SocialLoginController@sendAuthorizationEmail')
 Route::post('/auth/Social/linkNow','SocialLoginController@linkNow');
 Route::get('/auth/Social/link','SocialLoginController@createLink');
 Route::any('/deploy','ServerController@deploy');
+Route::any('healthcheck.html','LoginController@healthcheck');
 
 //going to be used when we switch the account creation process over to laravel
 //Route::post('/auth/Social/register','SocialLoginController@landing');

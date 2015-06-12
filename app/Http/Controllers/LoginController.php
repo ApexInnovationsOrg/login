@@ -51,9 +51,9 @@ class LoginController extends Controller {
 	 *
 	 * @return Response
 	 */
-	public function store()
+	public function healthcheck()
 	{
-		//
+		return "<marquee>Hello!</marquee>";
 	}
 
 	/**
