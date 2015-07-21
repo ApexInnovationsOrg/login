@@ -47,7 +47,7 @@ class AuthController extends Controller {
 
     public function __construct(Guard $auth, Registrar $registrar)
     {
-        Log::info('AuthController.Init');
+        // Log::info('AuthController.Init');
         $this->auth = $auth;
         $this->registrar = $registrar;
 
