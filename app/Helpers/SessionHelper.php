@@ -205,6 +205,7 @@ class SessionHelper extends BasicObject {
         else
         {
             $Redis = Redis::connection();
+            $oldLastLogin = $user->LastLoginDate;
             Session::put('userId', $userId);
             // bad naming convention that continues to get carried over.
             Session::put('userID', $userId);
@@ -212,6 +213,7 @@ class SessionHelper extends BasicObject {
             Session::put('Username', $user->FirstName.' '.$user->LastName);
             Session::put('_id', Session::getId());
             $Redis->set('User:' . $userId, Session::getId());
+            $user->PreviousLastLoginDate = $oldLastLogin;
             $user->LastLoginDate = date("Y-m-d H:i:s");
             $user->save();
             //Log::info('authenticateUserSession: '.print_r(['session'=>Session::getId()]));
