@@ -10,7 +10,7 @@
 					@if (isset($status))
 						<div class="alert alert-success">
 							<ul>
-								{{ $status }}
+								<li>{{ $status }}</li>
 								<li>The link will expire after 60 minutes!</li>
 							</ul>
 						</div>
