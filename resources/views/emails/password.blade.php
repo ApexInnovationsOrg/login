@@ -16,6 +16,7 @@ a{
 </style>
   <p style="font-size:20px">Hi {{ $user->FirstName . ' '. $user->LastName}},</p>
   <div style="margin:14pt 0 18.75pt 0; font-size:16px">Looks like you forgot your password... No problem! Just click below, and we'll get you on your way :)</div>
+  <div>P.S. - This link expires in 60 minutes!</div>
   <table border="1" cellspacing="0" cellpadding="0" style="background-color:#337ab7;border-style:none none solid none;border-bottom-width:1.5pt;border-bottom-color:#2e6da4; text-align:center;">
     <tbody>
         <tr>

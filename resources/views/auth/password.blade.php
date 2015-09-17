@@ -9,7 +9,10 @@
 				<div class="panel-body">
 					@if (isset($status))
 						<div class="alert alert-success">
-							{{ $status }}
+							<ul>
+								<li>{{ $status }}<li>
+								<li>The link will expire after 60 minutes!</li>
+							</ul>
 						</div>
 					@endif
 					@if (count($errors) > 0)
