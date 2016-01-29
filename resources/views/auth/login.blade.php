@@ -58,7 +58,7 @@
 						
 					</form>
 					<hr/>
-					<div id="janrainEngageEmbed" class="col-md-6 col-centered">
+					<div id="janrainEngageEmbed" class="col-md-6 col-md-offset-3">
 						<!-- janrain content -->
 					</div>
 				</div>
