@@ -37,19 +37,12 @@
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav navbar-right text-uppercase text-center">
 				<li>
+					<a href="{{url('/')}}" style="cursor:pointer;" class=" activeNav">Login</a>
 					<?php
-					//get the domain for the login link
-					if (preg_match("/www/i", $_SERVER['HTTP_HOST']))
-					{
-						$domain = str_replace('www','',$_SERVER['HTTP_HOST']);
-					}
-					else
-					{
-						$domain = '.'. $_SERVER['HTTP_HOST'];
-					}
+
 
 					if (!isset($_SESSION['userID'])) {
-						echo '<a href="https://login' . $domain . '" style="cursor:pointer;" class=" activeNav">Login</a>';
+
 					} else {
 						echo "<a href='https://www.apexinnovations.com/MyCurriculum.php'>My Curriculum</a>";
 					}
