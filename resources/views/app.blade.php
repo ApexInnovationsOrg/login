@@ -28,7 +28,7 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="/">
+			<a class="navbar-brand" href="https://www.apexinnovations.com">
 				<img class="brand-image" src="{{url('/grfx/ApexLogo500.svg')}}" alt="Apex Innovations, Education Healthcare Relies On"/>
 				<img width="45" height="50" class="brand-icon" src="{{url('grfx/starIcon.svg')}}" alt="star icon">
 			</a>
