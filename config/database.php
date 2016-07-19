@@ -115,12 +115,12 @@ return [
 		'cluster' => false,
 
         'default' => [
-            'host'     => 'db1.apexinnovations.com',
+            'host'     => 'db2.apexinnovations.com',
             'port'     => 6379
         ],
 
         'session' => [
-            'host'     => 'db1.apexinnovations.com',
+            'host'     => 'db2.apexinnovations.com',
             'port'     => 6379
         ],
 
