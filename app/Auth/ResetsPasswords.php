@@ -1,6 +1,8 @@
 <?php namespace App\Auth;
 
 use App\User;
+use DB;
+use App\Organization;
 
 use App\Helpers\CookieMonster;
 use App\Helpers\SessionHelper;
@@ -98,6 +100,55 @@ trait ResetsPasswords {
 		return view('auth.reset')->with('token', $token);
 	}
 
+	private function getOrgPasswordRequirements($request)
+	{
+
+
+    	$OrgSearch = DB::select('SELECT Organizations.ID FROM Organizations JOIN Departments ON Departments.OrganizationID = Organizations.ID JOIN Users ON Users.DepartmentID = Departments.ID AND Users.Login = ?',[$request->input('Login')]);
+    	$OrgID = count($OrgSearch) > 0 ? $OrgSearch[0]->ID : 111;
+		$Org = Organization::find($OrgID);
+
+		$requirementString = 'required|confirmed';
+		$requirements = ["PasswordMinLength", "PasswordComplexityNumeric", "PasswordComplexitySpecial", "PasswordComplexityUppercase", "PasswordComplexityLowercase"];
+
+		foreach ($requirements as $requirement) 
+		{
+			switch($requirement)
+			{
+				case "PasswordMinLength":
+					$requirementString .= '|min:' . $Org->PasswordMinLength;
+					break;
+				case "PasswordComplexityNumeric":
+					if($Org->PasswordComplexityNumeric == "Y")
+					{
+						$requirementString .= '|HasNumbers';
+					}
+					break;
+				case "PasswordComplexitySpecial":
+					if($Org->PasswordComplexitySpecial == "Y")
+					{
+						$requirementString .= '|HasNonAlphanumeric';
+					}
+					break;
+				case "PasswordComplexityUppercase":
+					if($Org->PasswordComplexityUppercase == "Y")
+					{
+						$requirementString .= '|HasUppercase';
+					}
+					break;
+				case "PasswordComplexityLowercase":
+					if($Org->PasswordComplexityLowercase == "Y")
+					{
+						$requirementString .= '|HasLowercase';
+					}
+					break;
+			}
+
+		}
+
+		return $requirementString;
+	}
+
 	/**
 	 * Reset the given user's password.
 	 *
@@ -106,14 +157,14 @@ trait ResetsPasswords {
 	 */
 	public function postReset(Request $request)
 	{
-
+		$this->getOrgPasswordRequirements($request);
 		if(empty(Input::get('token')))
 		{
 			$request['Login'] = trim($request['Login']); //20150511JK - Need to trim the emails incase there is a space. If there is a space, email will not authenticate.
 			$this->validate($request, [
 				'Login' => 'required|email',
 				'oldPassword' => 'required',
-				'Password' => 'required|confirmed|min:6',
+				'Password' => $this->getOrgPasswordRequirements($request),
 			]);
 
 			$credentials = $request->only(
@@ -139,7 +190,7 @@ trait ResetsPasswords {
 			$this->validate($request, [
 				'token' => 'required',
 				'Login' => 'required|email',
-				'Password' => 'required|confirmed|min:6',
+				'Password' => $this->getOrgPasswordRequirements($request),
 			]);
 
 			$credentials = $request->only(

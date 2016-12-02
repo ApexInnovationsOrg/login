@@ -131,6 +131,7 @@ return [
 		'Illuminate\Pipeline\PipelineServiceProvider',
 		'Illuminate\Queue\QueueServiceProvider',
 		'Illuminate\Redis\RedisServiceProvider',
+		'Illuminate\Broadcasting\BroadcastServiceProvider',
 		//'Illuminate\Auth\Passwords\PasswordResetServiceProvider',
 		'App\Providers\PasswordResetServiceProvider',
 		'Illuminate\Session\SessionServiceProvider',

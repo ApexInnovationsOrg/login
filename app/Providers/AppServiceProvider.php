@@ -1,6 +1,7 @@
 <?php namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Validator;
 
 class AppServiceProvider extends ServiceProvider {
 
@@ -12,6 +13,21 @@ class AppServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		//
+		Validator::extend('HasNumbers', function($attribute, $value, $parameters, $validator) {
+            return (1 === preg_match('~[0-9]~',$value));
+        });
+		
+		Validator::extend('HasUppercase', function($attribute, $value, $parameters, $validator) {
+            return preg_match('/[A-Z]/',$value);
+        });
+
+        Validator::extend('HasLowercase', function($attribute, $value, $parameters, $validator) {
+            return preg_match('/[a-z]/',$value);
+        });
+
+        Validator::extend('HasNonAlphanumeric', function($attribute, $value, $parameters, $validator) {
+            return !ctype_alnum($value);
+        });
 	}
 
 	/**

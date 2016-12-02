@@ -73,6 +73,10 @@ return [
 	"unique"               => "The :attribute has already been taken.",
 	"url"                  => "The :attribute format is invalid.",
 	"timezone"             => "The :attribute must be a valid zone.",
+	"has_numbers"			=> "The :attribute must contain at least one number.",
+	"has_uppercase"			=> "The :attribute must contain at least one uppercase letter.",
+	"has_lowercase"			=> "The :attribute must contain at least one lowercase letter.",
+	"has_non_alphanumeric"	=> "The :attribute must contain a special non-alphanumeric character, e.g., ?, !, $, #, &",
 
 	/*
 	|--------------------------------------------------------------------------
