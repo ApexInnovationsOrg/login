@@ -54,7 +54,7 @@ return [
 
 		'mysql' => [
 			'driver'    => 'mysql',
-			'host'      => env('DB_HOST', 'db1.apexinnovations.com'),
+			'host'      => env('DB_HOST', 'db2.apexinnovations.com'),
 			'database'  => env('DB_DATABASE', 'ApexProducts'),
 			'username'  => env('DB_USERNAME', 'UserName'),
 			'password'  => env('DB_PASSWORD', 'PassWord'),
