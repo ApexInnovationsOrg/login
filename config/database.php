@@ -115,15 +115,17 @@ return [
 		'cluster' => false,
 
         'default' => [
-            'host'     => 'db2.apexinnovations.com',
-            'port'     => 6379
-        ],
+            'host'     => env('REDIS_HOST'),
+            'port'     => env('REDIS_PORT',6379),
+            'password' => env('REDIS_AUTH')
 
+        ],
         'session' => [
-            'host'     => 'db2.apexinnovations.com',
-            'port'     => 6379
-        ],
+            'host'     => env('REDIS_HOST'),
+            'port'     => env('REDIS_PORT',6379),
+            'password' => env('REDIS_AUTH')
 
+        ],
 	],
 
 ];
