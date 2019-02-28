@@ -2,6 +2,69 @@
 
 @section('content')
 <div class="container-fluid">
+
+		<div id="useChromeModal" class="modal fade" role="dialog">
+		<div class="modal-dialog" style="width: 550px; padding-top: 25vh;">
+		<div class="modal-content" style="padding-left: 0.27em; padding-right: 0.27em;">
+		<div class="modal-body text-center">
+		<div class="text-right">
+		<button type="button" class="close" style="font-size: 1.7em; color: red; opacity: 1;" onclick="$('#useChromeModal').modal('hide');" aria-label="Close">×</button>
+		<br>
+		</div>
+		<h2 style="color: black; font-family: Helvetica, Arial, sans-serif !important;">Please Use Chrome!</h2>
+		<br><br>
+		<img src="/images/chrome_logo.png" alt="Chrome" style="width: 80%; height: 80%; max-width: 180px; max-height: 180px;">
+		<br><br><br>
+		<div style="font-variant: normal; font-size: 1.3em; line-height: 1.2em; font-family: Helvetica, Arial, sans-serif !important;">To best experience our courseware, we highly recommend you use the Chrome browser.</div>
+		<br><br>
+		<a class="btn btn-lg btn-primary" style="color: white; font-family: Helvetica, Arial, sans-serif !important;" href="https://www.google.com/chrome/
+" target="_blank">Download Chrome</a>
+		</div>
+		</div>
+		</div>
+		</div>
+
+		  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E=" crossorigin="anonymous"></script>
+		  <script type="text/javascript">
+		  $(document).ready(function() {
+			  
+			setTimeout(function() {
+				
+				var browser = "Unknown";
+				
+				//Check if browser is IE
+				if (navigator.userAgent.search("MSIE") >= 0) {
+					// insert conditional IE code here
+                browser = "Microsoft Internet Explorer";
+				}
+				//Check if browser is Opera
+				else if (navigator.userAgent.search("OPR") >= 0 || navigator.userAgent.search("Opera") >= 0) {
+					// insert conditional Opera code here
+					 browser = "Opera";
+				}
+				//Check if browser is Chrome
+				else if (navigator.userAgent.search("Chrome") >= 0) {
+					// insert conditional Chrome code here
+					browser = "Google Chrome";
+				}
+				//Check if browser is Firefox 
+				else if (navigator.userAgent.search("Firefox") >= 0) {
+					// insert conditional Firefox Code here
+					browser = "Mozilla Firefox";
+				}
+				//Check if browser is Safari
+				else if (navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0) {
+					// insert conditional Safari code here
+					browser = "Apple Safari";
+				}
+
+				if (browser !== "Google Chrome" && browser !== "Mozilla Firefox") {
+					$("#useChromeModal").modal("show");
+				}
+			}, 300);
+		  });
+		  </script>
+
 	<div class="row">
 		<div class="col-md-8 col-md-offset-2">
 			<div class="panel panel-default">
