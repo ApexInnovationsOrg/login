@@ -58,7 +58,7 @@
 					browser = "Apple Safari";
 				}
 
-				if (browser !== "Google Chrome" && browser !== "Mozilla Firefox") {
+				if (browser !== "Google Chrome") {
 					$("#useChromeModal").modal("show");
 				}
 			}, 300);
