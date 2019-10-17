@@ -4,7 +4,7 @@
 <div class="container-fluid">
 
 		<div id="useChromeModal" class="modal fade" role="dialog">
-		<div class="modal-dialog" style="width: 550px; padding-top: 25vh;">
+		<div class="modal-dialog" style="padding-top: 25vh;">
 		<div class="modal-content" style="padding-left: 0.27em; padding-right: 0.27em;">
 		<div class="modal-body text-center">
 		<div class="text-right">
