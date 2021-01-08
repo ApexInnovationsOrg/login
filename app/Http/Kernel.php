@@ -17,6 +17,7 @@ class Kernel extends HttpKernel {
         'Illuminate\View\Middleware\ShareErrorsFromSession',
         'App\Http\Middleware\SessionManager',
         'App\Http\Middleware\VerifyCsrfToken',
+        'Fideloper\Proxy\TrustProxies',
     ];
 
     /**
