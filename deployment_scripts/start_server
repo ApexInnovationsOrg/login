@@ -12,6 +12,6 @@ echo -e '<Directory "/var/www/html/">\n AllowOverride All \n</Directory>' > /etc
 #because laravel is dumb. 
 chmod 777 -R /var/www/html/storage
 
-sed -i 's/DocumentRoot "/var/www/html"/DocumentRoot "/var/www/html/public"/g' /etc/httpd/conf/httpd.conf
+sed -i 's|DocumentRoot "/var/www/html"|DocumentRoot "/var/www/html/public"|' /etc/httpd/conf/httpd.conf
 
 service httpd start
