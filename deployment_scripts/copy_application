@@ -9,3 +9,5 @@ sudo cp -pr --parents ./* /var/www/html/
 
 
 sudo chmod 777 -R /var/www/html/storage
+sudo chmod 777 -R /var/www/html/cache
+sudo chmod 777 -R /var/www/html/bootstrap
