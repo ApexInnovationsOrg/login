@@ -1,0 +1,6 @@
+#!/bin/bash
+set -ex
+
+if [[ -n  `pgrep httpd` ]]; then
+    service httpd stop
+fi

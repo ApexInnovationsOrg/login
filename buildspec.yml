@@ -1,0 +1,47 @@
+version: 0.2
+env:
+  git-credential-helper: yes
+  parameter-store:
+    ssh_key: id_rsa
+    ssh_pub: id_rsa.pub  
+phases:
+    install:
+      commands:
+        #install dependencies
+        -  PYTHON=python2 amazon-linux-extras enable php7.4 epel
+        -  yum clean metadata 
+        -  yum -y install php php-common php-pear
+        # -  yum -y install php-{cgi,curl,mbstring,gd,mysqlnd,gettext,json,xml,fpm,intl,zip} 
+        -  php -v
+          #Enable xdebug - phpunit uses this for code coverage
+        # -  phpenmod xdebug
+          #Install composer
+        -  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        -  php composer-setup.php ;
+        -  php -r "unlink('composer-setup.php');" ;
+        -  mv composer.phar /usr/local/bin/composer
+
+
+        - mkdir -p ~/.ssh
+        - echo "$ssh_key" > ~/.ssh/id_rsa   
+        - echo "$ssh_pub" > ~/.ssh/id_rsa.pub
+        - chmod 600 ~/.ssh/id_rsa
+        - eval "$(ssh-agent -s)"
+
+    build:
+      commands:
+        - echo Build started on `date`
+        - echo Installing composer deps
+        - composer install --ignore-platform-reqs --no-suggest
+    post_build:
+      commands:
+        - echo Build completed on `date`
+        # Do you need to do this? In many cases phpunit will use sqllite or similar to avoid the need for a real DB.
+        # If you don't need it delete it
+        # - /usr/bin/mysql  -u root -e "GRANT ALL ON *.* TO 'test'@'localhost' IDENTIFIED BY '' WITH GRANT OPTION"
+        # - mysqladmin -u test create test
+        # - ./vendor/bin/phpunit      
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: no
