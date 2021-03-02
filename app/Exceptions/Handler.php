@@ -28,22 +28,22 @@ class Handler extends ExceptionHandler {
 	{
 		$caller = $_SERVER['SCRIPT_NAME'];
 		$backtrace = '';
-		foreach(debug_backtrace() as $key => $val){
-			if($val['function'] == 'include' || $val['function'] == 'include_once' || $val['function'] == 'require_once' || $val['function'] == 'require'){
-				$backtrace .= '#' . $key . ' ' . $val['function'] . '(' . $val['args'][0] . ') called at [' . $val['file'] . ':' . $val['line'] . ']<br />';
-			}else{
-				$backtrace .= '#' . $key . ' ' . $val['function'] . '() called at [' . $val['file'] . ':' . $val['line'] . ']<br />';
-			}
-		}
+		// foreach(debug_backtrace() as $key => $val){
+		// 	if($val['function'] == 'include' || $val['function'] == 'include_once' || $val['function'] == 'require_once' || $val['function'] == 'require'){
+		// 		$backtrace .= '#' . $key . ' ' . $val['function'] . '(' . $val['args'][0] . ') called at [' . $val['file'] . ':' . $val['line'] . ']<br />';
+		// 	}else{
+		// 		$backtrace .= '#' . $key . ' ' . $val['function'] . '() called at [' . $val['file'] . ':' . $val['line'] . ']<br />';
+		// 	}
+		// }
 		
 		$get = $post = $session = '';
-		foreach ($_GET as $key => $value) $get .= output_keyvalues($key, $value);
-		foreach ($_POST as $key => $value) $post .= output_keyvalues($key, $value);
-		foreach (Session::all() as $key => $value){
+		// foreach ($_GET as $key => $value) $get .= output_keyvalues($key, $value);
+		// foreach ($_POST as $key => $value) $post .= output_keyvalues($key, $value);
+		// foreach (Session::all() as $key => $value){
 
-				$session .= $key . ': ' . print_r($value,1) . ',' . PHP_EOL;
+		// 		$session .= $key . ': ' . print_r($value,1) . ',' . PHP_EOL;
 
-		}
+		// }
 
 		if ($get != '') $get = substr($get, 0, -5);
 		if ($post != '') $post = substr($post, 0, -5);
