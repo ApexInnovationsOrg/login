@@ -27,7 +27,7 @@ a{
             </td>
             <td style="padding:0 17.25pt 1.5pt 18pt;border-style:none;">
                 <div align="center" style="text-align:center;margin:10px;">
-                    <font face="Times New Roman,serif" size="3"><span style="font-size:12pt;"><a ses:no-track href={{ url('password/reset/'.$token) }} target="_blank" style="text-decoration:none; color:#ffffff"><font face="Segoe UI,sans-serif" size="4"><span style="font-size:13.5pt;"><font size="4" color="white"><span style="font-size:15pt;" style="color:#ffffff !important">Reset
+                    <font face="Times New Roman,serif" size="3"><span style="font-size:12pt;"><a href={{ url('password/reset/'.$token) }} target="_blank" style="text-decoration:none; color:#ffffff"><font face="Segoe UI,sans-serif" size="4"><span style="font-size:13.5pt;"><font size="4" color="white"><span style="font-size:15pt;" style="color:#ffffff !important">Reset
 your password&nbsp;&nbsp;></span></font>
                     </span>
                     </font>
