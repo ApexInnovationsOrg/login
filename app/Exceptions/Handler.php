@@ -53,9 +53,9 @@ class Handler extends ExceptionHandler {
 						' [' . $e->getFile() . ':' . $e->getLine() . ']';
 		        // emails.exception is the template of your email
 		        // it will have access to the $error that we are passing below
-		        Mail::send('emails.exception', ['caller'=>$_SERVER['SCRIPT_NAME'],'backtrace'=>$backtrace,'post' => $post, 'get' => $get,'session'=>$session, 'error' => $error ], function ($m) {
-		            $m->to('developers@apexinnovations.com', 'Apex Developers')->subject('Login system error');
-		        });
+		        // Mail::send('emails.exception', ['caller'=>$_SERVER['SCRIPT_NAME'],'backtrace'=>$backtrace,'post' => $post, 'get' => $get,'session'=>$session, 'error' => $error ], function ($m) {
+		        //     $m->to('developers@apexinnovations.com', 'Apex Developers')->subject('Login system error');
+		        // });
 		    }
 
 		    return parent::report($e);
