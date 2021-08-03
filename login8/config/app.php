@@ -157,19 +157,19 @@ return [
         Illuminate\Queue\QueueServiceProvider::class,
         Illuminate\Redis\RedisServiceProvider::class,
         // Illuminate\Auth\Passwords\PasswordResetServiceProvider::class,
-        App\Auth\Passwords\ApexPasswordResetServiceProvider::class,
         Illuminate\Session\SessionServiceProvider::class,
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-
+        
         /*
-         * Package Service Providers...
-         */
-
+        * Package Service Providers...
+        */
+        
         /*
-         * Application Service Providers...
-         */
+        * Application Service Providers...
+        */
+        App\Providers\ApexPasswordResetServiceProvider::class,
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,

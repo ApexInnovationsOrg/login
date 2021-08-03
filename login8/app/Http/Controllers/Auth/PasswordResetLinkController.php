@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Mockery\Generator\StringManipulation\Pass\Pass;
 
 class PasswordResetLinkController extends Controller
 {

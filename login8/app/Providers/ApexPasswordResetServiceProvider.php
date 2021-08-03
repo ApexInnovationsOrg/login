@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Auth\Passwords;
+namespace App\Providers;
 
 use Illuminate\Auth\Passwords\PasswordResetServiceProvider;
+use App\Auth\Passwords\ApexPasswordBrokerManager;
 
 class ApexPasswordResetServiceProvider extends PasswordResetServiceProvider
 {
