@@ -8,13 +8,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
+use App\Rules\HasNumbers;
+use App\Rules\HasLowercase;
+use App\Rules\HasUppercase;
+use App\Rules\HasNonAlphanumeric;
+
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
     
     public $timestamps = false;
-
+    protected $primaryKey = 'ID';
     protected $table = 'Users';
     /**
      * The attributes that are mass assignable.
@@ -60,7 +65,18 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    protected $primaryKey = 'ID';
+
+
+
+    public function id()
+    {
+        return $this->ID;
+    }
+
+    public function userId()
+    {
+        return $this->ID;
+    }
 
     public function getEmailForPasswordReset()
     {
@@ -69,7 +85,7 @@ class User extends Authenticatable
 
     public function getAuthIdentifier()
     {
-        return $this->Login;
+        return $this->ID;
     }
 
     public function getAuthPassword()
@@ -84,5 +100,55 @@ class User extends Authenticatable
             'email' => $this->getEmailForPasswordReset(),
         ], false));
         Mail::to($this->Login)->send(new ResetPassword($url,$this));
+    }
+    public function department()
+    {
+        return $this->hasOne(Department::class,'ID','DepartmentID');
+    }
+
+    public function getPasswordRequirements()
+    {
+		$Org = $this->department->org;
+
+		
+		$requirementTypes = ["PasswordMinLength", "PasswordComplexityNumeric", "PasswordComplexitySpecial", "PasswordComplexityUppercase", "PasswordComplexityLowercase"];
+        $requirements = ['required','confirmed'];
+
+		foreach ($requirementTypes as $requirement) 
+		{
+			switch($requirement)
+			{
+				case "PasswordMinLength":
+					$requirements[] = 'min:' . $Org->PasswordMinLength;
+					break;
+				case "PasswordComplexityNumeric":
+					if($Org->PasswordComplexityNumeric == "Y")
+					{
+						$requirements[] = new HasNumbers;
+					}
+					break;
+				case "PasswordComplexitySpecial":
+					if($Org->PasswordComplexitySpecial == "Y")
+					{
+						$requirements[] = new HasNonAlphanumeric;
+					}
+					break;
+				case "PasswordComplexityUppercase":
+					if($Org->PasswordComplexityUppercase == "Y")
+					{
+						$requirements[] = new HasUppercase;
+					}
+					break;
+				case "PasswordComplexityLowercase":
+					if($Org->PasswordComplexityLowercase == "Y")
+					{
+						$requirements[] = new HasLowercase;
+					}
+					break;
+			}
+
+		}
+
+		return $requirements;
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AdminPasswordReset;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -62,3 +63,11 @@ Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store']
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
                 ->middleware('auth')
                 ->name('logout');
+
+Route::get('/reset-made-password',[AdminPasswordReset::class,'show'])
+                ->middleware('auth:web')
+                ->name('adminPasswordReset');
+
+Route::post('/reset-made-password',[AdminPasswordReset::class,'store'])
+                ->middleware('auth')
+                ->name('adminPasswordReset.store');
