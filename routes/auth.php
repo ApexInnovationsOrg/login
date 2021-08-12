@@ -9,7 +9,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
-use App\Http\Controllers\Auth\SamlAuthenticator;
+use App\Http\Controllers\Auth\FinishUserCreation;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/register', [RegisteredUserController::class, 'create'])
@@ -72,3 +72,11 @@ Route::get('/reset-made-password',[AdminPasswordReset::class,'show'])
 Route::post('/reset-made-password',[AdminPasswordReset::class,'store'])
                 ->middleware('auth')
                 ->name('adminPasswordReset.store');
+
+Route::get('/finishAccountCreation',[FinishUserCreation::class,'show'])
+                ->middleware('unfinishedUser')
+                ->name('unfinishedUser');
+
+Route::get('/finishUser',[FinishUserCreation::class,'store'])
+                ->middleware('unfinishedUser')
+                ->name('finishUser');

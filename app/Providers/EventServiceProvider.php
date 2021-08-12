@@ -55,7 +55,7 @@ class EventServiceProvider extends ServiceProvider
                     $laravelUser->City = "Houston";
                     $laravelUser->StateID = 66;
                     $laravelUser->CredentialID = 4;
-                    $laravelUser->DepartmentID = 15783;
+                    // $laravelUser->DepartmentID = 15783;
                     $laravelUser->CreationDate = Carbon::now();
                     $laravelUser->Active = 'Y';
                     $laravelUser->Disabled = 'N';
@@ -72,7 +72,7 @@ class EventServiceProvider extends ServiceProvider
                 $laravelUser = ApexUser::where('Login',$userData['id'])->first();
             }
             
-            
+
             Session::put('userId',$laravelUser->ID);
             Session::put('userID',$laravelUser->ID);
             Session::put('userName',$laravelUser->FirstName . ' ' . $laravelUser->LastName);

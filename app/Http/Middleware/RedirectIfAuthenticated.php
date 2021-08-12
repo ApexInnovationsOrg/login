@@ -22,6 +22,11 @@ class RedirectIfAuthenticated
         $guards = empty($guards) ? [null] : $guards;
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                if(Auth::user()->DepartmentID === null)//saml user that needs to get setup. 
+                {
+                    return redirect('/finishUserSetup');
+                }
+
                 return redirect(RouteServiceProvider::HOME);
             }
         }

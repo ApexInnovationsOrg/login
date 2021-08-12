@@ -32,7 +32,6 @@
                 Log in
             </breeze-button>
         </div>
-        <a href="/saml2/APEX/login">Login</a>
     </form>
 </template>
 
