@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Debug" type="PhpWebAppRunConfigurationType" factoryName="PHP Web Application" singleton="true" server_name="Local HTTPD" start_url="/apexlogin/public/">
-    <RunnerSettings RunnerId="PhpRunner" />
-    <RunnerSettings RunnerId="PhpWebAppDebugRunner" />
-    <ConfigurationWrapper RunnerId="PhpRunner" />
-    <ConfigurationWrapper RunnerId="PhpWebAppDebugRunner" />
-    <method />
-  </configuration>
-</component>

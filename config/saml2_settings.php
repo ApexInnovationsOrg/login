@@ -31,7 +31,7 @@ return $settings = array(
      * which middleware group to use for the saml routes
      * Laravel 5.2 will need a group which includes StartSession
      */
-    'routesMiddleware' => [],
+    'routesMiddleware' => ['saml'],
 
     /**
      * Indicates how the parameters will be
@@ -58,7 +58,7 @@ return $settings = array(
     // e.g X-Forwarded-Proto / HTTP_X_FORWARDED_PROTO. This is useful if
     // your application is running behind a load balancer which terminates
     // SSL.
-    'proxyVars' => true,
+    'proxyVars' => false,
 
     /**
      * (Optional) Which class implements the route functions.
