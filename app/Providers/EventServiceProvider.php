@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Event;
 use Aacotroneo\Saml2\Events\Saml2LoginEvent;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User as ApexUser;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Auth\Events\Login as LoginEvent;
 use Illuminate\Support\Str;
@@ -36,7 +37,7 @@ class EventServiceProvider extends ServiceProvider
         Event::listen('Aacotroneo\Saml2\Events\Saml2LoginEvent', function (Saml2LoginEvent $event) {
             $messageId = $event->getSaml2Auth()->getLastMessageId();
             // Add your own code preventing reuse of a $messageId to stop replay attacks
-        
+            // dd($event);
             $user = $event->getSaml2User();
             $userData = [
                 'id' => $user->getUserId(),
@@ -44,17 +45,48 @@ class EventServiceProvider extends ServiceProvider
                 'assertion' => $user->getRawSamlAssertion()
             ];
 
-            $laravelUser = ApexUser::where('Login',$userData['id'])->first();
-            // dd($laravelUser);
+            if($event->getSaml2Idp() == "MDA")
+            {
+                $laravelUser = ApexUser::firstOrNew(['Login',$userData['id']])->firstOrCreate();
+                if($laravelUser->ID > 0)
+                {
+
+                    $laravelUser->Address = "1515 Holcombe Blvd";
+                    $laravelUser->City = "Houston";
+                    $laravelUser->StateID = 66;
+                    $laravelUser->CredentialID = 4;
+                    $laravelUser->DepartmentID = 15783;
+                    $laravelUser->CreationDate = Carbon::now();
+                    $laravelUser->Active = 'Y';
+                    $laravelUser->Disabled = 'N';
+                    $laravelUser->PasswordChangedByAdmin = 'N';
+                    $laravelUser->Locale = 'en-us';
+                    $laravelUser->save();   
+                }
+                
+            }
+
+            if($event->getSaml2Idp() == "APEX")
+            {
+
+                $laravelUser = ApexUser::where('Login',$userData['id'])->first();
+            }
+            
+            
             Session::put('userId',$laravelUser->ID);
             Session::put('userID',$laravelUser->ID);
             Session::put('userName',$laravelUser->FirstName . ' ' . $laravelUser->LastName);
             Session::put('Username',$laravelUser->FirstName . ' ' . $laravelUser->LastName);
             //if it does not exist create it and go on  or show an error message
             // event(new LoginEvent(SessionGuard::class, $laravelUser, false));
-            error_log('saml login hit');
+            $laravelUser->LastLoginDate = Carbon::now();
             Auth::login($laravelUser);
             
+        });
+
+        Event::listen('Aacotroneo\Saml2\Events\Saml2LogoutEvent', function ($event) {
+            Auth::logout();
+            Session::save();
         });
     }
 }
