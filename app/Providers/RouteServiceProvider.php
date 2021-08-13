@@ -17,7 +17,8 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = 'https://www.apexinnovations.com/MyCurriculum.php';
+    public const HOME = '/dashboard';
+    // public const HOME = 'https://www.apexinnovations.com/MyCurriculum.php';
 
     /**
      * The controller namespace for the application.
