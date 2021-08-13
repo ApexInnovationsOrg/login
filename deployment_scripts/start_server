@@ -1,0 +1,17 @@
+#!/bin/bash
+set -ex
+#adding all the environment variables needed
+
+aws ssm get-parameters --with-decryption --region us-east-1 --names loginEnv --output text --query "Parameters[*].Value" > /var/www/html/.env
+
+
+#altering the apache config for login website
+echo -e '<Files .env>\n    Order allow,deny\n    Deny from all\n</Files>' > /etc/httpd/conf.d/envDisable.conf
+echo -e '<Directory "/var/www/html/">\n AllowOverride All \n</Directory>' > /etc/httpd/conf.d/login.conf
+
+#because laravel is dumb. 
+chmod 777 -R /var/www/html/storage
+
+sed -i 's|DocumentRoot "/var/www/html"|DocumentRoot "/var/www/html/public"|' /etc/httpd/conf/httpd.conf
+
+service httpd start
