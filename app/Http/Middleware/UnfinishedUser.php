@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use App\Providers\RouteServiceProvider;
+use Illuminate\Support\Facades\Auth;
 
 class UnfinishedUser
 {
@@ -17,11 +18,20 @@ class UnfinishedUser
      */
     public function handle(Request $request, Closure $next)
     {
-        if(auth()->user()->DepartmentID == null || auth()->user()->CredentialID == null)
-        {
-            return $next($request);
+        if(Auth::check())
+        {   
+            if(auth()->user()->DepartmentID == null || auth()->user()->CredentialID == null)
+            {
+                return $next($request);
+            }
+            else
+            {
+                return redirect(RouteServiceProvider::HOME);
+            }
         }
-
-        return redirect(RouteServiceProvider::HOME);
+        else
+        {
+            return redirect('/login');
+        }
     }
 }

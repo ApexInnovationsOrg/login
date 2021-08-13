@@ -26,6 +26,9 @@
         "vue-loader": "^16.1.2"
     },
     "dependencies": {
-        "@popperjs/core": "^2.9.2"
+        "@popperjs/core": "^2.9.2",
+        "moment": "^2.29.1",
+        "primeicons": "^4.1.0",
+        "primevue": "^3.6.0"
     }
 }

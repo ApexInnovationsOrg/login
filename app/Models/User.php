@@ -44,7 +44,14 @@ class User extends Authenticatable
       'ShowDemoReporting', 
       'PasswordChangedByAdmin', 
       'Locale', 
-      'oldUser'];
+      'oldUser',
+      'StateOfLicensureID',
+      'StateLicenseNumber',
+      'StateLicenseExpirationDate',
+      'NEMSID',
+      'NREMTCertificationNumber',
+      'NREMTReregistrationDate',
+      'CredentialLicenseTypeID'];
 
     /**
      * The attributes that should be hidden for arrays.

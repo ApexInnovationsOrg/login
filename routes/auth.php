@@ -64,6 +64,13 @@ Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store']
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
                 ->middleware('auth')
                 ->name('logout');
+Route::post('/auth/logout', [AuthenticatedSessionController::class, 'destroy']) //keeping the same stuff from the old site
+    ->middleware('auth')
+    ->name('logout'); 
+                
+Route::get('/auth/logout', [AuthenticatedSessionController::class, 'destroy']) //keeping the same stuff from the old site
+                ->middleware('auth')
+                ->name('logout');                
 
 Route::get('/reset-made-password',[AdminPasswordReset::class,'show'])
                 ->middleware('auth:web')
@@ -77,6 +84,6 @@ Route::get('/finishAccountCreation',[FinishUserCreation::class,'show'])
                 ->middleware('unfinishedUser')
                 ->name('unfinishedUser');
 
-Route::get('/finishUser',[FinishUserCreation::class,'store'])
-                ->middleware('unfinishedUser')
+Route::post('/finishUser',[FinishUserCreation::class,'store'])
+                ->middleware(['auth','unfinishedUser'])
                 ->name('finishUser');

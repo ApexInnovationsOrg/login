@@ -54,13 +54,15 @@ class EventServiceProvider extends ServiceProvider
                     $laravelUser->Address = "1515 Holcombe Blvd";
                     $laravelUser->City = "Houston";
                     $laravelUser->StateID = 66;
-                    $laravelUser->CredentialID = 4;
-                    // $laravelUser->DepartmentID = 15783;
+                    $laravelUser->CredentialID = 0;
+                    Session::put('Organization',933);
                     $laravelUser->CreationDate = Carbon::now();
                     $laravelUser->Active = 'Y';
                     $laravelUser->Disabled = 'N';
                     $laravelUser->PasswordChangedByAdmin = 'N';
+                    $laravelUser->LMS = 'N';
                     $laravelUser->Locale = 'en-us';
+                    
                     $laravelUser->save();   
                 }
                 
@@ -70,6 +72,7 @@ class EventServiceProvider extends ServiceProvider
             {
 
                 $laravelUser = ApexUser::where('Login',$userData['id'])->first();
+                Session::put('Organization',933);
             }
             
 
