@@ -15,7 +15,7 @@
 			<div class="w-full lg:flex lg:items-center lg:w-auto mr-5" :class="{ 'block' : showMenu , 'hidden' : !showMenu}">
 				<div class="text-md font-semibold lg:flex-grow lg:flex lg:items-center">					
 					
-					<inertia-link href="/mycurriculum" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5" v-if="showMyCurriculum">
+					<inertia-link href="https://www.apexinnovations.com/MyCurriculum.php" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5" v-if="showMyCurriculum">
 						MY CURRICULUM
 					</inertia-link>
 					
@@ -27,7 +27,7 @@
 							<inertia-link href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								LOGIN
 							</inertia-link>
-							<inertia-link href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/CreateAccountLanding.php" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								CREATE ACCOUNT
 							</inertia-link>
 						</div>
@@ -39,31 +39,31 @@
 							EDUCATION <span class="caret" :class="{'rotate': dropdownPopoverEducationShow}"></span>
 						</button>
 						<div v-bind:class="{'hidden': !dropdownPopoverEducationShow, 'block': dropdownPopoverEducationShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownEducationRef">							
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								ALL PRODUCTS
 							</inertia-link>
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html#cardiac"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								CARDIAC COURSEWARE
 							</inertia-link>
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html#sepsis"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								SEPSIS COURSEWARE
 							</inertia-link>
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html#neuro"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								NEURO COURSEWARE
 							</inertia-link>
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html#free"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								FREE COURSEWARE
 							</inertia-link>
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html#mirule"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								MI RULE VISIONS
 							</inertia-link>
-							<inertia-link href="/products"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/products.html#bundles"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								COURSEWARE BUNDLES
 							</inertia-link>
 						</div>
 					</div>
 					
-					<inertia-link href="/objectivityplus" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5">
+					<inertia-link href="https://www.apexinnovations.com/op.html" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5">
 						COMPETENCY VALIDATION
 					</inertia-link>
 					
@@ -72,16 +72,16 @@
 							ABOUT <span class="caret" :class="{'rotate': dropdownPopoverAboutShow}"></span>
 						</button>
 						<div v-bind:class="{'hidden': !dropdownPopoverAboutShow, 'block': dropdownPopoverAboutShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAboutRef">
-							<inertia-link href="/careers" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/careers.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								CAREERS
 							</inertia-link>
-							<inertia-link href="/contactus" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/contactUs.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								CONTACT US
 							</inertia-link>
-							<inertia-link href="/news" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/news.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								NEWS
 							</inertia-link>
-							<inertia-link href="/team" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+							<inertia-link href="https://www.apexinnovations.com/team.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								TEAM
 							</inertia-link>
 						</div>
