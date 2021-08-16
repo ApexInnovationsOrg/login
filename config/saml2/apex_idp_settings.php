@@ -55,7 +55,7 @@ return $settings = array(
             // URL Location where the <Response> from the IdP will be returned,
             // using HTTP-Redirect binding.
             // Leave blank to use the '{idpName}_sls' route, e.g. 'test_sls'
-            'url' => '',
+            'url' => '', 
         ),
     ),
 

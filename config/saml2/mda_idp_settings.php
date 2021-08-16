@@ -8,7 +8,7 @@ $this_idp_env_id = 'MDA';
 // For real IdP, you must set the url values in the 'idp' config to conform to the IdP's real urls.
 $idp_host = env('SAML2_'.$this_idp_env_id.'_IDP_HOST', 'http://localhost:8000/simplesaml');
 
-return $settings = array(
+return $settings = array( 
 
     /*****
      * One Login Settings
