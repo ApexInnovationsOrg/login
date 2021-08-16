@@ -75,7 +75,7 @@ class EventServiceProvider extends ServiceProvider
                 Session::put('Organization',933);
             }
             
-
+            Session::put('SAML',true);
             Session::put('userId',$laravelUser->ID);
             Session::put('userID',$laravelUser->ID);
             Session::put('userName',$laravelUser->FirstName . ' ' . $laravelUser->LastName);

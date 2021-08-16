@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
 use App\Http\Controllers\Auth\AdminPasswordReset;
+use Illuminate\Support\Facades\Session;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -25,7 +27,13 @@ Route::get('/', [AuthenticatedSessionController::class, 'create'])
 
 Route::get('/dashboard', function () {
     $url = 'https://www.apexinnovations.com/MyCurriculum.php';
+    
+    if(Session::has('SAML')) //SAML only likes 302s. You can't do external 302s with Inertia....sooo you get both. 
+    {
+        return redirect()->away($url);
+    }
     return Inertia::location($url);
+    
 })->middleware(['auth'])->name('dashboard');
 
 
