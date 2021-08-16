@@ -22,18 +22,10 @@ use App\Http\Controllers\Auth\AdminPasswordReset;
 Route::get('/', [AuthenticatedSessionController::class, 'create'])
                 ->middleware('guest')
                 ->name('login');
-Route::get('/test',function(){
-    $testUser = User::find(152002);
-    // dd(get_class(Auth::getFacadeRoot()));
-    // Auth::loginUsingId(152002);
-    dd($testUser->getPasswordRequirements());
-    // dd(Auth::user());
-    // return redirect('/dashboard');
-    // dd(Redis::get("laravel:70b844450735dbe01e48632780253fb7"));
-});
+
 Route::get('/dashboard', function () {
-    // dd('dashboard');
-    return Inertia::render('Dashboard');
+    $url = 'https://www.apexinnovations.com/MyCurriculum.php';
+    return Inertia::location($url);
 })->middleware(['auth'])->name('dashboard');
 
 
