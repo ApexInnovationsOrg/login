@@ -10,6 +10,7 @@ use Aacotroneo\Saml2\Events\Saml2LoginEvent;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User as ApexUser;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Auth\Events\Login as LoginEvent;
 use Illuminate\Support\Str;
@@ -37,35 +38,37 @@ class EventServiceProvider extends ServiceProvider
         Event::listen('Aacotroneo\Saml2\Events\Saml2LoginEvent', function (Saml2LoginEvent $event) {
             $messageId = $event->getSaml2Auth()->getLastMessageId();
             // Add your own code preventing reuse of a $messageId to stop replay attacks
-            // dd($event);
             $user = $event->getSaml2User();
             $userData = [
                 'id' => $user->getUserId(),
                 'attributes' => $user->getAttributes(),
                 'assertion' => $user->getRawSamlAssertion()
             ];
-
             if($event->getSaml2Idp() == "MDA")
             {
-                $laravelUser = ApexUser::firstOrNew(['Login',$userData['id']])->firstOrCreate();
-                if($laravelUser->ID > 0)
-                {
-
-                    $laravelUser->Address = "1515 Holcombe Blvd";
-                    $laravelUser->City = "Houston";
-                    $laravelUser->StateID = 66;
-                    $laravelUser->CredentialID = 0;
-                    Session::put('Organization',933);
-                    $laravelUser->CreationDate = Carbon::now();
-                    $laravelUser->Active = 'Y';
-                    $laravelUser->Disabled = 'N';
-                    $laravelUser->PasswordChangedByAdmin = 'N';
-                    $laravelUser->LMS = 'N';
-                    $laravelUser->Locale = 'en-us';
-                    
-                    $laravelUser->save();   
-                }
+                $humanAttributes = $user->getAttributesWithFriendlyName();
                 
+                if(empty($humanAttributes['mail'])) // no email provided
+                {
+                   return abort(401);
+                }
+                $laravelUser = ApexUser::firstOrNew(['Login'=>$humanAttributes['mail'][0]]);
+                
+                $laravelUser->FirstName = empty($humanAttributes['givenName']) ? 'FirstName' : $humanAttributes['givenName'][0];
+                $laravelUser->LastName = empty($humanAttributes['sn']) ? 'LastName' : $humanAttributes['sn'][0];
+                $laravelUser->Address = "1515 Holcombe Blvd";
+                $laravelUser->City = "Houston";
+                $laravelUser->PostalCode = "77030";
+                $laravelUser->StateID = 66;
+                $laravelUser->CredentialID = 0;
+                Session::put('Organization',933);
+                $laravelUser->CreationDate = Carbon::now();
+                $laravelUser->Active = 'Y';
+                $laravelUser->Disabled = 'N';
+                $laravelUser->PasswordChangedByAdmin = 'N';
+                $laravelUser->LMS = 'N';
+                $laravelUser->Locale = 'en-us';
+                $laravelUser->EmployeeID = empty($humanAttributes['workforceID']) ? 0000000 : $humanAttributes['workforceID'][0];
             }
 
             if($event->getSaml2Idp() == "APEX")
@@ -81,8 +84,8 @@ class EventServiceProvider extends ServiceProvider
             Session::put('userName',$laravelUser->FirstName . ' ' . $laravelUser->LastName);
             Session::put('Username',$laravelUser->FirstName . ' ' . $laravelUser->LastName);
             //if it does not exist create it and go on  or show an error message
-            // event(new LoginEvent(SessionGuard::class, $laravelUser, false));
             $laravelUser->LastLoginDate = Carbon::now();
+            $laravelUser->save(); 
             Auth::login($laravelUser);
             
         });
