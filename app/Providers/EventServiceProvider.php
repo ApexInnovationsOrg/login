@@ -14,6 +14,7 @@ use Exception;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Auth\Events\Login as LoginEvent;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\SessionGuard;
 class EventServiceProvider extends ServiceProvider
 {
@@ -50,42 +51,52 @@ class EventServiceProvider extends ServiceProvider
                 
                 if(empty($humanAttributes['mail'])) // no email provided
                 {
-                   return abort(401);
+                    return abort(401);
                 }
-                $laravelUser = ApexUser::firstOrNew(['Login'=>$humanAttributes['mail'][0]]);
-                
-                $laravelUser->FirstName = empty($humanAttributes['givenName']) ? 'FirstName' : $humanAttributes['givenName'][0];
-                $laravelUser->LastName = empty($humanAttributes['sn']) ? 'LastName' : $humanAttributes['sn'][0];
-                $laravelUser->Address = "1515 Holcombe Blvd";
-                $laravelUser->City = "Houston";
-                $laravelUser->PostalCode = "77030";
-                $laravelUser->StateID = 66;
-                $laravelUser->CredentialID = 0;
-                Session::put('Organization',933);
-                $laravelUser->CreationDate = Carbon::now();
-                $laravelUser->Active = 'Y';
-                $laravelUser->Disabled = 'N';
-                $laravelUser->PasswordChangedByAdmin = 'N';
-                $laravelUser->LMS = 'N';
-                $laravelUser->Locale = 'en-us';
-                $laravelUser->EmployeeID = empty($humanAttributes['workforceID']) ? 0000000 : $humanAttributes['workforceID'][0];
-            }
-
-            if($event->getSaml2Idp() == "APEX")
-            {
-
-                $laravelUser = ApexUser::where('Login',$userData['id'])->first();
+                $laravelUser = ApexUser::firstOrCreate(['Login'=>$humanAttributes['mail'][0]],
+                    [
+                        'FirstName' => empty($humanAttributes['givenName']) ? 'FirstName' : $humanAttributes['givenName'][0],
+                        'LastName' => empty($humanAttributes['sn']) ? 'LastName' : $humanAttributes['sn'][0],
+                        'Address' => "1515 Holcombe Blvd",
+                        'City' => "Houston",
+                        'PostalCode' => 77030,
+                        'Phone' => 8776326789,
+                        'StateID' => 66,
+                        'CredentialID' => 0,
+                        'DepartmentID' => 0,
+                        'CreationDate' => date('Y-m-d H:i:s',strtotime(Carbon::now()->toDateTimeString())),
+                        'Active' => 'Y',
+                        'Disabled' => 'N',
+                        'PasswordChangedByAdmin' => 'N',
+                        'LMS' => 'N',
+                        'Locale' => 'en-us',
+                        'SecurityAnswer' => '',
+                        'Password'=> Hash::make(Str::random()),
+                        'EmployeeID' => empty($humanAttributes['workforceID']) ? 0000000 : $humanAttributes['workforceID'][0]
+                    ]
+                ); 
                 Session::put('Organization',933);
             }
             
-            Session::put('SAML',true);
+            if($event->getSaml2Idp() == "APEX")
+            {    
+                $laravelUser = ApexUser::where('Login',$userData['id'])->first();
+                Session::put('Organization',933);
+            }
+
+            $laravelUser->LastLoginDate = Carbon::now()->toDateTimeString();
+            $laravelUser->save(); 
+            
+            if($laravelUser->DepartmentID != 0 && $laravelUser->CredentialID != 0)//redirect them to the finish account creation. Inertia doesn't like 302s, whereas normal http requests do.
+            {
+                Session::put('SAML',true);
+            }
+
             Session::put('userId',$laravelUser->ID);
             Session::put('userID',$laravelUser->ID);
             Session::put('userName',$laravelUser->FirstName . ' ' . $laravelUser->LastName);
             Session::put('Username',$laravelUser->FirstName . ' ' . $laravelUser->LastName);
             //if it does not exist create it and go on  or show an error message
-            $laravelUser->LastLoginDate = Carbon::now();
-            $laravelUser->save(); 
             Auth::login($laravelUser);
             
         });
