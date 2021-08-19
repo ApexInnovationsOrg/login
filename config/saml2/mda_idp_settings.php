@@ -33,8 +33,8 @@ return $settings = array(
 
         // Usually x509cert and privateKey of the SP are provided by files placed at
         // the certs folder. But we can also provide them with the following parameters
-        'x509cert' => env('SAML2_'.$this_idp_env_id.'_SP_x509',''),
-        'privateKey' => env('SAML2_'.$this_idp_env_id.'_SP_PRIVATEKEY',''),
+        'x509cert' => env('SAML2_MDA_APEXCERT'),
+        'privateKey' => env('SAML2_MDA_APEXKEY'),
 
         // Identifier (URI) of the SP entity.
         // Leave blank to use the '{idpName}_metadata' route, e.g. 'test_metadata'.
@@ -103,7 +103,7 @@ return $settings = array(
 
         // Indicates whether the <samlp:AuthnRequest> messages sent by this SP
         // will be signed.              [The Metadata of the SP will offer this info]
-        'authnRequestsSigned' => false,
+        'authnRequestsSigned' => true,
 
         // Indicates whether the <samlp:logoutRequest> messages sent by this SP
         // will be signed.
@@ -119,18 +119,18 @@ return $settings = array(
                                                     certFileName => 'metadata.crt'
                                                 )
         */
-        'signMetadata' => false,
+        'signMetadata' => true,
 
 
         /** signatures and encryptions required **/
 
         // Indicates a requirement for the <samlp:Response>, <samlp:LogoutRequest> and
         // <samlp:LogoutResponse> elements received by this SP to be signed.
-        'wantMessagesSigned' => false,
+        'wantMessagesSigned' => true,
 
         // Indicates a requirement for the <saml:Assertion> elements received by
         // this SP to be signed.        [The Metadata of the SP will offer this info]
-        'wantAssertionsSigned' => false,
+        'wantAssertionsSigned' => true,
 
         // Indicates a requirement for the NameID received by
         // this SP to be encrypted.
@@ -163,7 +163,7 @@ return $settings = array(
             'url' => 'https://www.apexinnovations.com'
         ),
     ),
-
+    
 /* Interoperable SAML 2.0 Web Browser SSO Profile [saml2int]   http://saml2int.org/profile/current
 
    'authnRequestsSigned' => false,    // SP SHOULD NOT sign the <samlp:AuthnRequest>,
