@@ -2,7 +2,7 @@
 	<header>
 		<nav class="flex items-center justify-between flex-wrap p-6">
 			<div class="flex items-center flex-shrink-0 text-black">
-				<a href="/">
+				<a href="https://www.apexinnovations.com/">
 					<img src="/assets/ApexLogo500.svg" alt="Apex Innovations, Education Healthcare Relies On" class="w-44 ml-3 hidden lg:inline-block">
 					<img src="/assets/starIcon.svg" alt="Apex Innovations, Education Healthcare Relies On" class="h-12 w-12 ml-3 inline-block lg:hidden">
 				</a>
