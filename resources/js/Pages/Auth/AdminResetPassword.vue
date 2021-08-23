@@ -8,7 +8,7 @@
         </div>
 
         <div class="mt-4">
-            <breeze-label for="password" value="Password" />
+            <breeze-label for="password" value="New Password" />
             <breeze-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" required autocomplete="new-password" />
         </div>
 
