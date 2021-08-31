@@ -5,26 +5,20 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Providers\RouteServiceProvider;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function create()
     {
-
-        return Inertia::render('Auth/Login', [
-            'canResetPassword' => Route::has('password.request'),
-            'status' => session('status'),
-        ]);
+        return view('auth.login');
     }
 
     /**
@@ -51,7 +45,7 @@ class AuthenticatedSessionController extends Controller
             
             if(Auth::user()->Disabled == 'Y') {
                 Auth::logout();
-                return redirect('login')->withErrors(['Your account has been disabled']);
+                return redirect('auth.login')->withErrors(['Your account has been disabled']);
             }
           
             $user->LastLoginDate = Carbon::now();
@@ -67,12 +61,15 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended('reset-made-password');
             }
             $request->session()->regenerate();
+
+            // dd($request->session());
+            return redirect()->intended(RouteServiceProvider::HOME);
         }
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
-
+        
     }
 
     /**
@@ -84,10 +81,7 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request)
     {
         Auth::guard('web')->logout();
-        $request->session()->pull('userId');
-        $request->session()->pull('userID');
-        $request->session()->pull('userName');
-        $request->session()->pull('Username');
+
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();

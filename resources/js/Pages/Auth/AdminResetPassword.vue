@@ -1,28 +1,30 @@
 <template>
-    <breeze-validation-errors class="mb-4" />
+    <div>
+        <breeze-validation-errors class="mb-4" />
 
-    <form @submit.prevent="submit">
-        <div>
-            <breeze-label for="email" value="Email" />
-            <breeze-input id="email" type="email" disabled class="mt-1 block w-full" v-model="form.Login" required autofocus autocomplete="username" />
-        </div>
+        <form @submit.prevent="submit">
+            <div>
+                <breeze-label for="email" value="Email" />
+                <breeze-input id="email" type="email" disabled class="mt-1 block w-full" v-model="form.Login" required autofocus autocomplete="username" />
+            </div>
 
-        <div class="mt-4">
-            <breeze-label for="password" value="New Password" />
-            <breeze-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" required autocomplete="new-password" />
-        </div>
+            <div class="mt-4">
+                <breeze-label for="password" value="New Password" />
+                <breeze-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" required autocomplete="new-password" />
+            </div>
 
-        <div class="mt-4">
-            <breeze-label for="password_confirmation" value="Confirm Password" />
-            <breeze-input id="password_confirmation" type="password" class="mt-1 block w-full" v-model="form.password_confirmation" required autocomplete="new-password" />
-        </div>
+            <div class="mt-4">
+                <breeze-label for="password_confirmation" value="Confirm Password" />
+                <breeze-input id="password_confirmation" type="password" class="mt-1 block w-full" v-model="form.password_confirmation" required autocomplete="new-password" />
+            </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <breeze-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                Reset Password
-            </breeze-button>
-        </div>
-    </form>
+            <div class="flex items-center justify-end mt-4">
+                <breeze-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    Reset Password
+                </breeze-button>
+            </div>
+        </form>
+    </div>
 </template>
 
 <script>
@@ -58,9 +60,9 @@
 
         methods: {
             submit() {
-                this.form.post(this.route('adminPasswordReset.store'), {
-                    onFinish: () => this.form.reset('password', 'password_confirmation'),
-                })
+                // this.form.post(this.route('adminPasswordReset.store'), {
+                //     onFinish: () => this.form.reset('password', 'password_confirmation'),
+                // })
             }
         }
     }

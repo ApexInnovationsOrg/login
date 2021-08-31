@@ -6,5 +6,6 @@ module.exports = {
         alias: {
             '@': path.resolve('resources/js'),
         },
+        modules: ['node_modules'],
     },
 };

@@ -46,7 +46,7 @@
                                 </label>
                                 <label class="block mt-4">
                                     <span class="text-gray-700">State Lic. Exp. Date: <strong>Format: MM/DD/YYYY</strong></span>
-                                    <Calendar required  class="form-input mt-1 block w-full" v-model="form.EMSData.stateExpDate" :showIcon="true" :yearNavigator="true" :yearRange="yearRange" />
+                                    <!-- <Calendar required  class="form-input mt-1 block w-full" v-model="form.EMSData.stateExpDate" :showIcon="true" :yearNavigator="true" :yearRange="yearRange" /> -->
                                 </label>
                                 <label class="block mt-4">
                                     <span class="text-gray-700">NEMSID: </span>
@@ -58,7 +58,7 @@
                                 </label>
                                 <label class="block mt-4">   
                                     <span class="text-gray-700">NREMT Rereg. Date: <strong>Format:MM/DD/YYYY</strong></span>
-                                    <Calendar required  class="form-input mt-1 block w-full" v-model="form.EMSData.reregDate"  :showIcon="true" :yearNavigator="true" :yearRange="yearRange" />
+                                    <!-- <Calendar required  class="form-input mt-1 block w-full" v-model="form.EMSData.reregDate"  :showIcon="true" :yearNavigator="true" :yearRange="yearRange" /> -->
                                 </label>
                                 <label class="block mt-4">   
                                     <span class="text-gray-700">License Type: </span>
@@ -81,7 +81,7 @@
 </template>
 
 <script>
-    import Calendar from 'primevue/calendar'
+    // import Calendar from 'primevue/calendar'
     import BreezeButton from '@/Components/Button'
     import BreezeAuthenticatedLayout from '@/Layouts/Authenticated'
     import BreezeInput from '@/Components/Input'

@@ -24,9 +24,9 @@
 							ACCOUNT <span class="caret" :class="{'rotate': dropdownPopoverAccountShow}"></span>
 						</button>
 						<div v-bind:class="{'hidden': !dropdownPopoverAccountShow, 'block': dropdownPopoverAccountShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAccountRef">
-							<a href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+							<inertia-link :href="route('login')" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								LOGIN
-							</a>
+							</inertia-link>
 							<a href="https://www.apexinnovations.com/CreateAccountLanding.php" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								CREATE ACCOUNT
 							</a>

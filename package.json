@@ -10,25 +10,36 @@
         "production": "mix --production"
     },
     "devDependencies": {
-        "@inertiajs/inertia": "^0.9.0",
-        "@inertiajs/inertia-vue3": "^0.4.0",
+        "@inertiajs/inertia": "^0.10.0",
+        "@inertiajs/inertia-vue": "^0.7.0",
         "@inertiajs/progress": "^0.2.4",
         "@tailwindcss/forms": "^0.2.1",
-        "@vue/compiler-sfc": "^3.0.5",
-        "autoprefixer": "^10.2.4",
+        "alpinejs": "^2.7.3",
+        "autoprefixer": "^10.1.0",
         "axios": "^0.21",
         "laravel-mix": "^6.0.6",
+        "laravel-mix-polyfill": "^3.0.1",
         "lodash": "^4.17.19",
-        "postcss": "^8.2.13",
-        "postcss-import": "^14.0.1",
-        "tailwindcss": "^2.1.2",
-        "vue": "^3.0.5",
-        "vue-loader": "^16.1.2"
+        "postcss": "^8.2.1",
+        "postcss-import": "^12.0.1",
+        "tailwindcss": "^1.9",
+        "targets-webpack-plugin": "^3.0.0"
     },
     "dependencies": {
+        "@babel/polyfill": "^7.12.1",
         "@popperjs/core": "^2.9.2",
+        "core-js": "^3.16.3",
         "moment": "^2.29.1",
         "primeicons": "^4.1.0",
-        "primevue": "^3.6.0"
+        "primevue": "^2.4.2",
+        "proxy-polyfill": "^0.3.2"
+    },
+    "browserslist": {
+        "production": [
+            "ie 11"
+        ],
+        "development": [
+            "ie 11"
+        ]
     }
 }
