@@ -1,0 +1,3 @@
+FROM 685265542736.dkr.ecr.us-east-1.amazonaws.com/base-php-fpm
+COPY --chown=www-data:www-data . /var/www/html/
+COPY .env.empty /var/www/html/.env

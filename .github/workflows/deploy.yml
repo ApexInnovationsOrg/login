@@ -1,0 +1,63 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: prod
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ec2-dev
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Composer
+      run: composer install --working-dir ${{ github.workspace }}/
+
+  docker-cleanup:
+    needs: build
+    runs-on: ec2-dev
+    steps:
+    - name: Docker cleanup
+      run: docker system prune -a -f --filter "until=24h"
+      
+  docker-php:
+    needs: docker-cleanup
+    runs-on: ec2-dev
+    steps:
+    - name: login to ECR
+      run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 685265542736.dkr.ecr.us-east-1.amazonaws.com
+    - name: dockerignore
+      run: cp .dockerignore-php .dockerignore
+    - name: Docker build
+      run: docker build -f .Dockerfile-php -t apexinnovations-php-fpm-login .
+    - name: Docker tag
+      run: docker tag apexinnovations-php-fpm-login 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
+    - name: Docker push
+      run: docker push 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
+
+  docker-nginx:
+    needs: docker-cleanup
+    runs-on: ec2-dev
+    steps:
+    - name: login to ECR
+      run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 685265542736.dkr.ecr.us-east-1.amazonaws.com
+    - name: dockerignore
+      run: cp .dockerignore-nginx .dockerignore
+    - name: Docker build
+      run: docker build -f .Dockerfile-nginx -t apexinnovations-nginx-login .
+    - name: Docker tag
+      run: docker tag apexinnovations-nginx-login 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-nginx-login
+    - name: Docker push
+      run: docker push 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-nginx-login
+
+  ecs-update:
+    needs: [docker-php, docker-nginx]
+    runs-on: ec2-dev
+    steps:
+    - name: update main service
+      run: aws ecs update-service --cluster ApexInnovations --service login --force-new-deployment
+

@@ -1,0 +1,34 @@
+# Ignore .php but not index.php as Nginx needs it for directory index check
+*.php
+**/*.php
+!**/index.php
+
+# This project has PHP in html files
+*.html
+**/*.html
+
+*.inc
+**/*.inc
+
+**/node_modules/
+**/node_modules/**/*
+
+# Ignore vendor directories
+**/vendor/
+**/vendor/**/*
+
+**/.git/
+**/.git/**/*
+**/.github/
+**/.github/**/*
+
+**/Jenkins*
+*.yml
+.*
+!**/.gitignore
+!**/.nginx-site.conf
+
+README*
+package*.json
+config.rb
+gruntfile*
