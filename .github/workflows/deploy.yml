@@ -33,7 +33,7 @@ jobs:
         context: .
         file: ./Dockerfile-php
         push: true
-        tags: apexinnovations-php-fpm-login 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
+        tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
     
     - name: Docker push
       run: docker push 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
