@@ -9,21 +9,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Composer
-      run: composer update --working-dir ${{ github.workspace }}/
-      
   docker-php:
-    needs: build
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Composer
+      run: composer update --working-dir ${{ github.workspace }}/
     - name: show key ID
       run: echo $AWS_SECRET_ACCESS_KEY
     - name: Set up Docker Buildx
