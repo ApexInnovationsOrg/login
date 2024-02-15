@@ -15,7 +15,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     - name: Composer
-      run: composer install --working-dir ${{ github.workspace }}/
+      run: composer update --working-dir ${{ github.workspace }}/
       
   docker-php:
     needs: build
