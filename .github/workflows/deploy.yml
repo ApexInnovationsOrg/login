@@ -34,7 +34,13 @@ jobs:
         file: ./.Dockerfile-php
         push: true
         tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
+    - name: dockerignore
+      run: cp .dockerignore-nginx .dockerignore
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./.Dockerfile-nginx
+        push: true
+        tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-nginx-login
     
-    - name: Docker push
-      run: docker push 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
-
