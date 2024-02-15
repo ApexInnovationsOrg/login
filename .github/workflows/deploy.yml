@@ -24,6 +24,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
+    - name: show key ID
+      run: echo $AWS_SECRET_ACCESS_KEY
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
     - name: login to ECR
