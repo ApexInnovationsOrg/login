@@ -19,8 +19,6 @@ jobs:
       uses: actions/checkout@v4
     - name: Composer
       run: composer update --working-dir ${{ github.workspace }}/
-    - name: show key ID
-      run: echo $AWS_SECRET_ACCESS_KEY
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
     - name: login to ECR
