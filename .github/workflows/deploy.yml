@@ -42,3 +42,4 @@ jobs:
     
     - name: Docker push
       run: docker push 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login
+
