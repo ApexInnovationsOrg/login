@@ -5,6 +5,9 @@
 !*.php
 !**/*.php
 
+# Mix manifest
+!public/mix-manifest.json
+
 # These often exist in empty dirs that must be deployed
 !**/.gitignore
 
