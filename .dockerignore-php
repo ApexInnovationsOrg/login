@@ -12,6 +12,7 @@
 !**/.gitignore
 
 !.env.empty
+!*.ini
 
 # And not vendor directories
 !**/vendor/
