@@ -1,7 +1,15 @@
 <template>
-	<header>
-		<nav class="flex items-center justify-between flex-wrap p-6">
-			<div class="flex items-center flex-shrink-0 text-black">
+	<header>		
+		<nav class="flex items-center justify-between flex-wrap">
+			<div style="background: black;	color: white;	width: 100%;	padding: 1px 0px; 	font-size: 15px;	text-align: right;">
+				<div class="container">				
+					<a style="margin: 0px 10px;" href="https://www.facebook.com/Apex.online.continuing.education" alt="Apex Innovations facebook page"><font-awesome-icon :icon="['fab','facebook-f']" /></a>
+					<a style="margin: 0px 30px 0px 0px;" href="https://www.linkedin.com/company/apex-innovations-llc" alt="Apex Innovations linked in page"><font-awesome-icon :icon="['fab','linkedin-in']" /></a>
+					<a href="https://login' . $domain . '" style="cursor:pointer;">Login<font-awesome-icon style="margin-left:5px;" :icon="['far','user']" /></a>					
+					<a style="margin: 0 0 0 30px;" href="https://www.apexinnovations.com/store/Cart.php" alt="Apex Innovations store cart"><font-awesome-icon style="margin-left:5px;" :icon="['fas','shopping-cart']" /></a>
+				</div>
+			</div>
+			<div class="flex items-center flex-shrink-0 text-black p-4">
 				<a href="https://www.apexinnovations.com/">
 					<img src="/assets/ApexLogo500.svg" alt="Apex Innovations, Education Healthcare Relies On" class="w-44 ml-3 hidden lg:inline-block">
 					<img src="/assets/starIcon.svg" alt="Apex Innovations, Education Healthcare Relies On" class="h-12 w-12 ml-3 inline-block lg:hidden">
@@ -42,6 +50,9 @@
 							<a href="https://www.apexinnovations.com/products.html"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								ALL PRODUCTS
 							</a>
+							<a href="https://www.apexinnovations.com/products.html#glycemia"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								DIABETES COURSEWARE
+							</a>
 							<a href="https://www.apexinnovations.com/products.html#cardiac"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								CARDIAC COURSEWARE
 							</a>
@@ -62,10 +73,6 @@
 							</a>
 						</div>
 					</div>
-					
-					<a href="https://www.apexinnovations.com/op.html" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5">
-						COMPETENCY VALIDATION
-					</a>
 					
 					<div>
 						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('about')" ref="btnDropdownRefAbout">
