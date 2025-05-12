@@ -26,6 +26,11 @@
         "vue-loader": "^16.1.2"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^6.7.2",
+        "@fortawesome/free-brands-svg-icons": "^6.7.2",
+        "@fortawesome/free-regular-svg-icons": "^6.7.2",
+        "@fortawesome/free-solid-svg-icons": "^6.7.2",
+        "@fortawesome/vue-fontawesome": "^3.0.8",
         "@popperjs/core": "^2.9.2",
         "moment": "^2.29.1",
         "primeicons": "^4.1.0",
