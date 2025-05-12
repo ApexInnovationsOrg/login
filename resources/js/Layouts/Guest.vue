@@ -2,8 +2,8 @@
     <div>
        
     <apexheader/>
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 apex-bg">
-        <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+    <div class="min-h-screen flex flex-col items-center sm:pt-0 apex-bg" style="padding-top: 3em;">
+        <div class="w-full sm:max-w-lg mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-xl" style="background: url('/assets/apex-star-cropped-large.png') left bottom no-repeat;">
             
             <slot />
         </div>

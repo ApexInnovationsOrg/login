@@ -16,7 +16,7 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <breeze-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+            <breeze-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing" style="background-color: #d20000">
                 Email Password Reset Link
             </breeze-button>
         </div>

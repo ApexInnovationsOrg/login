@@ -5,12 +5,12 @@
 				<div class="container" style="margin:0 auto;">				
 					<a style="margin: 0px 10px;" href="https://www.facebook.com/Apex.online.continuing.education" alt="Apex Innovations facebook page"><font-awesome-icon :icon="['fab','facebook-f']" /></a>
 					<a style="margin: 0px 30px 0px 0px;" href="https://www.linkedin.com/company/apex-innovations-llc" alt="Apex Innovations linked in page"><font-awesome-icon :icon="['fab','linkedin-in']" /></a>
-					<a href="https://login' . $domain . '" style="cursor:pointer;">Login<font-awesome-icon style="margin-left:5px;" :icon="['far','user']" /></a>					
-					<a style="margin: 0 0 0 30px;" href="https://www.apexinnovations.com/store/Cart.php" alt="Apex Innovations store cart"><font-awesome-icon style="margin-left:5px;" :icon="['fas','shopping-cart']" /></a>
+					<a href="https://login' . $domain . '" style="cursor:pointer;">Login<img src="/assets/accountIcon.svg" alt="Apex Innovations, Education Healthcare Relies On" style="height:13px;" class="inline-block ml-1"></a>					
+					<a style="margin: 0 35px 0 30px;" href="https://www.apexinnovations.com/store/Cart.php" alt="Apex Innovations store cart"><font-awesome-icon style="margin-left:5px;" :icon="['fas','shopping-cart']" /></a>
 				</div>
 			</div>
-			<div class="container flex items-center flex-shrink-0 justify-between flex-wrap"  style="margin:0 auto;">				
-				<div class="flex items-center flex-shrink-0 text-black p-4 ml-50">
+			<div class="container flex items-center flex-shrink-0 justify-between flex-wrap"  style="margin:0 auto;font-size:14px;">				
+				<div class="flex items-center flex-shrink-0 text-black pt-4 pb-2 ml-50">
 					<a href="https://www.apexinnovations.com/">
 						<img src="/assets/ApexLogo500.svg" alt="Apex Innovations, Education Healthcare Relies On" class="w-44 ml-3 hidden lg:inline-block">
 						<img src="/assets/starIcon.svg" alt="Apex Innovations, Education Healthcare Relies On" class="h-12 w-12 ml-3 inline-block lg:hidden">
@@ -24,19 +24,19 @@
 				<div class="w-full lg:flex lg:items-center lg:w-auto mr-5" :class="{ 'block' : showMenu , 'hidden' : !showMenu}">
 					<div class="text-md font-semibold lg:flex-grow lg:flex lg:items-center">					
 						
-						<a href="https://www.apexinnovations.com/MyCurriculum.php" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5" v-if="showMyCurriculum">
+						<a href="https://www.apexinnovations.com/MyCurriculum.php" class="block mt-4 lg:inline-block lg:mt-0 mr-5" v-if="showMyCurriculum">
 							MY CURRICULUM
 						</a>
 						
 						<div>
-							<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('account')" ref="btnDropdownRefAccount">
-								ACCOUNT <span class="caret" :class="{'rotate': dropdownPopoverAccountShow}"></span>
+							<button class="font-semibold outline-none focus:outline-none mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('account')" ref="btnDropdownRefAccount">
+								ACCOUNT <div class="caret" :class="{'rotate': dropdownPopoverAccountShow}"></div>
 							</button>
-							<div v-bind:class="{'hidden': !dropdownPopoverAccountShow, 'block': dropdownPopoverAccountShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAccountRef">
+							<div v-bind:class="{'hidden': !dropdownPopoverAccountShow, 'block': dropdownPopoverAccountShow}" class="bg-white text-base z-50 float-left py-1 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAccountRef">
 								<a href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 									LOGIN
 								</a>
-								<a href="https://www.apexinnovations.com/CreateAccountLanding.php" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/CreateAccountLanding.php" class="hover:bg-gray-200 font-semibold py-1 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 									CREATE ACCOUNT
 								</a>
 							</div>
@@ -44,32 +44,32 @@
 						
 						
 						<div>
-							<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('education')" ref="btnDropdownRefEducation">
-								EDUCATION <span class="caret" :class="{'rotate': dropdownPopoverEducationShow}"></span>
+							<button class="font-semibold outline-none focus:outline-none mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('education')" ref="btnDropdownRefEducation">
+								EDUCATION <div class="caret" :class="{'rotate': dropdownPopoverEducationShow}"></div>
 							</button>
 							<div v-bind:class="{'hidden': !dropdownPopoverEducationShow, 'block': dropdownPopoverEducationShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownEducationRef">							
-								<a href="https://www.apexinnovations.com/products.html"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									ALL PRODUCTS
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#glycemia"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#glycemia"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									DIABETES COURSEWARE
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#cardiac"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#cardiac"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									CARDIAC COURSEWARE
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#sepsis"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#sepsis"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									SEPSIS COURSEWARE
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#neuro"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#neuro"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									NEURO COURSEWARE
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#free"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#free"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									FREE COURSEWARE
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#mirule"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#mirule"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									MI RULE VISIONS
 								</a>
-								<a href="https://www.apexinnovations.com/products.html#bundles"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/products.html#bundles"  class="hover:bg-gray-200 py-1 px-4 block w-full whitespace-nowrap bg-transparent">
 									COURSEWARE BUNDLES
 								</a>
 							</div>
@@ -77,19 +77,16 @@
 						
 						<div>
 							<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('about')" ref="btnDropdownRefAbout">
-								ABOUT <span class="caret" :class="{'rotate': dropdownPopoverAboutShow}"></span>
+								ABOUT <div class="caret" :class="{'rotate': dropdownPopoverAboutShow}"></div>
 							</button>
 							<div v-bind:class="{'hidden': !dropdownPopoverAboutShow, 'block': dropdownPopoverAboutShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAboutRef">
-								<a href="https://www.apexinnovations.com/careers.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
-									CAREERS
-								</a>
-								<a href="https://www.apexinnovations.com/contactUs.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/contactUs.html" class="hover:bg-gray-200 font-semibold py-1 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 									CONTACT US
 								</a>
-								<a href="https://www.apexinnovations.com/news.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/news.html" class="hover:bg-gray-200 font-semibold py-1 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 									NEWS
 								</a>
-								<a href="https://www.apexinnovations.com/team.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+								<a href="https://www.apexinnovations.com/team.html" class="hover:bg-gray-200 font-semibold py-1 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 									TEAM
 								</a>
 							</div>
@@ -107,10 +104,9 @@
 		border-bottom: 1px solid #e7e7e7;
 	}
 	.caret {
-		display: inline-block;
 		width: 0;
 		height: 0;
-		margin-left: 2px;
+		margin: 10px auto 0 auto;
 		vertical-align: middle;
 		border-top: 4px dashed;
 		border-right: 4px solid transparent;
@@ -119,6 +115,13 @@
 	.rotate {
 		transition: 100ms linear all;
 		transform: rotate(180deg);
+	}
+	button, li > a {
+		font-size:13px;
+		font-weight: 700;
+	}
+	button:hover {
+		color: #C9252C !important;
 	}
 </style>
 <script>

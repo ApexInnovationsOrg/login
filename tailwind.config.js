@@ -18,9 +18,9 @@ module.exports = {
             'xs': '480px',    // Extra small devices
             'sm': '640px',    // Small devices
             'md': '768px',    // Medium devices
-            'lg': '1024px',   // Large devices
-            'xl': '1280px',   // Extra large devices
-            '2xl': '1536px',  // 2X large devices
+            'lg': '970px',   // Large devices
+            'xl': '970px',   // Extra large devices
+            '2xl': '970px',  // 2X large devices
         },
     },
 
