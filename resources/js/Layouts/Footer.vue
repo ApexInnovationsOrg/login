@@ -6,7 +6,7 @@
 				<inertia-link href="/">
 					<img width="45" height="50" src="/assets/starIcon.svg" alt="Apex Innovations, Education Healthcare Relies On" >
 				</inertia-link>
-				<div class="pl-1">
+				<div class="pl-1 pr-6">
 					Copyright 2002-2025<br/>
 					Apex Innovations, LLC,<br/>
 					All Rights Reserved
