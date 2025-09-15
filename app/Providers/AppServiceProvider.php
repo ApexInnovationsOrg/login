@@ -29,6 +29,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        // Override Fortify's login response here
+        app()->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    // 🚀 Force Inertia to do a full browser redirect
+                    return Inertia::location('https://www.apexinnovations.com/MyCurriculum.php');
+                }
+            };
+        });
     }
 }

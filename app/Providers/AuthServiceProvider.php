@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use Laravel\Fortify\Contracts\LoginResponse;
-use Inertia\Inertia;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -27,15 +25,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Override Fortify's login redirect to external app
-        app()->singleton(LoginResponse::class, function () {
-            return new class implements LoginResponse {
-                public function toResponse($request)
-                {
-                    // Force a full-page redirect (avoids CORS/XHR issues)
-                    return Inertia::location('https://www.apexinnovations.com/MyCurriculum.php');
-                }
-            };
-        });
+        //
     }
 }
