@@ -1,0 +1,38 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - development
+
+concurrency:
+  group: development
+  cancel-in-progress: true
+
+jobs:
+  docker-php:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Composer
+      run: composer update --working-dir ${{ github.workspace }}/
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: login to ECR
+      run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 685265542736.dkr.ecr.us-east-1.amazonaws.com
+    - name: dockerignore
+      run: cp .dockerignore-php .dockerignore
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./.Dockerfile-php
+        push: true
+        tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login-dev
+    - name: update login service
+      run: aws ecs update-service --cluster ApexInnovations --service login-dev --force-new-deployment
+    
