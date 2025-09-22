@@ -68,7 +68,7 @@ class AuthenticatedSessionController extends Controller
             }
             $request->session()->regenerate();
 
-            return redirect()->away('https://www.apexinnovations.com/dashboard');
+            return Inertia::location('https://www.apexinnovations.com/MyCurriculum.php');
         }
 
         return back()->withErrors([
