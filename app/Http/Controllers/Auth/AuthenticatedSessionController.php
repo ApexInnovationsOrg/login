@@ -67,6 +67,8 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended('reset-made-password');
             }
             $request->session()->regenerate();
+
+            return redirect()->away('https://www.apexinnovations.com/dashboard');
         }
 
         return back()->withErrors([
