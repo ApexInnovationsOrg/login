@@ -67,6 +67,8 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended('reset-made-password');
             }
             $request->session()->regenerate();
+
+            return Inertia::location('https://www.apexinnovations.com/MyCurriculum.php');
         }
 
         return back()->withErrors([
