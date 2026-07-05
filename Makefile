@@ -5,7 +5,7 @@
 # Everything runs in containers; no PHP/composer needed on the host.
 
 COMPOSE      = docker compose
-EXEC         = $(COMPOSE) exec -T laravel.test
+EXEC         = $(COMPOSE) exec -T login
 WEBSITE_ROOT = ../website_root
 COMPOSER_IMG = docker run --rm --entrypoint sh -v $(CURDIR)/..:/repos composer:2 -c
 

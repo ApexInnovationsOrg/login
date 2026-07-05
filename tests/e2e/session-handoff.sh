@@ -9,8 +9,8 @@
 #   4. The legacy site must recognize the session (via shared Redis)
 #      and render the logged-in user
 #
-# Requires the docker compose stack (laravel.test, website, mysql, redis)
-# and a seeded database: docker compose exec laravel.test php artisan migrate:fresh --seed
+# Requires the docker compose stack (login, website, mysql, redis)
+# and a seeded database: docker compose exec login php artisan migrate:fresh --seed
 #
 set -u
 
