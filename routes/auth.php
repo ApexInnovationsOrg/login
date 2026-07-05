@@ -69,8 +69,8 @@ Route::post('/auth/logout', [AuthenticatedSessionController::class, 'destroy']) 
     ->name('logout');
 
 Route::get('/auth/logout', [AuthenticatedSessionController::class, 'destroy']) // keeping the same stuff from the old site
-                    ->middleware('auth')
-                    ->name('logout');
+    ->middleware('auth')
+    ->name('logout');
 
 Route::get('/reset-made-password', [AdminPasswordReset::class, 'show'])
     ->middleware('auth:web')
