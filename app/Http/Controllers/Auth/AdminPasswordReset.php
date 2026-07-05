@@ -3,25 +3,26 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+use Inertia\Inertia;
 
 class AdminPasswordReset extends Controller
 {
     /**
      * Show the confirm password view.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function show()
     {
-        return Inertia::render('Auth/AdminResetPassword',['Login'=>Auth::user()->Login]);
+        return Inertia::render('Auth/AdminResetPassword', ['Login' => Auth::user()->Login]);
     }
 
     public function store(Request $request)
@@ -32,13 +33,12 @@ class AdminPasswordReset extends Controller
             'password' => $user->getPasswordRequirements(),
         ]);
 
-
-        $user = Auth::user();   
+        $user = Auth::user();
         $user->forceFill([
             'Password' => Hash::make($request->password),
             'remember_token' => Str::random(60),
         ])->save();
-        
+
         $user->PasswordChangedByAdmin = 'N';
         $user->save();
 
@@ -46,13 +46,12 @@ class AdminPasswordReset extends Controller
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
 
-        //return redirect(RouteServiceProvider::HOME);
+        // return redirect(RouteServiceProvider::HOME);
         return Inertia::location(config('app.mycurriculum_url')); // Reset success, lets forward them to MyCurriculum
-        
 
         throw ValidationException::withMessages([
             'email' => [trans($status)],
         ]);
-        
+
     }
 }

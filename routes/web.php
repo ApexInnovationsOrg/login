@@ -1,14 +1,10 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redis;
-use App\Http\Controllers\Auth\AdminPasswordReset;
 use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,18 +18,17 @@ use Illuminate\Support\Facades\Session;
 */
 
 Route::get('/', [AuthenticatedSessionController::class, 'create'])
-                ->middleware('guest');
+    ->middleware('guest');
 
 Route::get('/dashboard', function () {
     $url = config('app.mycurriculum_url');
-    
-    if(Session::has('SAML')) //SAML only likes 302s. You can't do external 302s with Inertia....sooo you get both. 
-    {
+
+    if (Session::has('SAML')) { // SAML only likes 302s. You can't do external 302s with Inertia....sooo you get both.
         return redirect()->away($url);
     }
-    return Inertia::location($url);
-    
-})->middleware(['auth'])->name('dashboard');
 
+    return Inertia::location($url);
+
+})->middleware(['auth'])->name('dashboard');
 
 require __DIR__.'/auth.php';

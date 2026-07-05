@@ -10,7 +10,6 @@ class LogSessionCreation
     /**
      * Handle the event.
      *
-     * @param  \Illuminate\Session\Events\SessionCreated  $event
      * @return void
      */
     public function handle(SessionCreated $event)

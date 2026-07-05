@@ -39,17 +39,16 @@ class LoginRequest extends FormRequest
      *
      * @return void
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function authenticate()
     {
         $this->ensureIsNotRateLimited();
-        //converting the inputs to play well with the User Model
+        // converting the inputs to play well with the User Model
         $creds = [
-            'Login'=>$this->only('email')['email'],
-            'password'=>$this->only('password')['password']
+            'Login' => $this->only('email')['email'],
+            'password' => $this->only('password')['password'],
         ];
-
 
         if (! Auth::attempt($creds, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
@@ -67,7 +66,7 @@ class LoginRequest extends FormRequest
      *
      * @return void
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function ensureIsNotRateLimited()
     {

@@ -4,25 +4,24 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Providers\RouteServiceProvider;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-
-use Monolog\Level; // The StreamHandler sends log messages to a file on your disk
+use Inertia\Inertia; // The StreamHandler sends log messages to a file on your disk
+use Inertia\Response;
 use Monolog\Formatter\JsonFormatter;
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-
+use Monolog\Level;
+use Monolog\Logger;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      *
-     * @return \Inertia\Response
+     * @return Response
      */
     public function create()
     {
@@ -35,8 +34,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      *
-     * @param  \App\Http\Requests\Auth\LoginRequest  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(LoginRequest $request)
     {
@@ -45,46 +43,45 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required'],
         ]);
 
-
         $translatedCreds = [
-            'Login'=>$request->only('email')['email'],
-            'password'=>$request->only('password')['password']
+            'Login' => $request->only('email')['email'],
+            'password' => $request->only('password')['password'],
         ];
 
         if (Auth::attempt($translatedCreds)) {
             $user = Auth::user();
-            
-            if(Auth::user()->Disabled == 'Y') {
+
+            if (Auth::user()->Disabled == 'Y') {
                 Auth::logout();
+
                 return redirect('login')->withErrors(['Your account has been disabled']);
             }
-          
+
             $user->LastLoginDate = Carbon::now();
             $user->save();
-            
-            $request->session()->put('userId',$user->ID);
-            $request->session()->put('userID',$user->ID);
-            $request->session()->put('userName',$user->FirstName . ' ' . $user->LastName);
-            $request->session()->put('Username',$user->FirstName . ' ' . $user->LastName);
 
-            if($user->PasswordChangedByAdmin == 'Y')
-            {
+            $request->session()->put('userId', $user->ID);
+            $request->session()->put('userID', $user->ID);
+            $request->session()->put('userName', $user->FirstName.' '.$user->LastName);
+            $request->session()->put('Username', $user->FirstName.' '.$user->LastName);
+
+            if ($user->PasswordChangedByAdmin == 'Y') {
                 return redirect()->intended('reset-made-password');
             }
             $request->session()->regenerate();
 
-            if(isset($_COOKIE['ApexInnovations'])){
+            if (isset($_COOKIE['ApexInnovations'])) {
                 $value = $_COOKIE['ApexInnovations'];
                 $cookieVal = "Cookie is set: $value";
-            }else{
-                $cookieVal = "Cookie not set";
+            } else {
+                $cookieVal = 'Cookie not set';
             }
 
             $log = new Logger('custom');
-            $formatter = new JsonFormatter();
-            $log->pushHandler((new StreamHandler("php://stdout", Level::Debug))->setFormatter($formatter));
+            $formatter = new JsonFormatter;
+            $log->pushHandler((new StreamHandler('php://stdout', Level::Debug))->setFormatter($formatter));
 
-            $log->info('Session Started',["Cookie"=>$cookieVal,"IP"=>$this->getClientIP(),"Page"=>"Login"]);
+            $log->info('Session Started', ['Cookie' => $cookieVal, 'IP' => $this->getClientIP(), 'Page' => 'Login']);
 
             return Inertia::location(config('app.mycurriculum_url'));
         }
@@ -98,8 +95,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(Request $request)
     {
@@ -115,16 +111,17 @@ class AuthenticatedSessionController extends Controller
         return redirect('/');
     }
 
-	private function getClientIP() {
-		if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-			return $_SERVER['HTTP_CLIENT_IP'];
-		}
+    private function getClientIP()
+    {
+        if (! empty($_SERVER['HTTP_CLIENT_IP'])) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        }
 
-		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			// In case of multiple IPs, take the first one
-			return trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
-		}
+        if (! empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            // In case of multiple IPs, take the first one
+            return trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+        }
 
-		return $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-	}
+        return $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+    }
 }

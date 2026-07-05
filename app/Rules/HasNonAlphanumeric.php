@@ -25,7 +25,7 @@ class HasNonAlphanumeric implements Rule
      */
     public function passes($attribute, $value)
     {
-        return !ctype_alnum($value);
+        return ! ctype_alnum($value);
     }
 
     /**

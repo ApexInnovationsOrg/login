@@ -25,7 +25,7 @@ class HasNumbers implements Rule
      */
     public function passes($attribute, $value)
     {
-        return (1 === preg_match('~[0-9]~',$value));
+        return preg_match('~[0-9]~', $value) === 1;
     }
 
     /**

@@ -48,8 +48,8 @@ class AuthenticationTest extends TestCase
         // The legacy site reads both spellings of each key
         $response->assertSessionHas('userId', $user->ID);
         $response->assertSessionHas('userID', $user->ID);
-        $response->assertSessionHas('userName', $user->FirstName . ' ' . $user->LastName);
-        $response->assertSessionHas('Username', $user->FirstName . ' ' . $user->LastName);
+        $response->assertSessionHas('userName', $user->FirstName.' '.$user->LastName);
+        $response->assertSessionHas('Username', $user->FirstName.' '.$user->LastName);
     }
 
     public function test_login_updates_last_login_date()

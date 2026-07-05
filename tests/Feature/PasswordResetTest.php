@@ -46,7 +46,7 @@ class PasswordResetTest extends TestCase
         $user = User::factory()->create();
         $token = Password::createToken($user);
 
-        $response = $this->get('/reset-password/' . $token . '?email=' . urlencode($user->Login));
+        $response = $this->get('/reset-password/'.$token.'?email='.urlencode($user->Login));
 
         $response->assertStatus(200);
     }

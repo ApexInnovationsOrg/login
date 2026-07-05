@@ -47,12 +47,13 @@ class CreateLocalUsers extends Command
     {
         if (app()->environment('production')) {
             $this->error('Local development only.');
+
             return 1;
         }
 
         // A system groups organizations (Systems <- SystemOrganizations -> Organizations)
         $systemId = DB::table('Systems')->where('Name', 'Local Health System')->value('ID');
-        if (!$systemId) {
+        if (! $systemId) {
             $systemId = DB::table('Systems')->insertGetId([
                 'Name' => 'Local Health System',
                 'CreationDate' => now()->format('Y-m-d H:i:s'),
@@ -138,6 +139,7 @@ class CreateLocalUsers extends Command
                 $user->DepartmentID = $deptId;
                 $user->save();
             }
+
             return $user;
         }
 
@@ -151,7 +153,7 @@ class CreateLocalUsers extends Command
 
     private function membership(string $table, array $keys): void
     {
-        if (!DB::table($table)->where($keys)->exists()) {
+        if (! DB::table($table)->where($keys)->exists()) {
             DB::table($table)->insert($keys);
         }
     }

@@ -9,7 +9,7 @@ EXEC         = $(COMPOSE) exec -T laravel.test
 WEBSITE_ROOT = ../website_root
 COMPOSER_IMG = docker run --rm --entrypoint sh -v $(CURDIR)/..:/repos composer:2 -c
 
-.PHONY: help setup env deps up db users test e2e down destroy logs
+.PHONY: help setup env deps up db users test e2e lint fix down destroy logs
 
 help:
 	@echo "Targets:"
@@ -20,6 +20,8 @@ help:
 	@echo "  db       migrate:fresh, seed, and create the local user hierarchy"
 	@echo "  users    (re)run the local user hierarchy command only"
 	@echo "  test     run the phpunit suite (MySQL test database)"
+	@echo "  lint     check code style (pint --test)"
+	@echo "  fix      fix code style (pint)"
 	@echo "  e2e      run the login -> MyCurriculum session handoff test"
 	@echo "  down     stop containers"
 	@echo "  destroy  stop containers and delete the database volume"
@@ -55,6 +57,12 @@ users:
 
 test:
 	$(EXEC) php artisan test
+
+lint:
+	$(EXEC) vendor/bin/pint --test
+
+fix:
+	$(EXEC) vendor/bin/pint
 
 e2e:
 	./tests/e2e/session-handoff.sh

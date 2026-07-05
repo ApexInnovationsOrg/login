@@ -48,7 +48,7 @@ class UserFactory extends Factory
      * A user provisioned by SSO who has not completed account creation
      * (routed to /finishAccountCreation by the unfinishedUser middleware).
      *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     * @return Factory
      */
     public function unfinished()
     {
@@ -65,7 +65,7 @@ class UserFactory extends Factory
     /**
      * A disabled account (login is refused).
      *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     * @return Factory
      */
     public function disabled()
     {
@@ -80,7 +80,7 @@ class UserFactory extends Factory
      * An account whose password was reset by an admin
      * (forced to /reset-made-password after login).
      *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     * @return Factory
      */
     public function adminReset()
     {
