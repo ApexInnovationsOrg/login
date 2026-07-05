@@ -26,7 +26,7 @@ Route::get('/', [AuthenticatedSessionController::class, 'create'])
                 ->name('login');
 
 Route::get('/dashboard', function () {
-    $url = 'https://www.apexinnovations.com/MyCurriculum.php';
+    $url = config('app.mycurriculum_url');
     
     if(Session::has('SAML')) //SAML only likes 302s. You can't do external 302s with Inertia....sooo you get both. 
     {

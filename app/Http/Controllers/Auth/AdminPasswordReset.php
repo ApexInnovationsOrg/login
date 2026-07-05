@@ -47,7 +47,7 @@ class AdminPasswordReset extends Controller
         // redirect them back to where they came from with their error message.
 
         //return redirect(RouteServiceProvider::HOME);
-        return Inertia::location('https://www.apexinnovations.com/MyCurriculum.php'); // Reset success, lets forward them to MyCurriculum
+        return Inertia::location(config('app.mycurriculum_url')); // Reset success, lets forward them to MyCurriculum
         
 
         throw ValidationException::withMessages([

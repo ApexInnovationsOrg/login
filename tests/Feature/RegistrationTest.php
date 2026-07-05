@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +16,13 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_new_users_can_register()
+    /**
+     * Characterization: the Register.vue form posts name/email/password, but the
+     * controller validates FirstName/LastName/Login/Password — so the payload the
+     * real frontend sends is always rejected. Registration is broken as shipped.
+     * If this test ever fails, the mismatch was fixed and the flow needs real tests.
+     */
+    public function test_frontend_registration_payload_is_rejected()
     {
         $response = $this->post('/register', [
             'name' => 'Test User',
@@ -26,7 +31,8 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $this->assertGuest();
+        $response->assertSessionHasErrors(['FirstName', 'LastName', 'Login', 'Password']);
+        $this->assertDatabaseMissing('Users', ['Login' => 'test@example.com']);
     }
 }

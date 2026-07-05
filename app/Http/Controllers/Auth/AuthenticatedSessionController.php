@@ -86,7 +86,7 @@ class AuthenticatedSessionController extends Controller
 
             $log->info('Session Started',["Cookie"=>$cookieVal,"IP"=>$this->getClientIP(),"Page"=>"Login"]);
 
-            return Inertia::location('https://www.apexinnovations.com/MyCurriculum.php');
+            return Inertia::location(config('app.mycurriculum_url'));
         }
 
         return back()->withErrors([

@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | MyCurriculum URL
+    |--------------------------------------------------------------------------
+    |
+    | Where users are handed off on the main site after logging in. Point
+    | this at a local website_root instance for end-to-end testing.
+    |
+    */
+
+    'mycurriculum_url' => env('MYCURRICULUM_URL', 'https://www.apexinnovations.com/MyCurriculum.php'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

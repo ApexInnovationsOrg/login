@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class UserFactory extends Factory
 {
@@ -23,24 +22,69 @@ class UserFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            'remember_token' => Str::random(10),
+            'Login' => $this->faker->unique()->safeEmail(),
+            'Password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'FirstName' => $this->faker->firstName(),
+            'LastName' => $this->faker->lastName(),
+            'Address' => $this->faker->streetAddress(),
+            'City' => $this->faker->city(),
+            'StateID' => 1,
+            'PostalCode' => $this->faker->postcode(),
+            'CountryID' => 1,
+            'Phone' => $this->faker->phoneNumber(),
+            'CreationDate' => now()->format('Y-m-d H:i:s'),
+            'DepartmentID' => 1,
+            'CredentialID' => 1,
+            'SecurityAnswer' => '',
+            'Locale' => 'en-us',
+            'Active' => 'Y',
+            'Disabled' => 'N',
+            'PasswordChangedByAdmin' => 'N',
+            'LMS' => 'N',
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * A user provisioned by SSO who has not completed account creation
+     * (routed to /finishAccountCreation by the unfinishedUser middleware).
      *
      * @return \Illuminate\Database\Eloquent\Factories\Factory
      */
-    public function unverified()
+    public function unfinished()
     {
         return $this->state(function (array $attributes) {
             return [
-                'email_verified_at' => null,
+                'DepartmentID' => null,
+                'CredentialID' => null,
+            ];
+        });
+    }
+
+    /**
+     * A disabled account (login is refused).
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    public function disabled()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'Disabled' => 'Y',
+            ];
+        });
+    }
+
+    /**
+     * An account whose password was reset by an admin
+     * (forced to /reset-made-password after login).
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    public function adminReset()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'PasswordChangedByAdmin' => 'Y',
             ];
         });
     }
