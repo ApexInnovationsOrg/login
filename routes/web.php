@@ -22,8 +22,7 @@ use Illuminate\Support\Facades\Session;
 */
 
 Route::get('/', [AuthenticatedSessionController::class, 'create'])
-                ->middleware('guest')
-                ->name('login');
+                ->middleware('guest');
 
 Route::get('/dashboard', function () {
     $url = config('app.mycurriculum_url');

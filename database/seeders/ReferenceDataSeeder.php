@@ -18,6 +18,11 @@ class ReferenceDataSeeder extends Seeder
      */
     public function run()
     {
+        DB::table('Countries')->insert([
+            ['ID' => 1, 'Abbreviation' => 'CA', 'Name' => 'Canada'],
+            ['ID' => 231, 'Abbreviation' => 'US', 'Name' => 'United States'], // Organizations.CountryID default, FK to Countries
+        ]);
+
         DB::table('States')->insert([
             ['ID' => 1, 'Abbreviation' => 'LA', 'Name' => 'Louisiana'],
             ['ID' => 2, 'Abbreviation' => 'CA', 'Name' => 'California'],

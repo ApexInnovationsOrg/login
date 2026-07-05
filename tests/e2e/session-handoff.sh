@@ -39,6 +39,7 @@ curl -s -c "$JAR" "$LOGIN_URL/login" -o /dev/null
 XSRF=$(awk '/XSRF-TOKEN/ {print $7}' "$JAR" | python3 -c "import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))")
 
 STATUS=$(curl -s -b "$JAR" -c "$JAR" \
+    -H "X-Inertia: true" \
     -H "X-XSRF-TOKEN: $XSRF" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \

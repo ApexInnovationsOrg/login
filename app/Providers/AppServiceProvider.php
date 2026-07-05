@@ -19,9 +19,6 @@ class AppServiceProvider extends ServiceProvider
 
             return (new CookieJar)->setDefaultPathAndDomain($config['path'], $config['domain']);
         });
-
-            // Force Fortify to always use our custom response
-        $this->app->singleton(LoginResponse::class, CustomLoginResponse::class);
     }
 
     /**

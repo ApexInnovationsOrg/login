@@ -82,7 +82,7 @@ class AuthenticatedSessionController extends Controller
 
             $log = new Logger('custom');
             $formatter = new JsonFormatter();
-            $log->pushHandler((new StreamHandler("php://stdout", Logger::DEBUG))->setFormatter($formatter));
+            $log->pushHandler((new StreamHandler("php://stdout", Level::Debug))->setFormatter($formatter));
 
             $log->info('Session Started',["Cookie"=>$cookieVal,"IP"=>$this->getClientIP(),"Page"=>"Login"]);
 

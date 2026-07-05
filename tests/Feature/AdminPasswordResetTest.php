@@ -33,7 +33,7 @@ class AdminPasswordResetTest extends TestCase
     {
         $user = User::factory()->adminReset()->create();
 
-        $response = $this->actingAs($user)->post('/reset-made-password', [
+        $response = $this->actingAs($user)->withHeader('X-Inertia', 'true')->post('/reset-made-password', [
             'Login' => $user->Login,
             'password' => 'brand-new-password',
             'password_confirmation' => 'brand-new-password',

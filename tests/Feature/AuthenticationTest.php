@@ -21,15 +21,17 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // The form posts "email"; the controller matches it against Users.Login
-        $response = $this->post('/login', [
+        // The form posts "email" via the Inertia client; the controller
+        // matches it against Users.Login
+        $response = $this->withHeader('X-Inertia', 'true')->post('/login', [
             'email' => $user->Login,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
         // Successful login hands off to the main site via Inertia::location(),
-        // which responds 409 + X-Inertia-Location (the Inertia client follows it)
+        // which responds 409 + X-Inertia-Location to Inertia requests
+        // (plain requests get a normal 302 since inertia-laravel 0.6)
         $response->assertStatus(409);
         $response->assertHeader('X-Inertia-Location', 'https://www.apexinnovations.com/MyCurriculum.php');
     }

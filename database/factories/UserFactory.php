@@ -54,8 +54,10 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'DepartmentID' => null,
-                'CredentialID' => null,
+                // SSO-provisioned users get 0 (DepartmentID is NOT NULL in prod);
+                // the unfinishedUser middleware's loose == null check matches 0
+                'DepartmentID' => 0,
+                'CredentialID' => 0,
             ];
         });
     }

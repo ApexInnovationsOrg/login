@@ -23,9 +23,9 @@ class DashboardTest extends TestCase
 
         $response = $this->actingAs($user)->get('/dashboard');
 
-        // Inertia::location() responds 409 + X-Inertia-Location for the Inertia client
-        $response->assertStatus(409);
-        $response->assertHeader('X-Inertia-Location', 'https://www.apexinnovations.com/MyCurriculum.php');
+        // A plain (non-Inertia) request gets a normal redirect from
+        // Inertia::location() since inertia-laravel 0.6
+        $response->assertRedirect('https://www.apexinnovations.com/MyCurriculum.php');
     }
 
     public function test_saml_sessions_are_forwarded_with_a_plain_redirect()
