@@ -30,15 +30,17 @@ class UnfinishedUserTest extends TestCase
 
     public function test_finished_users_are_redirected_away_from_the_finish_screen()
     {
+        config(['app.mycurriculum_url' => 'http://localhost:8091/MyCurriculum.php']);
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->get('/finishAccountCreation');
 
-        $response->assertRedirect('https://www.apexinnovations.com/MyCurriculum.php');
+        $response->assertRedirect('http://localhost:8091/MyCurriculum.php');
     }
 
     public function test_unfinished_users_can_complete_their_account()
     {
+        config(['app.mycurriculum_url' => 'http://localhost:8091/MyCurriculum.php']);
         $user = User::factory()->unfinished()->create();
 
         $response = $this->actingAs($user)->post('/finishUser', [
@@ -48,7 +50,7 @@ class UnfinishedUserTest extends TestCase
         ]);
 
         $response->assertSessionHasNoErrors();
-        $response->assertRedirect('https://www.apexinnovations.com/MyCurriculum.php');
+        $response->assertRedirect('http://localhost:8091/MyCurriculum.php');
 
         $user->refresh();
         $this->assertEquals(1, $user->DepartmentID);

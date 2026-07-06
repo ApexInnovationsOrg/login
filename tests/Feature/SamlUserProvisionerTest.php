@@ -15,9 +15,9 @@ class SamlUserProvisionerTest extends TestCase
 
     protected $seed = true;
 
-    private function provision(SamlClient $client, string $email = 'sso.user@acme.test'): User
+    private function provision(SamlClient $client, string $email = 'sso.user@acme.test', ?string $firstName = 'Sso', ?string $lastName = 'User'): User
     {
-        return app(SamlUserProvisioner::class)->provision($client, $email, 'Sso', 'User');
+        return app(SamlUserProvisioner::class)->provision($client, $email, $firstName, $lastName);
     }
 
     public function test_matches_existing_user_by_login(): void
@@ -28,6 +28,39 @@ class SamlUserProvisionerTest extends TestCase
         $user = $this->provision($client, 'known@acme.test');
 
         $this->assertSame($existing->ID, $user->ID);
+    }
+
+    public function test_syncs_changed_name_for_existing_user(): void
+    {
+        User::factory()->create([
+            'Login' => 'renamed@acme.test',
+            'FirstName' => 'Eddie',
+            'LastName' => 'Smith',
+        ]);
+        $client = SamlClient::factory()->create(['jit_enabled' => false]);
+
+        $user = $this->provision($client, 'renamed@acme.test', 'Eddie', 'Muller');
+
+        $this->assertSame('Muller', $user->LastName);
+        $this->assertSame('Eddie', $user->FirstName);
+        $this->assertDatabaseHas('Users', ['Login' => 'renamed@acme.test', 'LastName' => 'Muller']);
+    }
+
+    public function test_does_not_overwrite_name_when_assertion_omits_it(): void
+    {
+        User::factory()->create([
+            'Login' => 'keep@acme.test',
+            'FirstName' => 'Real',
+            'LastName' => 'Name',
+        ]);
+        $client = SamlClient::factory()->create(['jit_enabled' => false]);
+
+        // Assertion carried no first/last name — provisioner receives nulls.
+        $user = $this->provision($client, 'keep@acme.test', null, null);
+
+        $this->assertSame('Real', $user->FirstName);
+        $this->assertSame('Name', $user->LastName);
+        $this->assertDatabaseHas('Users', ['Login' => 'keep@acme.test', 'FirstName' => 'Real', 'LastName' => 'Name']);
     }
 
     public function test_rejects_unknown_user_when_jit_disabled(): void

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class SamlUserProvisioner
 {
-    public function provision(SamlClient $client, string $email, string $firstName, string $lastName): User
+    public function provision(SamlClient $client, string $email, ?string $firstName, ?string $lastName): User
     {
         $user = User::where('Login', $email)->first();
 
@@ -21,7 +21,7 @@ class SamlUserProvisioner
         }
 
         if ($user) {
-            return $user;
+            return $this->syncName($user, $firstName, $lastName);
         }
 
         if (! $client->jit_enabled) {
@@ -33,8 +33,9 @@ class SamlUserProvisioner
 
         $user = User::factory()->newModel()->forceFill([
             'Login' => $email,
-            'FirstName' => $firstName,
-            'LastName' => $lastName,
+            // Placeholder when the IdP omitted a name; SamlController logs that misconfiguration.
+            'FirstName' => $firstName ?? 'FirstName',
+            'LastName' => $lastName ?? 'LastName',
             // Legacy schema: DepartmentID is NOT NULL; 0 routes through finishAccountCreation
             'DepartmentID' => $client->department_id ?? 0,
             'CredentialID' => 0,
@@ -50,6 +51,28 @@ class SamlUserProvisioner
         ]);
 
         $user->save();
+
+        return $user;
+    }
+
+    /**
+     * Reflect name changes from the IdP onto an existing user. Only non-null
+     * values are applied, so a misconfigured or partial assertion never wipes
+     * a real stored name with the SamlController placeholder fallback.
+     */
+    private function syncName(User $user, ?string $firstName, ?string $lastName): User
+    {
+        if ($firstName !== null && $firstName !== $user->FirstName) {
+            $user->FirstName = $firstName;
+        }
+
+        if ($lastName !== null && $lastName !== $user->LastName) {
+            $user->LastName = $lastName;
+        }
+
+        if ($user->isDirty()) {
+            $user->save();
+        }
 
         return $user;
     }
