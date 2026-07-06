@@ -18,6 +18,7 @@
     <server name="QUEUE_CONNECTION" value="sync"/>
     <server name="SESSION_DRIVER" value="array"/>
     <server name="MYCURRICULUM_URL" value="https://www.apexinnovations.com/MyCurriculum.php"/>
+    <server name="CREATEACCOUNT_URL" value="https://www.apexinnovations.com/CreateAccountLanding.php"/>
     <server name="TELESCOPE_ENABLED" value="false"/>
   </php>
   <source>

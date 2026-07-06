@@ -132,6 +132,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Account Creation URL
+    |--------------------------------------------------------------------------
+    |
+    | Account creation lives on the main site; /register redirects there.
+    |
+    */
+
+    'createaccount_url' => env('CREATEACCOUNT_URL', 'https://www.apexinnovations.com/CreateAccountLanding.php'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
