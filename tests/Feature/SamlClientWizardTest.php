@@ -33,6 +33,7 @@ class SamlClientWizardTest extends TestCase
                 '5000' => 'Wizard Cardiology',
             ])
             ->expectsConfirmation('Auto-create unknown users on first login?', 'yes')
+            ->expectsQuestion('Email domains for SSO routing (comma-separated, blank to skip)', 'acme.com')
             ->expectsConfirmation('Customize attribute names? (needed for Entra/Azure)', 'no')
             ->expectsOutputToContain('/saml/wizard-acme-health/acs')
             ->assertSuccessful();
@@ -44,6 +45,8 @@ class SamlClientWizardTest extends TestCase
             'jit_enabled' => true,
             'enabled' => false,
         ]);
+
+        $this->assertSame(['acme.com'], SamlClient::where('slug', 'wizard-acme-health')->first()->email_domains);
     }
 
     public function test_wizard_none_department_stores_null(): void
@@ -59,6 +62,7 @@ class SamlClientWizardTest extends TestCase
                 '5000' => 'Wizard Cardiology',
             ])
             ->expectsConfirmation('Auto-create unknown users on first login?', 'yes')
+            ->expectsQuestion('Email domains for SSO routing (comma-separated, blank to skip)', '')
             ->expectsConfirmation('Customize attribute names? (needed for Entra/Azure)', 'no')
             ->assertSuccessful();
 
@@ -78,6 +82,7 @@ class SamlClientWizardTest extends TestCase
                 '5000' => 'Wizard Cardiology',
             ])
             ->expectsConfirmation('Auto-create unknown users on first login?', 'yes')
+            ->expectsQuestion('Email domains for SSO routing (comma-separated, blank to skip)', '')
             ->expectsConfirmation('Customize attribute names? (needed for Entra/Azure)', 'yes')
             ->expectsQuestion('Email attribute name', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress')
             ->expectsQuestion('First name attribute name', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')
