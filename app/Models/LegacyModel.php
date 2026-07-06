@@ -11,18 +11,8 @@ use Illuminate\Database\Eloquent\Model;
  * created_at/updated_at, so each model declares its own $timestamps.
  *
  * App-owned tables (e.g. SamlClient) use stock Laravel conventions and extend Model.
- *
- * Note: renaming $primaryKey does not make Eloquent alias the plain `id` property
- * to it (there is no such mechanism in the framework) — since none of these tables
- * have an `id` column, we add the accessor explicitly so `->id` resolves the same
- * way `getKey()` does.
  */
 abstract class LegacyModel extends Model
 {
     protected $primaryKey = 'ID';
-
-    public function getIdAttribute()
-    {
-        return $this->attributes[$this->getKeyName()] ?? null;
-    }
 }

@@ -32,7 +32,8 @@ class HierarchyRelationsTest extends TestCase
         $org = Organization::find(7001);
 
         $this->assertNotNull($org);
-        $this->assertSame(7001, $org->id);        // ->id now resolves via $primaryKey = 'ID'
+        $this->assertSame(7001, $org->ID);              // find() resolves the ID pk
+        $this->assertSame(7001, (int) $org->getKey());  // getKey() reads $primaryKey = 'ID'
         $this->assertSame('ID', $org->getKeyName());
     }
 
@@ -53,7 +54,7 @@ class HierarchyRelationsTest extends TestCase
 
         $dept = Department::find(8001);
 
-        $this->assertSame(7001, $dept->organization->id);
+        $this->assertSame(7001, $dept->organization->ID);
         $this->assertCount(1, $dept->users);
     }
 
