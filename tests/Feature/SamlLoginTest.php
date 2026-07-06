@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\SamlClient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Tests\Support\SamlResponseFactory;
 use Tests\TestCase;
@@ -176,5 +177,41 @@ class SamlLoginTest extends TestCase
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('Users', ['Login' => 'nameid.only@acme.test']);
+    }
+
+    public function test_existing_user_name_change_syncs_from_idp(): void
+    {
+        User::factory()->create([
+            'Login' => 'married@acme.test',
+            'FirstName' => 'Jane',
+            'LastName' => 'Smith',
+        ]);
+
+        $this->acs(['nameId' => 'married@acme.test', 'attributes' => [
+            'email' => 'married@acme.test', 'firstName' => 'Jane', 'lastName' => 'Doe',
+        ]]);
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('Users', ['Login' => 'married@acme.test', 'LastName' => 'Doe']);
+    }
+
+    public function test_missing_mapped_name_attribute_is_logged(): void
+    {
+        // Assertion carries only email; the mapped firstName/lastName attributes are absent,
+        // so the code silently falls back to placeholder names. That misconfiguration must warn.
+        Log::spy();
+
+        $response = $this->acs(['attributes' => [
+            'email' => 'nameless@acme.test',
+        ], 'nameId' => 'nameless@acme.test']);
+
+        $this->assertAuthenticated();
+
+        Log::shouldHaveReceived('warning')->withArgs(function (string $message, array $context) {
+            return str_contains($message, 'attribute')
+                && ($context['client'] ?? null) === 'acme'
+                && in_array('first_name', $context['missing'] ?? [], true)
+                && in_array('last_name', $context['missing'] ?? [], true);
+        })->once();
     }
 }

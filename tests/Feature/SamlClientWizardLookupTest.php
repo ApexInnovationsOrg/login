@@ -64,7 +64,7 @@ class SamlClientWizardLookupTest extends TestCase
 
         $options = $this->command()->depts(1010, '');
 
-        $this->assertSame('None — users choose at finish-account', $options['']);
+        $this->assertSame('None — users choose at finish-account', $options['none']);
         $this->assertArrayHasKey(1100, $options);
         $this->assertArrayNotHasKey(1101, $options); // inactive excluded
         $this->assertArrayNotHasKey(1200, $options); // other org excluded
@@ -77,7 +77,7 @@ class SamlClientWizardLookupTest extends TestCase
 
         $options = $this->command()->depts(1010, 'zzz-no-match');
 
-        $this->assertArrayHasKey('', $options); // None always present
+        $this->assertArrayHasKey('none', $options); // None always present
         $this->assertArrayNotHasKey(1100, $options);
     }
 

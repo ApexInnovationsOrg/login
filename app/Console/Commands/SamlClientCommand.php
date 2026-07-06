@@ -18,7 +18,7 @@ use function Laravel\Prompts\text;
 class SamlClientCommand extends Command
 {
     protected $signature = 'saml:client
-        {action : list, create, update, enable, or disable}
+        {action : list, describe, create, update, enable, or disable}
         {slug? : client slug (all actions except list/create)}
         {--name= : display name}
         {--slug= : explicit slug (create only; defaults to slugged name)}
@@ -31,16 +31,24 @@ class SamlClientCommand extends Command
 
     protected $description = 'Manage SAML SSO client configurations';
 
+    /**
+     * Non-empty sentinel for the wizard's "no default department" choice.
+     * Laravel Prompts' search() treats an empty-string selection as "required",
+     * so the None option cannot use '' as its key.
+     */
+    private const NO_DEPARTMENT = 'none';
+
     public function handle(SamlClientManager $manager): int
     {
         try {
             return match ($this->argument('action')) {
                 'list' => $this->listClients($manager),
                 'create' => $this->createClient($manager),
+                'describe' => $this->describeClient($manager),
                 'update' => $this->updateClient($manager),
                 'enable' => $this->toggle($manager, true),
                 'disable' => $this->toggle($manager, false),
-                default => $this->failWith('Unknown action. Use: list, create, update, enable, disable.'),
+                default => $this->failWith('Unknown action. Use: list, describe, create, update, enable, disable.'),
             };
         } catch (ValidationException $e) {
             foreach ($e->errors() as $messages) {
@@ -75,6 +83,29 @@ class SamlClientCommand extends Command
         });
 
         $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Org', 'Dept', 'Cert expires', ''], $rows->all());
+
+        return self::SUCCESS;
+    }
+    
+    private function describeClient(SamlClientManager $manager): int
+    {
+        $client = $this->resolveClient();
+        $cert = $manager->certificateStatus($client);
+
+        $this->line("Name: {$client->name}");
+        $this->line("Slug: {$client->slug}");
+        $this->line('Enabled: '.($client->enabled ? 'yes' : 'no'));
+        $this->line('JIT provisioning: '.($client->jit_enabled ? 'yes' : 'no'));
+        $this->line("Organization ID: {$client->organization_id}");
+        $this->line('Department ID: '.($client->department_id ?? 'none (users select their department at finish-account)'));
+        $this->line('ACS URL: '.$client->acsUrl());
+        $this->line('Metadata URL: '.$client->metadataUrl());
+        $this->line('IdP Entity ID: '.$client->idp_entity_id);
+        $this->line('IdP SSO URL: '.$client->idp_sso_url);
+        $this->line('IdP certificate expires: '.($cert['expires_at']?->toDateString() ?? '-'));
+        if ($cert['expiring']) {
+            $this->warn('IdP certificate is expiring soon!');
+        }
 
         return self::SUCCESS;
     }
@@ -135,7 +166,7 @@ class SamlClientCommand extends Command
             options: fn (string $value) => $this->wizardDepartmentOptions($organizationId, $value),
             placeholder: 'Type to search, or choose None',
         );
-        $departmentId = $departmentChoice === '' ? null : (int) $departmentChoice;
+        $departmentId = $departmentChoice === self::NO_DEPARTMENT ? null : (int) $departmentChoice;
 
         $jit = confirm(
             label: 'Auto-create unknown users on first login?',
@@ -245,7 +276,7 @@ class SamlClientCommand extends Command
     }
 
     /**
-     * @return array<int|string, string> Leading '' => "None …", then the org's
+     * @return array<int|string, string> Leading 'none' => "None …", then the org's
      *                                   active departments (ID => Name) by search.
      */
     protected function wizardDepartmentOptions(int $orgId, string $search): array
@@ -259,7 +290,10 @@ class SamlClientCommand extends Command
             ->pluck('Name', 'ID')
             ->all();
 
-        return ['' => 'None — users choose at finish-account'] + $departments;
+        // Sentinel key is non-empty: Laravel Prompts' search() rejects an empty-string
+        // selection as "required", so an '' key can never be chosen. Converted to null
+        // in runWizard().
+        return [self::NO_DEPARTMENT => 'None — users choose at finish-account'] + $departments;
     }
 
     // Named failWith: the base Command class already defines fail()

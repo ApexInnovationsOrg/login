@@ -29,7 +29,7 @@ class SamlClientWizardTest extends TestCase
             ->expectsQuestion('URL slug', 'wizard-acme-health')
             ->expectsSearch('Organization', '4242', 'Wizard Acme', ['4242' => 'Wizard Acme Health'])
             ->expectsSearch('Default department', '5000', '', [
-                '' => 'None — users choose at finish-account',
+                'none' => 'None — users choose at finish-account',
                 '5000' => 'Wizard Cardiology',
             ])
             ->expectsConfirmation('Auto-create unknown users on first login?', 'yes')
@@ -54,8 +54,8 @@ class SamlClientWizardTest extends TestCase
             ->expectsQuestion('Client display name', 'Wizard Acme Health')
             ->expectsQuestion('URL slug', 'wizard-acme-health')
             ->expectsSearch('Organization', '4242', 'Wizard Acme', ['4242' => 'Wizard Acme Health'])
-            ->expectsSearch('Default department', '', '', [
-                '' => 'None — users choose at finish-account',
+            ->expectsSearch('Default department', 'none', '', [
+                'none' => 'None — users choose at finish-account',
                 '5000' => 'Wizard Cardiology',
             ])
             ->expectsConfirmation('Auto-create unknown users on first login?', 'yes')
@@ -73,8 +73,8 @@ class SamlClientWizardTest extends TestCase
             ->expectsQuestion('Client display name', 'Entra Corp')
             ->expectsQuestion('URL slug', 'entra-corp')
             ->expectsSearch('Organization', '4242', 'Wizard Acme', ['4242' => 'Wizard Acme Health'])
-            ->expectsSearch('Default department', '', '', [
-                '' => 'None — users choose at finish-account',
+            ->expectsSearch('Default department', 'none', '', [
+                'none' => 'None — users choose at finish-account',
                 '5000' => 'Wizard Cardiology',
             ])
             ->expectsConfirmation('Auto-create unknown users on first login?', 'yes')

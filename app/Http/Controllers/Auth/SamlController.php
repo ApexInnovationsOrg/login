@@ -106,7 +106,7 @@ class SamlController extends Controller
     }
 
     /**
-     * @return array{0: ?string, 1: string, 2: string}
+     * @return array{0: ?string, 1: ?string, 2: ?string}
      */
     private function extractIdentity(OneLoginAuth $auth, SamlClient $client): array
     {
@@ -114,10 +114,28 @@ class SamlController extends Controller
         $attributes = $auth->getAttributes();
         $value = fn (string $key) => $attributes[$map[$key] ?? ''][0] ?? null;
 
+        $firstName = $value('first_name');
+        $lastName = $value('last_name');
+
+        // A mapped name attribute that never arrives means the map and the IdP's
+        // emitted attributes disagree. The provisioner substitutes a placeholder
+        // on creation, so without this warning a user is silently named "FirstName".
+        $missing = array_keys(array_filter([
+            'first_name' => $firstName === null,
+            'last_name' => $lastName === null,
+        ]));
+
+        if ($missing !== []) {
+            Log::warning('SAML assertion missing mapped name attribute', [
+                'client' => $client->slug,
+                'missing' => $missing,
+            ]);
+        }
+
         return [
             $value('email') ?? $auth->getNameId() ?: null,
-            $value('first_name') ?? 'FirstName',
-            $value('last_name') ?? 'LastName',
+            $firstName,
+            $lastName,
         ];
     }
 
