@@ -8,5 +8,7 @@ class ProfessionalRole extends LegacyModel
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $table = 'ProfessionalRoles';
 }

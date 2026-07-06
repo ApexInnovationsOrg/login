@@ -12,6 +12,8 @@ class Department extends LegacyModel
 
     public $timestamps = false;
 
+    protected $guarded = ['ID'];
+
     protected $table = 'Departments';
 
     // Existing relation — used by User::getPasswordRequirements() via department->org.

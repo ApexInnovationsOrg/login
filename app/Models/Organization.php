@@ -12,6 +12,8 @@ class Organization extends LegacyModel
 
     public $timestamps = false;
 
+    protected $guarded = ['ID'];
+
     protected $table = 'Organizations';
 
     public function departments(): HasMany

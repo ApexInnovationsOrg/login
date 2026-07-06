@@ -8,5 +8,7 @@ class ProfessionalCredentialFilters extends LegacyModel
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $table = 'ProfessionalCredentialFilters';
 }

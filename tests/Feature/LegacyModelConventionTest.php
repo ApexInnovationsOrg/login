@@ -31,12 +31,6 @@ class LegacyModelConventionTest extends TestCase
         $this->assertSame('ID', (new $class)->getKeyName());
     }
 
-    public function test_timestamped_legacy_models_keep_timestamps(): void
-    {
-        $this->assertTrue((new ProfessionalRole)->usesTimestamps());
-        $this->assertTrue((new ProfessionalCredentialFilters)->usesTimestamps());
-    }
-
     public function test_non_timestamped_legacy_models_disable_timestamps(): void
     {
         $this->assertFalse((new Organization)->usesTimestamps());
@@ -44,6 +38,8 @@ class LegacyModelConventionTest extends TestCase
         $this->assertFalse((new Credential)->usesTimestamps());
         $this->assertFalse((new States)->usesTimestamps());
         $this->assertFalse((new CredentialLicenseTypes)->usesTimestamps());
+        $this->assertFalse((new ProfessionalRole)->usesTimestamps());
+        $this->assertFalse((new ProfessionalCredentialFilters)->usesTimestamps());
     }
 
     public function test_app_owned_saml_client_keeps_stock_conventions(): void
