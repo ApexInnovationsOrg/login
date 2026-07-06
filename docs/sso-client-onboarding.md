@@ -64,6 +64,22 @@ IT admin can either configure their IdP directly from these three values, or
 fetch `GET <Metadata URL>` from their own tooling if it can consume SP
 metadata XML directly.
 
+#### Interactive alternative: `--wizard`
+
+Instead of remembering the numeric organization and department IDs, run:
+
+```bash
+docker compose exec login php artisan saml:client create --wizard
+```
+
+The wizard prompts for the display name and slug, then lets you **search
+organizations and departments by name** (no IDs to look up), asks whether to
+enable JIT provisioning, and offers to set custom attribute names for providers
+that do not use Okta's defaults (e.g. Entra/Azure). It creates the same disabled
+client and prints the same ACS/metadata/entity handoff block as the flag-based
+command, so Step 2 onward is identical. The wizard needs an interactive terminal;
+use the flag-based form above for scripted/non-interactive creation.
+
 ### Step 2: Get IdP metadata from the customer
 
 Ask the customer for their **IdP metadata XML** (an exported file, or a URL
