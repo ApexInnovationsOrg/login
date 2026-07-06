@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Department;
+use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Saml\SamlClientManager;
 use Illuminate\Console\Command;
@@ -159,6 +161,37 @@ class SamlClientCommand extends Command
         }
 
         return $client;
+    }
+
+    /**
+     * @return array<int, string> Organizations.ID => Name, filtered by search.
+     */
+    protected function wizardOrganizationOptions(string $search): array
+    {
+        return Organization::query()
+            ->when($search !== '', fn ($q) => $q->where('Name', 'like', '%'.$search.'%'))
+            ->orderBy('Name')
+            ->limit(25)
+            ->pluck('Name', 'ID')
+            ->all();
+    }
+
+    /**
+     * @return array<int|string, string> Leading '' => "None …", then the org's
+     *                                   active departments (ID => Name) by search.
+     */
+    protected function wizardDepartmentOptions(int $orgId, string $search): array
+    {
+        $departments = Department::query()
+            ->where('OrganizationID', $orgId)
+            ->where('Active', 'Y')
+            ->when($search !== '', fn ($q) => $q->where('Name', 'like', '%'.$search.'%'))
+            ->orderBy('Name')
+            ->limit(25)
+            ->pluck('Name', 'ID')
+            ->all();
+
+        return ['' => 'None — users choose at finish-account'] + $departments;
     }
 
     // Named failWith: the base Command class already defines fail()
