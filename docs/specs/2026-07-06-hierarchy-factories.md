@@ -28,32 +28,57 @@ Admin tiers are NOT columns on Users — they are membership rows:
 
 All these are legacy tables: PascalCase columns, integer PKs named `ID`, `$timestamps = false`.
 
-## Prerequisite: fix the primary key on the legacy models
+## Prerequisite: a `LegacyModel` base for the shared-schema convention
 
-`Organization` and `Department` do **not** set `$primaryKey`, so they inherit Laravel's default
-`'id'` while the tables' actual primary key is `ID`. Today `$organization->id`, `->find()`, and
-any primary-key-based relationship silently resolve the wrong column (verified:
-`Organization::getKeyName()` returns `'id'`, and `$org->id` is `null`). The relationships added
-below are keyed on the primary key, so this must be corrected first:
+The root cause of the seeding pain is that every model hand-rolls its conventions against the
+legacy schema, and most get the primary key wrong. Of the nine models, only `User` declares
+`protected $primaryKey = 'ID'`; the other eight legacy-schema models
+(`Organization`, `Department`, `Credential`, `ProfessionalRole`, `States`,
+`CredentialLicenseTypes`, `ProfessionalCredentialFilters`, and the new `System`) inherit
+Laravel's default `'id'` while the tables' actual primary key is `ID`. So `->id`, `->find()`,
+and every primary-key-based relationship silently resolve the wrong column (verified:
+`Organization::getKeyName()` returns `'id'`, `$org->id` is `null`).
 
-- Add `protected $primaryKey = 'ID';` to `Organization`, `Department`, and the new `System`
-  (`User` already sets it). These tables auto-increment an unsigned int `ID`, so
-  `$incrementing = true` and the default int key type are correct; only the key *name* is wrong.
+Introduce **`app/Models/LegacyModel.php`** — an abstract base extending `Model` that encodes the
+one convention that is genuinely universal across these legacy tables:
 
-This also makes passing an explicit `['ID' => 933]` through a factory behave correctly
-(the seeder relies on this — see "Rebuilding ReferenceDataSeeder").
+```php
+abstract class LegacyModel extends Model
+{
+    protected $primaryKey = 'ID';   // every legacy table's PK is an unsigned-int `ID`
+    // $incrementing = true and int key type are the correct defaults; declared explicitly for clarity.
+}
+```
+
+The seven plain-`Model` legacy models extend `LegacyModel` (instead of `Model`) and drop their
+own `$primaryKey` line. `User` is the exception: it must extend `Authenticatable` (auth
+requirement), so it keeps its own `protected $primaryKey = 'ID';` — which it already had. This
+fixes the silent PK bug across the board and stops the next legacy model from reintroducing it.
+
+**Timestamps stay per-model, NOT in the base.** Two of these tables — `ProfessionalRoles` and
+`ProfessionalCredentialFilters` — actually have `created_at`/`updated_at` columns and their
+models correctly leave timestamps on; the rest have no such columns and set
+`public $timestamps = false;`. Baking `$timestamps = false` into the base would break the two
+timestamped tables, so each model keeps its own timestamps declaration.
+
+**`SamlClient` is deliberately excluded.** It is app-owned (created in Milestone 2 with
+`$table->id()` and `$table->timestamps()`), so it correctly uses stock Laravel conventions and
+continues to extend `Model`, not `LegacyModel`. New app-owned tables follow the same rule.
+
+Fixing the primary key also makes passing an explicit `['ID' => 933]` through a factory behave
+correctly (the seeder relies on this — see "Rebuilding ReferenceDataSeeder").
 
 ## Models and relationships
 
-- **`System`** — new model, table `Systems`, `$timestamps = false`, `HasFactory`,
-  `protected $primaryKey = 'ID'`.
+- **`System`** — new model extending `LegacyModel`, table `Systems`, `$timestamps = false`,
+  `HasFactory` (inherits `$primaryKey = 'ID'` from the base).
   - `organizations(): BelongsToMany` — to `Organization` through `SystemOrganizations`
     (`SystemID` / `OrganizationID`).
-- **`Organization`** (existing) — add:
+- **`Organization`** (existing) — now extends `LegacyModel`; add:
   - `departments(): HasMany` — to `Department` on `OrganizationID`.
   - `systems(): BelongsToMany` — to `System` through `SystemOrganizations`.
-- **`Department`** (existing) — keep the existing `org()` relation untouched (may be in use);
-  add:
+- **`Department`** (existing) — now extends `LegacyModel`; keep the existing `org()` relation
+  untouched (may be in use); add:
   - `organization(): BelongsTo` — conventionally named, on `OrganizationID`.
   - `users(): HasMany` — to `User` on `DepartmentID`.
 - **`User`** (existing) — add:
@@ -191,6 +216,11 @@ the command adds the demo *departments and users* on top, now via factories.
   - `Organization::factory()->create(['ID' => 933])` persists with `ID` 933 and
     `$org->id === 933` (proves the primary-key fix), and `OrganizationFactory::strict()` produces
     the 12-char / all-complexity preset.
+- **`LegacyModel` migration:** a test asserting every migrated legacy model reports
+  `getKeyName() === 'ID'` (parameterized over the eight models), and that the two timestamped
+  models (`ProfessionalRole`, `ProfessionalCredentialFilters`) still have `$timestamps === true`
+  while the rest report `false` — i.e. moving to the base did not silently flip timestamp
+  behavior. `SamlClient::getKeyName()` stays `'id'` (unaffected).
 - **Seeder regression:** after `migrate:fresh --seed`, assert the fixed fixtures still exist with
   their exact IDs and names (organization 933 = "SSO Organization", org 2 is the strict preset,
   departments 1/2/3 mapped to the right orgs) — i.e. the factory-based rebuild produced the same
