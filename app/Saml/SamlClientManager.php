@@ -6,6 +6,7 @@ use App\Models\SamlClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use OneLogin\Saml2\IdPMetadataParser;
 use OneLogin\Saml2\Utils;
@@ -50,6 +51,10 @@ class SamlClientManager
     {
         $input['slug'] = $input['slug'] ?? Str::slug($input['name'] ?? '');
 
+        if (isset($input['email_domains'])) {
+            $input['email_domains'] = $this->normalizeDomains($input['email_domains']);
+        }
+
         $validated = Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug'],
@@ -60,7 +65,11 @@ class SamlClientManager
             'attribute_map.email' => ['required_with:attribute_map', 'string'],
             'attribute_map.first_name' => ['sometimes', 'string'],
             'attribute_map.last_name' => ['sometimes', 'string'],
+            'email_domains' => ['sometimes', 'array'],
+            'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
         ])->validate();
+
+        $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], null);
 
         return SamlClient::create($validated + [
             'enabled' => false, // enabled explicitly once IdP metadata is in place
@@ -69,11 +78,16 @@ class SamlClientManager
             'idp_sso_url' => 'pending',
             'idp_certificate' => 'pending',
             'attribute_map' => self::DEFAULT_ATTRIBUTE_MAP,
+            'email_domains' => [],
         ]);
     }
 
     public function update(SamlClient $client, array $input): SamlClient
     {
+        if (isset($input['email_domains'])) {
+            $input['email_domains'] = $this->normalizeDomains($input['email_domains']);
+        }
+
         $validated = Validator::make($input, [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => ['sometimes', 'required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug,'.$client->id],
@@ -84,7 +98,11 @@ class SamlClientManager
             'attribute_map.email' => ['required_with:attribute_map', 'string'],
             'attribute_map.first_name' => ['sometimes', 'string'],
             'attribute_map.last_name' => ['sometimes', 'string'],
+            'email_domains' => ['sometimes', 'array'],
+            'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
         ])->validate();
+
+        $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], $client);
 
         $client->update($validated);
 
@@ -123,5 +141,36 @@ class SamlClientManager
             'expires_at' => $expires,
             'expiring' => $expires->isBefore(now()->addDays(30)),
         ];
+    }
+
+    /**
+     * @param  array<int, mixed>  $domains
+     * @return array<int, string>
+     */
+    private function normalizeDomains(array $domains): array
+    {
+        return array_values(array_unique(array_map(
+            fn ($domain) => strtolower(ltrim(trim((string) $domain), '@')),
+            $domains,
+        )));
+    }
+
+    /**
+     * A domain may belong to at most one client, enabled or not — a disabled
+     * client's claim still blocks, so re-enabling never creates a conflict.
+     */
+    private function assertDomainsUnclaimed(array $domains, ?SamlClient $except = null): void
+    {
+        foreach ($domains as $domain) {
+            $claimed = SamlClient::whereJsonContains('email_domains', $domain)
+                ->when($except, fn ($query) => $query->where('id', '!=', $except->id))
+                ->exists();
+
+            if ($claimed) {
+                throw ValidationException::withMessages([
+                    'email_domains' => "Domain {$domain} is already claimed by another SAML client.",
+                ]);
+            }
+        }
     }
 }
