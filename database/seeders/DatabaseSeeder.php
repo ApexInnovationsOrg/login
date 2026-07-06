@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call(ReferenceDataSeeder::class);
+        $this->call(LocalSamlClientSeeder::class);
 
         // Known local login: dev@example.com / password
         User::factory()->create([

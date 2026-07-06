@@ -54,6 +54,10 @@ up:
 db:
 	$(EXEC) php artisan migrate:fresh --seed
 	$(EXEC) php artisan local:users
+	$(EXEC) sh -c "curl -sf -H 'Host: localhost:$${MOCK_IDP_PORT:-8092}' http://mock-idp:8080/simplesaml/saml2/idp/metadata.php -o /tmp/mock-idp-metadata.xml \
+		&& php artisan saml:client update local-idp --metadata=/tmp/mock-idp-metadata.xml \
+		&& php artisan saml:client enable local-idp" \
+		|| echo "mock-idp not reachable; SAML client left disabled (run 'docker compose up -d mock-idp' then 'make db')"
 
 users:
 	$(EXEC) php artisan local:users
@@ -69,6 +73,7 @@ fix:
 
 e2e:
 	./tests/e2e/session-handoff.sh
+	./tests/e2e/saml-login.sh
 
 down:
 	$(COMPOSE) down

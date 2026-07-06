@@ -47,6 +47,16 @@ services:
             test: ["CMD", "redis-cli", "ping"]
             retries: 3
             timeout: 5s
+    mock-idp:
+        image: 'kristophjunge/test-saml-idp'
+        ports:
+            - '${MOCK_IDP_PORT:-8092}:8080'
+        environment:
+            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/metadata'
+            SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: 'http://localhost:8090/saml/local-idp/acs'
+            SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE: 'http://localhost:8090/saml/local-idp/acs'
+        networks:
+            - sail
     mysql:
         image: 'mysql:8.0'
         # Legacy production MySQL runs non-strict (no ONLY_FULL_GROUP_BY / STRICT_TRANS_TABLES)
