@@ -67,6 +67,70 @@ else
     pass "legacy site accepted the SAML session"
 fi
 
+# --- SP-initiated flow ---
+
+# 5. The lookup endpoint routes the mock-IdP domain to SP login
+SP_JAR="$(mktemp)"
+trap 'rm -f "$JAR" "$SP_JAR"' EXIT
+
+curl -s -c "$SP_JAR" -o /dev/null "$LOGIN_URL/login"
+XSRF=$(python3 -c "import urllib.parse,sys;print(urllib.parse.unquote(sys.argv[1]))" \
+    "$(grep XSRF-TOKEN "$SP_JAR" | awk '{print $NF}')")
+
+SSO_PATH=$(curl -s -b "$SP_JAR" -c "$SP_JAR" \
+    -H "X-XSRF-TOKEN: $XSRF" -H 'Accept: application/json' -H 'Content-Type: application/json' \
+    -d '{"email":"user1@example.com"}' "$LOGIN_URL/sso/lookup" \
+    | python3 -c "import json,sys;print(json.load(sys.stdin).get('sso') or '')")
+
+if [ "$SSO_PATH" = "/saml/local-idp/login" ]; then
+    pass "lookup routed user1@example.com to SP login"
+else
+    fail "lookup returned '$SSO_PATH' (expected /saml/local-idp/login)"
+fi
+
+# 6. Unknown domains get the identical null shape
+NULL_BODY=$(curl -s -b "$SP_JAR" -c "$SP_JAR" \
+    -H "X-XSRF-TOKEN: $XSRF" -H 'Accept: application/json' -H 'Content-Type: application/json' \
+    -d '{"email":"someone@gmail.com"}' "$LOGIN_URL/sso/lookup")
+
+if [ "$NULL_BODY" = '{"sso":null}' ]; then
+    pass "unknown domain returns the null shape"
+else
+    fail "unknown domain returned: $NULL_BODY"
+fi
+
+# 7. SP login redirects to the mock IdP with a SAMLRequest
+SP_REDIRECT=$(curl -s -b "$SP_JAR" -c "$SP_JAR" -o /dev/null -w '%{redirect_url}' \
+    "$LOGIN_URL/saml/local-idp/login")
+
+case "$SP_REDIRECT" in
+    *SSOService*SAMLRequest=*) pass "SP login redirected to the IdP with an AuthnRequest" ;;
+    *) fail "SP login redirected to: $SP_REDIRECT" ;;
+esac
+
+# 8. Complete the round trip: IdP login form -> credentials -> assertion -> ACS
+SP_LOGIN_PAGE=$(curl -s -L -c "$SP_JAR" -b "$SP_JAR" "$SP_REDIRECT")
+SP_AUTH_STATE=$(echo "$SP_LOGIN_PAGE" | grep -o 'name="AuthState" value="[^"]*"' | sed 's/.*value="//; s/"$//' | head -1)
+
+SP_AUTO_SUBMIT=$(curl -s -L -c "$SP_JAR" -b "$SP_JAR" \
+    --data-urlencode "username=user1" \
+    --data-urlencode "password=user1pass" \
+    --data-urlencode "AuthState=$SP_AUTH_STATE" \
+    "$IDP_URL/simplesaml/module.php/core/loginuserpass.php")
+
+SP_SAML_RESPONSE=$(echo "$SP_AUTO_SUBMIT" | grep -o 'name="SAMLResponse" value="[^"]*"' | sed 's/.*value="//; s/"$//' | head -1)
+SP_DECODED=$(python3 -c "import html,sys; print(html.unescape(sys.stdin.read()), end='')" <<<"$SP_SAML_RESPONSE")
+
+SP_ACS_STATUS=$(curl -s -c "$SP_JAR" -b "$SP_JAR" -o /dev/null -w "%{http_code}" \
+    --data-urlencode "SAMLResponse=$SP_DECODED" \
+    "$LOGIN_URL/saml/local-idp/acs")
+
+if [ "$SP_ACS_STATUS" = "302" ]; then
+    pass "SP-initiated round trip landed an authenticated session (302)"
+else
+    fail "SP-initiated ACS returned HTTP $SP_ACS_STATUS (expected 302)"
+fi
+
 echo
 if [ "$FAILURES" -gt 0 ]; then
     echo "$FAILURES check(s) failed"
