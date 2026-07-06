@@ -19,7 +19,7 @@ class SsoLookupController extends Controller
      */
     public function __invoke(Request $request): JsonResponse
     {
-        $email = (string) $request->input('email', '');
+        $email = is_string($request->input('email')) ? $request->input('email') : '';
         $domain = str_contains($email, '@') ? Str::afterLast($email, '@') : '';
 
         $client = $domain === '' ? null : SamlClient::forEmailDomain($domain);

@@ -99,6 +99,8 @@ class SamlController extends Controller
         $client = SamlClient::where('slug', $slug)->where('enabled', true)->first();
 
         if (! $client) {
+            Log::warning('SAML SP login hit for unknown or disabled client', ['slug' => $slug]);
+
             abort(404);
         }
 

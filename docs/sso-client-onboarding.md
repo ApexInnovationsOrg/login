@@ -52,7 +52,9 @@ Options:
   (e.g. `--domains=acmehealth.com,acme-health.org`). SP-initiated routing only
   activates once a client has email domains assigned; a client with no domains
   is IdP-initiated only (its users start login from the IdP's dashboard, not
-  from `/sso/lookup`).
+  from `/sso/lookup`). On `update`, `--domains=` replaces the entire list;
+  passing an empty value clears it (disabling SP-initiated routing for that
+  client).
 
 The command prints the information the customer's IT admin needs:
 

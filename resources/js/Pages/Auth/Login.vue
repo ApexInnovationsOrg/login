@@ -13,7 +13,7 @@
 
         <div v-show="showPassword" class="mt-4">
             <breeze-label for="password" value="Password" />
-            <breeze-input id="password" ref="password" type="password" class="mt-1 block w-full" v-model="form.password" :required="showPassword" autocomplete="current-password" />
+            <breeze-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" :required="showPassword" autocomplete="current-password" />
         </div>
 
         <div v-show="showPassword" class="block mt-4">
