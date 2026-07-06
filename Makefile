@@ -37,6 +37,9 @@ setup: env deps up db
 env:
 	@test -f .env || (cp .env.dev .env && echo "created .env from .env.dev")
 	@test -f $(WEBSITE_ROOT)/.env || (grep -v '^#' docker/website.env.dev > $(WEBSITE_ROOT)/.env && echo "created $(WEBSITE_ROOT)/.env")
+	@test -f storage/saml/sp.key || (mkdir -p storage/saml && \
+		openssl req -x509 -newkey rsa:2048 -keyout storage/saml/sp.key -out storage/saml/sp.crt -days 1825 -nodes -subj "/CN=local-login-sp" 2>/dev/null && \
+		echo "generated local SP keypair in storage/saml/")
 
 deps:
 	@test -d vendor || (echo "installing login composer deps..." && \

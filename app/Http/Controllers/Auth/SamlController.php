@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use OneLogin\Saml2\Auth as OneLoginAuth;
+use OneLogin\Saml2\Settings;
 
 class SamlController extends Controller
 {
@@ -142,6 +143,19 @@ class SamlController extends Controller
             'client' => $client->slug,
             'user_id' => $user->ID,
         ]);
+    }
+
+    public function metadata(string $slug)
+    {
+        $client = SamlClient::where('slug', $slug)->first();
+
+        if (! $client) {
+            abort(404);
+        }
+
+        $settings = new Settings($this->settings->forClient($client), spValidationOnly: true);
+
+        return response($settings->getSPMetadata(), 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
     }
 
     private function reject(SamlClient $client, array $context, ?string $publicMessage = null)

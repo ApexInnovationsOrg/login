@@ -33,5 +33,6 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 Route::post('/saml/{slug}/acs', [SamlController::class, 'acs'])->name('saml.acs');
+Route::get('/saml/{slug}/metadata', [SamlController::class, 'metadata'])->name('saml.metadata');
 
 require __DIR__.'/auth.php';
