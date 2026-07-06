@@ -136,6 +136,19 @@ class SamlLoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_disabled_existing_user_is_rejected(): void
+    {
+        User::factory()->disabled()->create(['Login' => 'blocked@acme.test']);
+
+        $response = $this->acs(['nameId' => 'blocked@acme.test', 'attributes' => [
+            'email' => 'blocked@acme.test', 'firstName' => 'Blocked', 'lastName' => 'User',
+        ]]);
+
+        $response->assertStatus(403);
+        $response->assertSee('has been disabled');
+        $this->assertGuest();
+    }
+
     public function test_entra_style_attribute_map_works(): void
     {
         $claims = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims';
