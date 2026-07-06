@@ -32,6 +32,7 @@ class LocalSamlClientSeeder extends Seeder
             'attribute_map' => [
                 'email' => 'email',
             ],
+            'email_domains' => ['example.com'],
         ]);
     }
 }
