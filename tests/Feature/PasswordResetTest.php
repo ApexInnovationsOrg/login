@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\ResetPassword;
+use App\Models\SamlClient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +40,21 @@ class PasswordResetTest extends TestCase
         });
         // The custom token repository keys password_resets on Login, not email
         $this->assertDatabaseHas('password_resets', ['Login' => $user->Login]);
+    }
+
+    public function test_sso_domain_emails_cannot_request_password_reset(): void
+    {
+        Mail::fake();
+
+        SamlClient::factory()->create(['email_domains' => ['acme.com']]);
+        $user = User::factory()->create(['Login' => 'jane@acme.com']);
+
+        $response = $this->post('/forgot-password', ['Login' => 'jane@acme.com']);
+
+        $response->assertSessionHasErrors('email');
+        Mail::assertNotSent(ResetPassword::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->Login);
+        });
     }
 
     public function test_reset_password_screen_can_be_rendered()

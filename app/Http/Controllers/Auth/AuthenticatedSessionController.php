@@ -49,7 +49,7 @@ class AuthenticatedSessionController extends Controller
 
         if ($domain !== '' && SamlClient::forEmailDomain($domain)) {
             return back()->withErrors([
-                'email' => 'Your organization signs in with single sign-on. Use your organization\'s portal or the SSO option on the login page.',
+                'email' => 'Your organization signs in with single sign-on. Enter your work email on the login page and select Continue.',
             ]);
         }
 

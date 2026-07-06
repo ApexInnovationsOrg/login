@@ -84,6 +84,9 @@ unsolicited assertions by design (IdP-initiated is a supported flow), so trackin
 `AuthenticatedSessionController::store` rejects password attempts for any email whose
 domain maps to an enabled SSO client, with a validation error directing the user to SSO.
 Without this, posting to `/login` directly would bypass the two-step routing entirely.
+Password-reset requests are rejected the same way: `PasswordResetLinkController::store`
+applies the identical domain check so a reset link can never be requested for an
+SSO-claimed email either.
 
 ## Frontend modernization
 
@@ -117,7 +120,8 @@ every auth page renders and submits in the E2E environment.
 - `public/build/manifest.json` → the **php-fpm** image (Laravel resolves asset URLs from
   the manifest server-side; this mirrors the current mix-manifest split).
 - Both the dev and master workflows build the node stage — dev deploys ship frontend
-  changes for the first time (today only master builds the nginx image).
+  changes for the first time (dev now also builds and pushes its own nginx image,
+  `apexinnovations-nginx-login-dev`, alongside master's `apexinnovations-nginx-login`).
 
 Local/E2E: `npm run build` inside the login container, or the Vite dev server while
 iterating.
