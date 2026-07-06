@@ -24,9 +24,9 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <inertia-link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-gray-600 hover:text-gray-900">
+            <Link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-gray-600 hover:text-gray-900">
                 Forgot your password?
-            </inertia-link>
+            </Link>
 
             <breeze-button class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                 Log in
@@ -37,6 +37,7 @@
 </template>
 
 <script>
+    import { Link, useForm } from '@inertiajs/vue3'
     import BreezeButton from '@/Components/Button'
     import BreezeGuestLayout from "@/Layouts/Guest"
     import BreezeInput from '@/Components/Input'
@@ -48,6 +49,7 @@
         layout: BreezeGuestLayout,
 
         components: {
+            Link,
             BreezeButton,
             BreezeInput,
             BreezeCheckbox,
@@ -62,7 +64,7 @@
 
         data() {
             return {
-                form: this.$inertia.form({
+                form: useForm({
                     email: '',
                     password: '',
                     remember: false

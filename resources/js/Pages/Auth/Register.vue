@@ -23,9 +23,9 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <inertia-link :href="route('login')" class="underline text-sm text-gray-600 hover:text-gray-900">
+            <Link :href="route('login')" class="underline text-sm text-gray-600 hover:text-gray-900">
                 Already registered?
-            </inertia-link>
+            </Link>
 
             <breeze-button class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                 Register
@@ -35,6 +35,7 @@
 </template>
 
 <script>
+    import { Link, useForm } from '@inertiajs/vue3'
     import BreezeButton from '@/Components/Button'
     import BreezeGuestLayout from '@/Layouts/Guest'
     import BreezeInput from '@/Components/Input'
@@ -45,6 +46,7 @@
         layout: BreezeGuestLayout,
 
         components: {
+            Link,
             BreezeButton,
             BreezeInput,
             BreezeLabel,
@@ -53,7 +55,7 @@
 
         data() {
             return {
-                form: this.$inertia.form({
+                form: useForm({
                     name: '',
                     email: '',
                     password: '',
