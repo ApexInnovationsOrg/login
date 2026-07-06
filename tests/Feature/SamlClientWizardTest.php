@@ -2,35 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
+use App\Models\Organization;
 use App\Models\SamlClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SamlClientWizardTest extends TestCase
 {
     use RefreshDatabase;
 
-    // Reference data seeds Countries so the Organizations CountryID FK resolves.
-    protected $seed = true;
-
     private function seedOrgAndDept(): void
     {
-        DB::table('Organizations')->insert([
-            'ID' => 4242,
-            'Name' => 'Wizard Acme Health',
-            'CreationDate' => now()->format('Y-m-d H:i:s'),
-            'PasswordMinLength' => 6,
-            'PasswordComplexityNumeric' => 'N',
-            'PasswordComplexitySpecial' => 'N',
-            'PasswordComplexityUppercase' => 'N',
-            'PasswordComplexityLowercase' => 'N',
-        ]);
-        DB::table('Departments')->insert([
-            'ID' => 5000,
-            'OrganizationID' => 4242,
-            'Name' => 'Wizard Cardiology',
-            'Active' => 'Y',
+        Organization::factory()->create(['ID' => 4242, 'Name' => 'Wizard Acme Health']);
+        Department::factory()->create([
+            'ID' => 5000, 'OrganizationID' => 4242, 'Name' => 'Wizard Cardiology', 'Active' => 'Y',
         ]);
     }
 

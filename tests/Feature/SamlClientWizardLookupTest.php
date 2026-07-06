@@ -3,17 +3,14 @@
 namespace Tests\Feature;
 
 use App\Console\Commands\SamlClientCommand;
+use App\Models\Department;
+use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SamlClientWizardLookupTest extends TestCase
 {
     use RefreshDatabase;
-
-    // Seed reference data (Countries/States/Organizations/Departments) so the
-    // legacy foreign-key constraints on Organizations/Departments are satisfied.
-    protected $seed = true;
 
     /**
      * Expose the private lookup helpers for direct testing without driving the
@@ -35,28 +32,15 @@ class SamlClientWizardLookupTest extends TestCase
         };
     }
 
-    /** Insert an Organization with the legacy table's required scalar columns. */
     private function org(int $id, string $name): void
     {
-        DB::table('Organizations')->insert([
-            'ID' => $id,
-            'Name' => $name,
-            'CreationDate' => now()->format('Y-m-d H:i:s'),
-            'PasswordMinLength' => 6,
-            'PasswordComplexityNumeric' => 'N',
-            'PasswordComplexitySpecial' => 'N',
-            'PasswordComplexityUppercase' => 'N',
-            'PasswordComplexityLowercase' => 'N',
-        ]);
+        Organization::factory()->create(['ID' => $id, 'Name' => $name]);
     }
 
     private function dept(int $id, int $orgId, string $name, string $active): void
     {
-        DB::table('Departments')->insert([
-            'ID' => $id,
-            'OrganizationID' => $orgId,
-            'Name' => $name,
-            'Active' => $active,
+        Department::factory()->create([
+            'ID' => $id, 'OrganizationID' => $orgId, 'Name' => $name, 'Active' => $active,
         ]);
     }
 

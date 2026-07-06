@@ -13,6 +13,8 @@ class System extends LegacyModel
 
     protected $table = 'Systems';
 
+    protected $fillable = ['Name', 'CreationDate'];
+
     public function organizations(): BelongsToMany
     {
         return $this->belongsToMany(
