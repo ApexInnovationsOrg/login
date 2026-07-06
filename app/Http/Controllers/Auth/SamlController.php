@@ -90,6 +90,25 @@ class SamlController extends Controller
     }
 
     /**
+     * SP-initiated login: send the browser to the IdP with an AuthnRequest.
+     * The ACS accepts unsolicited assertions (IdP-initiated is a supported
+     * flow), so no request-ID state is kept here.
+     */
+    public function login(string $slug)
+    {
+        $client = SamlClient::where('slug', $slug)->where('enabled', true)->first();
+
+        if (! $client) {
+            abort(404);
+        }
+
+        $auth = new OneLoginAuth($this->settings->forClient($client));
+        $auth->getSettings()->setBaseURL(config('app.url'));
+
+        return redirect()->away($auth->login(stay: true));
+    }
+
+    /**
      * Atomically claim an assertion ID; false when already seen (replay).
      */
     private function consumeAssertionId(?string $assertionId): bool
