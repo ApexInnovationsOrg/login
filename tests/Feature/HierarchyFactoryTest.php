@@ -41,10 +41,10 @@ class HierarchyFactoryTest extends TestCase
 
     public function test_organization_factory_honours_explicit_id_and_strict_state(): void
     {
-        $org = Organization::factory()->strict()->create(['ID' => 933, 'Name' => 'SSO Organization']);
+        $org = Organization::factory()->strict()->create(['ID' => 909933, 'Name' => 'Explicit ID Organization']);
 
-        $this->assertSame(933, $org->ID);
-        $this->assertSame('SSO Organization', $org->Name);
+        $this->assertSame(909933, $org->ID);
+        $this->assertSame('Explicit ID Organization', $org->Name);
         $this->assertSame(12, (int) $org->PasswordMinLength);
         $this->assertSame('Y', $org->PasswordComplexityNumeric);
     }
