@@ -86,7 +86,7 @@ class SamlClientCommand extends Command
 
         return self::SUCCESS;
     }
-    
+
     private function describeClient(SamlClientManager $manager): int
     {
         $client = $this->resolveClient();
