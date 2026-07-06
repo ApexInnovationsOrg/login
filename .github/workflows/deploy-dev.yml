@@ -49,5 +49,14 @@ jobs:
         file: ./.Dockerfile-php
         push: true
         tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login-dev
+    - name: dockerignore
+      run: cp .dockerignore-nginx .dockerignore
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./.Dockerfile-nginx
+        push: true
+        tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-nginx-login-dev
     - name: update login service
       run: aws ecs update-service --cluster ApexInnovations --service login-dev --force-new-deployment
