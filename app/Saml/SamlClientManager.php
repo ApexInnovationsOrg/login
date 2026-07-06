@@ -58,6 +58,8 @@ class SamlClientManager
             'jit_enabled' => ['sometimes', 'boolean'],
             'attribute_map' => ['sometimes', 'array'],
             'attribute_map.email' => ['required_with:attribute_map', 'string'],
+            'attribute_map.first_name' => ['sometimes', 'string'],
+            'attribute_map.last_name' => ['sometimes', 'string'],
         ])->validate();
 
         return SamlClient::create($validated + [
@@ -80,6 +82,8 @@ class SamlClientManager
             'jit_enabled' => ['sometimes', 'boolean'],
             'attribute_map' => ['sometimes', 'array'],
             'attribute_map.email' => ['required_with:attribute_map', 'string'],
+            'attribute_map.first_name' => ['sometimes', 'string'],
+            'attribute_map.last_name' => ['sometimes', 'string'],
         ])->validate();
 
         $client->update($validated);

@@ -7,8 +7,13 @@ use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Saml\SamlClientManager;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\search;
+use function Laravel\Prompts\text;
 
 class SamlClientCommand extends Command
 {
@@ -21,7 +26,8 @@ class SamlClientCommand extends Command
         {--department= : default department ID (omit for the finish-account flow)}
         {--jit : enable just-in-time provisioning}
         {--no-jit : disable just-in-time provisioning}
-        {--metadata= : path to an IdP metadata XML file}';
+        {--metadata= : path to an IdP metadata XML file}
+        {--wizard : create a client interactively (create action only)}';
 
     protected $description = 'Manage SAML SSO client configurations';
 
@@ -75,13 +81,19 @@ class SamlClientCommand extends Command
 
     private function createClient(SamlClientManager $manager): int
     {
-        $client = $manager->create(array_filter([
-            'name' => $this->option('name'),
-            'slug' => $this->option('slug'),
-            'organization_id' => $this->option('org'),
-            'department_id' => $this->option('department'),
-        ], fn ($v) => $v !== null));
+        $input = $this->option('wizard')
+            ? $this->runWizard()
+            : array_filter([
+                'name' => $this->option('name'),
+                'slug' => $this->option('slug'),
+                'organization_id' => $this->option('org'),
+                'department_id' => $this->option('department'),
+            ], fn ($v) => $v !== null);
 
+        $client = $manager->create($input);
+
+        // --jit/--no-jit still apply to the flag path; the wizard sets jit in $input,
+        // so applyCommonOptions is a no-op there (no --jit flag passed).
         $client = $this->applyCommonOptions($manager, $client);
 
         $this->info("Created {$client->name} ({$client->slug}). Give the customer:");
@@ -91,6 +103,62 @@ class SamlClientCommand extends Command
         $this->line('Then: saml:client update '.$client->slug.' --metadata=<their-metadata.xml> && saml:client enable '.$client->slug);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Gather client-creation input interactively.
+     *
+     * @return array{name: string, slug: string, organization_id: int,
+     *               department_id: int|null, jit_enabled: bool, attribute_map?: array}
+     */
+    private function runWizard(): array
+    {
+        $name = text(
+            label: 'Client display name',
+            required: true,
+        );
+
+        $slug = text(
+            label: 'URL slug',
+            default: Str::slug($name),
+            required: true,
+        );
+
+        $organizationId = (int) search(
+            label: 'Organization',
+            options: fn (string $value) => $this->wizardOrganizationOptions($value),
+            placeholder: 'Type to search organizations',
+        );
+
+        $departmentChoice = search(
+            label: 'Default department',
+            options: fn (string $value) => $this->wizardDepartmentOptions($organizationId, $value),
+            placeholder: 'Type to search, or choose None',
+        );
+        $departmentId = $departmentChoice === '' ? null : (int) $departmentChoice;
+
+        $jit = confirm(
+            label: 'Auto-create unknown users on first login?',
+            default: true,
+        );
+
+        $input = [
+            'name' => $name,
+            'slug' => $slug,
+            'organization_id' => $organizationId,
+            'department_id' => $departmentId,
+            'jit_enabled' => $jit,
+        ];
+
+        if (confirm(label: 'Customize attribute names? (needed for Entra/Azure)', default: false)) {
+            $input['attribute_map'] = [
+                'email' => text(label: 'Email attribute name', default: 'email', required: true),
+                'first_name' => text(label: 'First name attribute name', default: 'firstName', required: true),
+                'last_name' => text(label: 'Last name attribute name', default: 'lastName', required: true),
+            ];
+        }
+
+        return $input;
     }
 
     private function updateClient(SamlClientManager $manager): int
