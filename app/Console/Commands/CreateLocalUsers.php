@@ -80,20 +80,20 @@ class CreateLocalUsers extends Command
 
         $rows = [];
 
-        $this->user('department.user@example.com', 'Regular', 'User', $deptIds['Emergency']);
-        $rows[] = ['department.user@example.com', 'Regular user in Emergency (Org 1)'];
+        $this->user('department.user@example.test', 'Regular', 'User', $deptIds['Emergency']);
+        $rows[] = ['department.user@example.test', 'Regular user in Emergency (Org 1)'];
 
-        $user = $this->user('department.admin@example.com', 'Department', 'Admin', $deptIds['Emergency']);
+        $user = $this->user('department.admin@example.test', 'Department', 'Admin', $deptIds['Emergency']);
         $user->makeDepartmentAdmin(Department::find($deptIds['Emergency']));
-        $rows[] = ['department.admin@example.com', 'Department admin of Emergency (5 users)'];
+        $rows[] = ['department.admin@example.test', 'Department admin of Emergency (5 users)'];
 
-        $user = $this->user('organization.admin@example.com', 'Organization', 'Admin', $deptIds['Nursing']);
+        $user = $this->user('organization.admin@example.test', 'Organization', 'Admin', $deptIds['Nursing']);
         $user->makeOrganizationAdmin(Organization::find(1));
-        $rows[] = ['organization.admin@example.com', 'Org admin of Org 1 (Emergency, Cardiology, Nursing)'];
+        $rows[] = ['organization.admin@example.test', 'Org admin of Org 1 (Emergency, Cardiology, Nursing)'];
 
-        $user = $this->user('system.admin@example.com', 'System', 'Admin', $deptIds['Nursing']);
+        $user = $this->user('system.admin@example.test', 'System', 'Admin', $deptIds['Nursing']);
         $user->makeSystemAdmin($system);
-        $rows[] = ['system.admin@example.com', 'System admin (Orgs 1 + 933, NOT Org 2)'];
+        $rows[] = ['system.admin@example.test', 'System admin (Orgs 1 + 933, NOT Org 2)'];
 
         $this->table(['Login (password: "password")', 'Role'], $rows);
 
@@ -128,7 +128,7 @@ class CreateLocalUsers extends Command
     {
         $slug = Str::lower($deptName);
         for ($i = 1; $i <= $count; $i++) {
-            $this->user("$slug.user$i@example.com", ucfirst($slug), "User$i", $deptId);
+            $this->user("$slug.user$i@example.test", ucfirst($slug), "User$i", $deptId);
         }
     }
 
