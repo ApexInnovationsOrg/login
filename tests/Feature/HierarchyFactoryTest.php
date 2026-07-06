@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\System;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -63,5 +64,34 @@ class HierarchyFactoryTest extends TestCase
         $dept = Department::factory()->for($org)->create();
 
         $this->assertSame($org->ID, $dept->organization->ID);
+    }
+
+    public function test_user_factory_builds_department_and_organization_chain(): void
+    {
+        $user = User::factory()->create();
+
+        $this->assertNotNull($user->department);
+        $this->assertNotNull($user->department->organization);
+    }
+
+    public function test_make_admin_helpers_insert_one_idempotent_row(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create();
+        $dept = Department::factory()->for($org)->create();
+        $user = User::factory()->create(['DepartmentID' => $dept->ID]);
+
+        $user->makeDepartmentAdmin($dept);
+        $user->makeDepartmentAdmin($dept); // idempotent
+        $user->makeOrganizationAdmin($org);
+        $user->makeSystemAdmin($system);
+
+        $this->assertDatabaseCount('DepartmentAdmins', 1);
+        $this->assertDatabaseCount('OrganizationAdmins', 1);
+        $this->assertDatabaseCount('SystemAdmins', 1);
+
+        $this->assertTrue($user->adminDepartments->contains('ID', $dept->ID));
+        $this->assertTrue($user->adminOrganizations->contains('ID', $org->ID));
+        $this->assertTrue($user->adminSystems->contains('ID', $system->ID));
     }
 }

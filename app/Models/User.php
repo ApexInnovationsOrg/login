@@ -8,8 +8,10 @@ use App\Rules\HasNonAlphanumeric;
 use App\Rules\HasNumbers;
 use App\Rules\HasUppercase;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class User extends Authenticatable
@@ -115,6 +117,48 @@ class User extends Authenticatable
     public function department()
     {
         return $this->hasOne(Department::class, 'ID', 'DepartmentID');
+    }
+
+    public function adminDepartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'DepartmentAdmins', 'UserID', 'DepartmentID', 'ID', 'ID');
+    }
+
+    public function adminOrganizations(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'OrganizationAdmins', 'UserID', 'OrganizationID', 'ID', 'ID');
+    }
+
+    public function adminSystems(): BelongsToMany
+    {
+        return $this->belongsToMany(System::class, 'SystemAdmins', 'UserID', 'SystemID', 'ID', 'ID');
+    }
+
+    public function makeDepartmentAdmin(Department $department): static
+    {
+        DB::table('DepartmentAdmins')->updateOrInsert(
+            ['DepartmentID' => $department->ID, 'UserID' => $this->ID],
+        );
+
+        return $this;
+    }
+
+    public function makeOrganizationAdmin(Organization $organization): static
+    {
+        DB::table('OrganizationAdmins')->updateOrInsert(
+            ['OrganizationID' => $organization->ID, 'UserID' => $this->ID],
+        );
+
+        return $this;
+    }
+
+    public function makeSystemAdmin(System $system): static
+    {
+        DB::table('SystemAdmins')->updateOrInsert(
+            ['SystemID' => $system->ID, 'UserID' => $this->ID],
+        );
+
+        return $this;
     }
 
     public function getPasswordRequirements()
