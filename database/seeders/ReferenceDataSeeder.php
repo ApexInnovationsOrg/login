@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
+use App\Models\Organization;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -29,44 +31,13 @@ class ReferenceDataSeeder extends Seeder
             ['ID' => 66, 'Abbreviation' => 'TX', 'Name' => 'Texas'],
         ]);
 
-        DB::table('Organizations')->insert([
-            [
-                'ID' => 1,
-                'Name' => 'Local Dev Organization',
-                'CreationDate' => now()->format('Y-m-d H:i:s'),
-                'PasswordMinLength' => 6,
-                'PasswordComplexityNumeric' => 'N',
-                'PasswordComplexitySpecial' => 'N',
-                'PasswordComplexityUppercase' => 'N',
-                'PasswordComplexityLowercase' => 'N',
-            ],
-            [
-                'ID' => 2,
-                'Name' => 'Strict Password Organization',
-                'CreationDate' => now()->format('Y-m-d H:i:s'),
-                'PasswordMinLength' => 12,
-                'PasswordComplexityNumeric' => 'Y',
-                'PasswordComplexitySpecial' => 'Y',
-                'PasswordComplexityUppercase' => 'Y',
-                'PasswordComplexityLowercase' => 'Y',
-            ],
-            [
-                'ID' => 933,
-                'Name' => 'SSO Organization',
-                'CreationDate' => now()->format('Y-m-d H:i:s'),
-                'PasswordMinLength' => 6,
-                'PasswordComplexityNumeric' => 'N',
-                'PasswordComplexitySpecial' => 'N',
-                'PasswordComplexityUppercase' => 'N',
-                'PasswordComplexityLowercase' => 'N',
-            ],
-        ]);
+        Organization::factory()->create(['ID' => 1, 'Name' => 'Local Dev Organization']);
+        Organization::factory()->strict()->create(['ID' => 2, 'Name' => 'Strict Password Organization']);
+        Organization::factory()->create(['ID' => 933, 'Name' => 'SSO Organization']);
 
-        DB::table('Departments')->insert([
-            ['ID' => 1, 'OrganizationID' => 1, 'Name' => 'General'],
-            ['ID' => 2, 'OrganizationID' => 2, 'Name' => 'Strict Department'],
-            ['ID' => 3, 'OrganizationID' => 933, 'Name' => 'SSO Department'],
-        ]);
+        Department::factory()->create(['ID' => 1, 'OrganizationID' => 1, 'Name' => 'General']);
+        Department::factory()->create(['ID' => 2, 'OrganizationID' => 2, 'Name' => 'Strict Department']);
+        Department::factory()->create(['ID' => 3, 'OrganizationID' => 933, 'Name' => 'SSO Department']);
 
         DB::table('Credentials')->insert([
             ['ID' => 1, 'Name' => 'RN'],
