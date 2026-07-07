@@ -22,4 +22,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::prefix('admin')->middleware('admin.api')->name('admin.')->group(function () {
     Route::get('/saml-clients', [SamlClientController::class, 'index'])->name('saml-clients.index');
     Route::get('/saml-clients/{slug}', [SamlClientController::class, 'show'])->name('saml-clients.show');
+    Route::post('/saml-clients', [SamlClientController::class, 'store'])->name('saml-clients.store');
+    Route::patch('/saml-clients/{slug}', [SamlClientController::class, 'update'])->name('saml-clients.update');
+    Route::post('/saml-clients/{slug}/idp-metadata', [SamlClientController::class, 'idpMetadata'])->name('saml-clients.idp-metadata');
+    Route::post('/saml-clients/{slug}/enable', [SamlClientController::class, 'enable'])->name('saml-clients.enable');
+    Route::post('/saml-clients/{slug}/disable', [SamlClientController::class, 'disable'])->name('saml-clients.disable');
 });
