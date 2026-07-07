@@ -152,8 +152,16 @@ class SsoClientsPageTest extends DuskTestCase
             // departments plus the "no department" option. In edit mode the
             // Slug form-item is hidden (v-if="!editSlug"), so the item order
             // shifts: 1=Name, 2=Organization, 3=Department.
-            $page->click('.el-table__body-wrapper tbody tr:first-child')
-                ->waitFor('.el-dialog', 10)
+            //
+            // The table sorts by name and dusk-acme sorts before local-idp,
+            // so ":first-child" is NOT local-idp's row — scope to it by
+            // slug via the same XPath row-lookup the enable/disable test
+            // below uses, rather than positional selection.
+            $row = $page->driver->findElement(WebDriverBy::xpath("//tr[contains(., 'local-idp')]"));
+
+            $row->click();
+
+            $page->waitFor('.el-dialog', 10)
                 ->click('.el-dialog .el-form-item:nth-of-type(3) .el-select');
 
             $this->waitForVisibleDropdownOption($page, 'None — users choose at finish-account');
@@ -206,6 +214,14 @@ class SsoClientsPageTest extends DuskTestCase
             // local-idp's org is 933; dev-sso@example.test belongs to it via
             // seeding, so it's a valid grantee for local-idp's client.
             //
+            // The table sorts by name and dusk-acme sorts before local-idp,
+            // so ":first-child" is NOT local-idp's row — scope to it by
+            // slug via the same XPath row-lookup the enable/disable test
+            // uses, rather than positional selection.
+            $row = $page->driver->findElement(WebDriverBy::xpath("//tr[contains(., 'local-idp')]"));
+
+            $row->click();
+
             // The form-level size="small" cascades to every el-select in the
             // dialog (organization AND department pickers also render
             // `.el-select--small`), so that class alone doesn't uniquely
@@ -213,8 +229,7 @@ class SsoClientsPageTest extends DuskTestCase
             // placeholder instead.
             $grantInput = '.el-dialog .el-select input.el-input__inner[placeholder="Search users by name or email"]';
 
-            $page->click('.el-table__body-wrapper tbody tr:first-child')
-                ->waitFor('.el-dialog', 10)
+            $page->waitFor('.el-dialog', 10)
                 ->click($grantInput)
                 ->type($grantInput, 'dev-sso');
 
@@ -225,8 +240,12 @@ class SsoClientsPageTest extends DuskTestCase
                 ->waitForTextIn('.el-dialog', 'dev-sso@example.test', 20);
 
             // Remove: close the tag via its "x" icon, which fires
-            // removeGrant() -> saveGrants() again.
-            $page->click('.el-dialog .el-tag .el-tag__close')
+            // removeGrant() -> saveGrants() again. Scope to grant tags
+            // specifically (class hook added in SSOClientsApp.vue) — the
+            // dialog also renders el-tags for email domains, and a bare
+            // `.el-tag .el-tag__close` selector would ambiguously match
+            // those too.
+            $page->click('.el-dialog .grant-tag .el-tag__close')
                 ->waitForTextIn('.el-message', 'saved', 20)
                 ->waitUntilMissingText('dev-sso@example.test', 20);
         });
