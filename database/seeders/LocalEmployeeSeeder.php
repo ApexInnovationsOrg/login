@@ -15,6 +15,13 @@ class LocalEmployeeSeeder extends Seeder
      */
     public function run(): void
     {
+        // Dev fixture; must never touch a shared database. `testing` is
+        // included because phpunit runs against a disposable local MySQL
+        // database (apex_login_test), not the shared one.
+        if (! app()->environment(['local', 'testing'])) {
+            return;
+        }
+
         DB::table('Employees')->updateOrInsert(
             ['Email' => 'dev.admin@apexinnovations.com'],
             [
