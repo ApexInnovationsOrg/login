@@ -58,8 +58,8 @@ standard Laravel 422 error bag the portal JS renders as field errors. Unknown sl
 - No rate limiting: server-to-server behind a shared secret.
 
 Every mutation logs one structured line: acting admin, method+path, slug, and the changed
-field *names* (values only for `enabled` and `email_domains`, which are the operationally
-interesting ones).
+field *names* (values only for `enabled`, `email_domains`, and grant logins, which are the
+operationally interesting ones).
 
 ## Grants model (designed now, consumed later)
 

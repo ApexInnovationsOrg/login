@@ -60,6 +60,7 @@ class SsoGrantController extends Controller
         AdminAudit::log($request, 'replace grants', [
             'slug' => $client->slug,
             'grant_count' => $users->count(),
+            'logins' => $users->pluck('Login')->values()->all(),
         ]);
 
         return response()->json(['data' => $this->grantsFor($client)]);
