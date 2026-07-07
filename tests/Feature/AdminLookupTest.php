@@ -7,6 +7,7 @@ use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminLookupTest extends TestCase
@@ -83,5 +84,33 @@ class AdminLookupTest extends TestCase
     public function test_departments_non_numeric_organization_404s(): void
     {
         $this->getJson('/api/admin/organizations/not-a-number/departments', $this->headers())->assertNotFound();
+    }
+
+    public function test_organization_search_is_limited_to_25_results(): void
+    {
+        for ($i = 0; $i < 30; $i++) {
+            Organization::factory()->create(['Name' => 'Prefix Org '.Str::random(6)]);
+        }
+
+        $response = $this->getJson('/api/admin/organizations?q=Prefix Org', $this->headers())->assertOk();
+
+        $this->assertCount(25, $response->json('data'));
+    }
+
+    public function test_lookup_routes_require_a_valid_token(): void
+    {
+        $org = Organization::factory()->create();
+        $client = SamlClient::factory()->create(['slug' => 'acme', 'organization_id' => $org->ID]);
+
+        $routes = [
+            '/api/admin/organizations',
+            "/api/admin/organizations/{$org->ID}/departments",
+            "/api/admin/saml-clients/{$client->slug}/users",
+        ];
+
+        foreach ($routes as $route) {
+            $this->getJson($route)->assertUnauthorized();
+            $this->getJson($route, ['Authorization' => 'Bearer wrong-token'])->assertUnauthorized();
+        }
     }
 }
