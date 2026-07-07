@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\SamlClientController;
+use App\Http\Controllers\Api\Admin\SsoGrantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +28,6 @@ Route::prefix('admin')->middleware('admin.api')->name('admin.')->group(function 
     Route::post('/saml-clients/{slug}/idp-metadata', [SamlClientController::class, 'idpMetadata'])->name('saml-clients.idp-metadata');
     Route::post('/saml-clients/{slug}/enable', [SamlClientController::class, 'enable'])->name('saml-clients.enable');
     Route::post('/saml-clients/{slug}/disable', [SamlClientController::class, 'disable'])->name('saml-clients.disable');
+    Route::get('/saml-clients/{slug}/grants', [SsoGrantController::class, 'index'])->name('saml-clients.grants.index');
+    Route::put('/saml-clients/{slug}/grants', [SsoGrantController::class, 'replace'])->name('saml-clients.grants.replace');
 });
