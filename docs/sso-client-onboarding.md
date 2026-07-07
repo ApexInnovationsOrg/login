@@ -182,7 +182,8 @@ SSO clients can also be managed from the legacy admin portal at
 disable a client, and manage its organization grants (the "SSO managers"
 list of users permitted to administer that org's SSO settings). The portal
 page is a thin UI over this app's admin API — it does not talk to the
-database directly.
+database directly. Grants belong to the organization, not the individual
+client, so SSO clients that share an organization also share one grant list.
 
 The API it consumes lives in this app at `/api/admin/saml-clients` (see
 below). Both this application and the admin portal's application need
@@ -190,6 +191,10 @@ below). Both this application and the admin portal's application need
 to authenticate its API calls. The CLI (`saml:client ...`) remains fully
 equivalent to the portal for every operation the portal supports — use
 whichever is more convenient.
+
+**Rollout note:** the `sso_grants` migration must be run before the portal's
+grants panel ships to production — deploys do not run migrations
+automatically, and the client detail view 500s without that table.
 
 ## Troubleshooting
 
