@@ -132,11 +132,14 @@ class SsoClientsPageTest extends DuskTestCase
                 ->press('Save')
                 ->waitFor('.el-form-item__error', 10);
 
-            // Unique slug -> created.
+            // Unique slug -> created. Generous wait: this round-trips through
+            // the legacy portal's bridge (doSSOClients.php) which has been
+            // observed to slow down sharply under occasional load on this
+            // shared dev stack.
             $page->type('.el-dialog .el-form-item:nth-of-type(2) input', 'dusk-acme')
                 ->press('Save')
-                ->waitForTextIn('.el-message', 'Created', 10)
-                ->waitForTextIn('.el-table', 'dusk-acme', 10);
+                ->waitForTextIn('.el-message', 'Created', 20)
+                ->waitForTextIn('.el-table', 'dusk-acme', 20);
         });
     }
 
@@ -171,14 +174,23 @@ class SsoClientsPageTest extends DuskTestCase
             // test relies on dusk-acme existing from the previous test
             // (still disabled, per the above) and scopes to its row via an
             // XPath lookup rather than pressing the first global match for
-            // "Enable".
+            // "Enable". Poll first: the row exists as soon as the table
+            // renders, but WebDriver's findElement() below throws
+            // immediately (no implicit wait) if fired a beat too early.
+            $page->waitUsing(15, 100, function () use ($page) {
+                return (bool) $page->script(<<<'JS'
+                    return Array.from(document.querySelectorAll('.el-table__body-wrapper tbody tr'))
+                        .some(function (tr) { return tr.innerText.includes('dusk-acme'); });
+                JS)[0];
+            }, 'waiting for the dusk-acme row');
+
             $row = $page->driver->findElement(WebDriverBy::xpath("//tr[contains(., 'dusk-acme')]"));
 
             $row->findElement(WebDriverBy::xpath(".//button[contains(., 'Enable')]"))->click();
 
             $page->waitFor('.el-message-box', 10)
                 ->press('OK')
-                ->waitForTextIn('.el-message', 'enabled', 10);
+                ->waitForTextIn('.el-message', 'enabled', 20);
         });
     }
 
@@ -205,14 +217,14 @@ class SsoClientsPageTest extends DuskTestCase
             $this->clickVisibleDropdownOption($page, 'dev-sso@example.test');
 
             $page->press('Add')
-                ->waitForTextIn('.el-message', 'saved', 10)
-                ->waitForTextIn('.el-dialog', 'dev-sso@example.test', 10);
+                ->waitForTextIn('.el-message', 'saved', 20)
+                ->waitForTextIn('.el-dialog', 'dev-sso@example.test', 20);
 
             // Remove: close the tag via its "x" icon, which fires
             // removeGrant() -> saveGrants() again.
             $page->click('.el-dialog .el-tag .el-tag__close')
-                ->waitForTextIn('.el-message', 'saved', 10)
-                ->waitUntilMissingText('dev-sso@example.test', 10);
+                ->waitForTextIn('.el-message', 'saved', 20)
+                ->waitUntilMissingText('dev-sso@example.test', 20);
         });
     }
 }
