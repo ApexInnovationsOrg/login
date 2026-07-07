@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Models\SsoGrant;
 use App\Saml\SamlClientManager;
@@ -148,6 +149,7 @@ class SamlClientController extends Controller
             'idp_entity_id' => $client->idp_entity_id,
             'idp_sso_url' => $client->idp_sso_url,
             'attribute_map' => $client->attribute_map,
+            'organization_name' => Organization::where('ID', $client->organization_id)->value('Name'),
             'grants_count' => SsoGrant::where('organization_id', $client->organization_id)->count(),
         ];
     }

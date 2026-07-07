@@ -44,7 +44,7 @@ class AdminSamlClientReadTest extends TestCase
             ->assertJsonPath('data.slug', 'acme')
             ->assertJsonPath('data.acs_url', $client->acsUrl())
             ->assertJsonStructure(['data' => ['acs_url', 'metadata_url', 'idp_entity_id',
-                'idp_sso_url', 'attribute_map', 'grants_count']]);
+                'idp_sso_url', 'attribute_map', 'organization_name', 'grants_count']]);
     }
 
     public function test_unknown_slug_404s(): void
