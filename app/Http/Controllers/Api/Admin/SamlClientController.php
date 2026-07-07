@@ -14,7 +14,18 @@ use InvalidArgumentException;
 
 class SamlClientController extends Controller
 {
+    /** Field names the manager's validators accept — the audit trail logs only these. */
+    private const EDITABLE_FIELDS = ['name', 'slug', 'organization_id', 'department_id', 'jit_enabled', 'email_domains', 'attribute_map'];
+
     public function __construct(private SamlClientManager $manager) {}
+
+    /**
+     * @return array<int, string>
+     */
+    private function submittedEditableFields(Request $request): array
+    {
+        return array_values(array_intersect(array_keys($request->all()), self::EDITABLE_FIELDS));
+    }
 
     public function index(): JsonResponse
     {
@@ -34,11 +45,16 @@ class SamlClientController extends Controller
     {
         $client = $this->manager->create($request->all());
 
-        AdminAudit::log($request, 'create client', [
+        $context = [
             'slug' => $client->slug,
-            'fields' => array_keys($request->all()),
-            'email_domains' => $client->email_domains ?? [],
-        ]);
+            'fields' => $this->submittedEditableFields($request),
+        ];
+
+        if (array_key_exists('email_domains', $request->all())) {
+            $context['email_domains'] = $client->email_domains ?? [];
+        }
+
+        AdminAudit::log($request, 'create client', $context);
 
         return response()->json(['data' => $this->detail($client)], 201);
     }
@@ -47,11 +63,16 @@ class SamlClientController extends Controller
     {
         $client = $this->manager->update($this->resolve($slug), $request->all());
 
-        AdminAudit::log($request, 'update client', [
+        $context = [
             'slug' => $client->slug,
-            'fields' => array_keys($request->all()),
-            'email_domains' => $client->email_domains ?? [],
-        ]);
+            'fields' => $this->submittedEditableFields($request),
+        ];
+
+        if (array_key_exists('email_domains', $request->all())) {
+            $context['email_domains'] = $client->email_domains ?? [];
+        }
+
+        AdminAudit::log($request, 'update client', $context);
 
         return response()->json(['data' => $this->detail($client)]);
     }
@@ -66,6 +87,7 @@ class SamlClientController extends Controller
             throw ValidationException::withMessages(['xml' => $e->getMessage()]);
         }
 
+        // Metadata uploads only touch the fixed idp_* trio (entity_id, sso_url, certificate), so no fields context is logged.
         AdminAudit::log($request, 'idp metadata', ['slug' => $client->slug]);
 
         return response()->json(['data' => $this->detail($client)]);

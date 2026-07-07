@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\SamlClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class AdminSamlClientWriteTest extends TestCase
@@ -84,5 +85,24 @@ class AdminSamlClientWriteTest extends TestCase
 
         $this->postJson('/api/admin/saml-clients/acme/disable', [], $this->headers())
             ->assertOk()->assertJsonPath('data.enabled', false);
+    }
+
+    public function test_audit_fields_reflect_only_submitted_editable_fields(): void
+    {
+        SamlClient::factory()->create(['slug' => 'acme', 'jit_enabled' => false]);
+
+        Log::spy();
+
+        $this->patchJson('/api/admin/saml-clients/acme', [
+            'jit_enabled' => true,
+            'bogus_field' => 'x',
+        ], $this->headers())
+            ->assertOk();
+
+        Log::shouldHaveReceived('info')->withArgs(function ($message, $context) {
+            return isset($context['fields']) &&
+                   $context['fields'] === ['jit_enabled'] &&
+                   ! array_key_exists('email_domains', $context);
+        })->once();
     }
 }
