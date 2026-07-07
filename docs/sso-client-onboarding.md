@@ -174,6 +174,23 @@ certificate, re-run:
 php artisan saml:client update <slug> --metadata=<their-new-metadata.xml>
 ```
 
+## Admin portal
+
+SSO clients can also be managed from the legacy admin portal at
+`/admin/SSOClients.php` instead of the CLI: list clients, create a new one
+(with inline validation errors from the API), apply IdP metadata, enable or
+disable a client, and manage its organization grants (the "SSO managers"
+list of users permitted to administer that org's SSO settings). The portal
+page is a thin UI over this app's admin API — it does not talk to the
+database directly.
+
+The API it consumes lives in this app at `/api/admin/saml-clients` (see
+below). Both this application and the admin portal's application need
+`ADMIN_API_TOKEN` set (the same value in both `.env` files) for the portal
+to authenticate its API calls. The CLI (`saml:client ...`) remains fully
+equivalent to the portal for every operation the portal supports — use
+whichever is more convenient.
+
 ## Troubleshooting
 
 The application logs a `reason` value on every rejected SAML login. Use this
