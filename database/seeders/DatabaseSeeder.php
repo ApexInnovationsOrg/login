@@ -30,5 +30,17 @@ class DatabaseSeeder extends Seeder
             'LastName' => 'User',
             'DepartmentID' => 1,
         ]);
+
+        // Known local login belonging to the SSO Organization (933) / SSO
+        // Department (3) — the local-idp SAML client's org. Used for
+        // exercising the admin portal's SSO grants panel, which requires
+        // the granted user's department to belong to the client's
+        // organization (SsoGrantController::replace).
+        User::factory()->create([
+            'Login' => 'dev-sso@example.test',
+            'FirstName' => 'Dev',
+            'LastName' => 'SsoUser',
+            'DepartmentID' => 3,
+        ]);
     }
 }
