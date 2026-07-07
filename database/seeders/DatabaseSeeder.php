@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(ReferenceDataSeeder::class);
         $this->call(LocalSamlClientSeeder::class);
+        $this->call(EventTypesSeeder::class);
+        $this->call(LocalEmployeeSeeder::class);
 
         // Known local login: dev@example.test / password.
         // Pinned to seeded Department 1 — letting the factory mint its own
