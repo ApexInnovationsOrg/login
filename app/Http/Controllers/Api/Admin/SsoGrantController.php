@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\AdminAudit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SsoGrantController extends Controller
@@ -37,7 +38,7 @@ class SsoGrantController extends Controller
                 ]);
             }
 
-            if ($user->department?->OrganizationID !== $client->organization_id) {
+            if ($user->department === null || (int) $user->department->OrganizationID !== (int) $client->organization_id) {
                 throw ValidationException::withMessages([
                     'logins' => "{$login} does not belong to this client's organization.",
                 ]);
@@ -46,13 +47,15 @@ class SsoGrantController extends Controller
             return $user;
         });
 
-        SsoGrant::where('organization_id', $client->organization_id)->delete();
+        DB::transaction(function () use ($users, $client, $request) {
+            SsoGrant::where('organization_id', $client->organization_id)->delete();
 
-        $users->each(fn (User $user) => SsoGrant::create([
-            'user_id' => $user->ID,
-            'organization_id' => $client->organization_id,
-            'granted_by' => (string) $request->header('X-Acting-Admin'),
-        ]));
+            $users->each(fn (User $user) => SsoGrant::create([
+                'user_id' => $user->ID,
+                'organization_id' => $client->organization_id,
+                'granted_by' => (string) $request->header('X-Acting-Admin'),
+            ]));
+        });
 
         AdminAudit::log($request, 'replace grants', [
             'slug' => $client->slug,

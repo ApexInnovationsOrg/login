@@ -82,4 +82,24 @@ class AdminSsoGrantTest extends TestCase
         $this->putJson('/api/admin/saml-clients/acme/grants', ['logins' => ['other@org.com']],
             $this->headers())->assertStatus(422)->assertJsonValidationErrors('logins');
     }
+
+    public function test_empty_logins_list_clears_all_grants(): void
+    {
+        $user = User::factory()->create(['Login' => 'grantee@acme.com', 'DepartmentID' => $this->department->ID]);
+        SsoGrant::factory()->create(['user_id' => $user->ID, 'organization_id' => $this->client->organization_id]);
+
+        $this->putJson('/api/admin/saml-clients/acme/grants', ['logins' => []], $this->headers())
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->assertDatabaseCount('sso_grants', 0);
+    }
+
+    public function test_user_with_null_department_is_rejected(): void
+    {
+        User::factory()->create(['Login' => 'nodept@acme.com', 'DepartmentID' => 0]);
+
+        $this->putJson('/api/admin/saml-clients/acme/grants', ['logins' => ['nodept@acme.com']],
+            $this->headers())->assertStatus(422)->assertJsonValidationErrors('logins');
+    }
 }
