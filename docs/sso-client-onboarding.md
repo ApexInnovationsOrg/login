@@ -192,9 +192,13 @@ to authenticate its API calls. The CLI (`saml:client ...`) remains fully
 equivalent to the portal for every operation the portal supports — use
 whichever is more convenient.
 
-**Rollout note:** the `sso_grants` migration must be run before the portal's
-grants panel ships to production — deploys do not run migrations
-automatically, and the client detail view 500s without that table.
+**Rollout note:** migrations run automatically when a login container starts
+(the image entrypoint runs `php artisan migrate --force --isolated`). This is
+safe against the shared database because the login app tracks its migration
+history in its own `migrations_login` table — the shared `migrations` table
+belongs to other applications and is never read or written. No manual
+migration step is needed; a failed migration stops the new container before
+it serves, leaving the previous deployment running.
 
 ## Troubleshooting
 

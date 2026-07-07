@@ -106,7 +106,11 @@ return [
     |
     */
 
-    'migrations' => 'migrations',
+    // Not the default 'migrations': the production database is shared with
+    // other Laravel apps (e.g. the techSupport sub-app) whose history lives
+    // in `migrations`. A dedicated table keeps this app's migrate runs from
+    // reading or writing another app's history.
+    'migrations' => 'migrations_login',
 
     /*
     |--------------------------------------------------------------------------
