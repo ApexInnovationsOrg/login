@@ -53,7 +53,12 @@ up:
 	$(COMPOSE) up -d --build
 
 db:
-	$(EXEC) php artisan migrate:fresh --seed
+	# Wipe explicitly instead of migrate:fresh: fresh only wipes when the
+	# migration repository table exists, and ours is the app-specific
+	# migrations_login (shared prod DB) — on a DB built before the rename,
+	# fresh would skip the wipe and collide with the schema dump.
+	$(EXEC) php artisan db:wipe --force
+	$(EXEC) php artisan migrate --seed
 	$(EXEC) php artisan local:users
 	$(EXEC) sh -c "curl -sf -H 'Host: localhost:$${MOCK_IDP_PORT:-8092}' http://mock-idp:8080/simplesaml/saml2/idp/metadata.php -o /tmp/mock-idp-metadata.xml \
 		&& php artisan saml:client update local-idp --metadata=/tmp/mock-idp-metadata.xml \

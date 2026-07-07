@@ -14,6 +14,11 @@
 !.env.empty
 !*.ini
 
+# Migrate-on-start entrypoint (see .Dockerfile-php) — artisan has no .php
+# extension so it needs its own allowlist entry or the image can't migrate
+!.docker-entrypoint.sh
+!artisan
+
 # And not vendor directories
 !**/vendor/
 !**/vendor/**/*
