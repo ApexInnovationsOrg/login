@@ -9,7 +9,7 @@ EXEC         = $(COMPOSE) exec -T login
 WEBSITE_ROOT = ../website_root
 COMPOSER_IMG = docker run --rm --entrypoint sh -v $(CURDIR)/..:/repos composer:2 -c
 
-.PHONY: help setup env deps up db users test e2e lint fix down destroy logs
+.PHONY: help setup env deps up db users test dusk e2e lint fix down destroy logs
 
 help:
 	@echo "Targets:"
@@ -20,6 +20,7 @@ help:
 	@echo "  db       migrate:fresh, seed, and create the local user hierarchy"
 	@echo "  users    (re)run the local user hierarchy command only"
 	@echo "  test     run the phpunit suite (MySQL test database)"
+	@echo "  dusk     run Laravel Dusk browser tests (needs 'make db' state + selenium up)"
 	@echo "  lint     check code style (pint --test)"
 	@echo "  fix      fix code style (pint)"
 	@echo "  e2e      run the login -> MyCurriculum session handoff test"
@@ -64,6 +65,9 @@ users:
 
 test:
 	$(EXEC) php artisan test
+
+dusk:
+	$(EXEC) php artisan dusk
 
 lint:
 	$(EXEC) vendor/bin/pint --test
