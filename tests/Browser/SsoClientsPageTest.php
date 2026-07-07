@@ -159,6 +159,10 @@ class SsoClientsPageTest extends DuskTestCase
             $this->waitForVisibleDropdownOption($page, 'None — users choose at finish-account');
 
             $page->assertSee('None — users choose at finish-account');
+
+            $this->waitForVisibleDropdownOption($page, 'SSO Department');
+
+            $page->assertSee('SSO Department');
         });
     }
 
