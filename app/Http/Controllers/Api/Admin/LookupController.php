@@ -33,6 +33,8 @@ class LookupController extends Controller
 
     public function departments(int $organizationId): JsonResponse
     {
+        abort_if(Organization::where('ID', $organizationId)->doesntExist(), 404);
+
         return response()->json([
             'data' => Department::query()
                 ->where('OrganizationID', $organizationId)

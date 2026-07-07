@@ -74,4 +74,14 @@ class AdminLookupTest extends TestCase
     {
         $this->getJson('/api/admin/saml-clients/nope/users?q=x', $this->headers())->assertNotFound();
     }
+
+    public function test_departments_unknown_organization_404s(): void
+    {
+        $this->getJson('/api/admin/organizations/999999/departments', $this->headers())->assertNotFound();
+    }
+
+    public function test_departments_non_numeric_organization_404s(): void
+    {
+        $this->getJson('/api/admin/organizations/not-a-number/departments', $this->headers())->assertNotFound();
+    }
 }

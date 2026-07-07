@@ -23,7 +23,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::prefix('admin')->middleware('admin.api')->name('admin.')->group(function () {
     Route::get('/organizations', [LookupController::class, 'organizations'])->name('organizations.index');
-    Route::get('/organizations/{organizationId}/departments', [LookupController::class, 'departments'])->name('organizations.departments');
+    Route::get('/organizations/{organizationId}/departments', [LookupController::class, 'departments'])->whereNumber('organizationId')->name('organizations.departments');
     Route::get('/saml-clients/{slug}/users', [LookupController::class, 'users'])->name('saml-clients.users');
     Route::get('/saml-clients', [SamlClientController::class, 'index'])->name('saml-clients.index');
     Route::get('/saml-clients/{slug}', [SamlClientController::class, 'show'])->name('saml-clients.show');
