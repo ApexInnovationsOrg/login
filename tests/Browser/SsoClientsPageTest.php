@@ -2,6 +2,8 @@
 
 namespace Tests\Browser;
 
+use App\Models\SamlClient;
+use App\Models\SsoGrant;
 use Laravel\Dusk\Browser;
 use Tests\Browser\Support\InteractsWithAdminPortal;
 use Tests\DuskTestCase;
@@ -9,6 +11,31 @@ use Tests\DuskTestCase;
 class SsoClientsPageTest extends DuskTestCase
 {
     use InteractsWithAdminPortal;
+
+    /**
+     * Tracks whether the once-per-class cleanup below has already run, so
+     * later test methods in this class don't wipe state that an earlier
+     * test method in the same run just created (e.g. "dusk-acme").
+     */
+    private static bool $cleanedStaleState = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (self::$cleanedStaleState) {
+            return;
+        }
+
+        self::$cleanedStaleState = true;
+
+        // Idempotency: these tests create/mutate a "dusk-acme" client and
+        // grants on org 933 (local-idp's org). Without this cleanup, a
+        // second `make dusk` run (without an intervening `make db`) hits
+        // "slug already taken" and stale grant state from the previous run.
+        SamlClient::where('slug', 'dusk-acme')->delete();
+        SsoGrant::where('organization_id', 933)->delete();
+    }
 
     private function visitPage(Browser $browser): Browser
     {

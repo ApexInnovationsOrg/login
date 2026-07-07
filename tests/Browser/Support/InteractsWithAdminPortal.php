@@ -30,7 +30,10 @@ trait InteractsWithAdminPortal
             $browser->type('Username', 'dev.admin')
                 ->type('Password', 'password')
                 ->press('Login')
-                ->pause(500);
+                // Home.php only renders #adminID once $_SESSION['AdminID'] is
+                // set, so this is a stable signal that login completed
+                // (rather than a fixed pause guessing how long that takes).
+                ->waitFor('#adminID', 10);
         }
 
         return $browser;
