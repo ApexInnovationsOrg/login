@@ -2,61 +2,62 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Mail\ResetPassword;
+use App\Rules\HasLowercase;
+use App\Rules\HasNonAlphanumeric;
+use App\Rules\HasNumbers;
+use App\Rules\HasUppercase;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
-use App\Rules\HasNumbers;
-use App\Rules\HasLowercase;
-use App\Rules\HasUppercase;
-use App\Rules\HasNonAlphanumeric;
-
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
-    
+
     public $timestamps = false;
+
     protected $primaryKey = 'ID';
+
     protected $table = 'Users';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['Login', 
-    'FirstName',
-     'Password',
-     'CreationDate',
-     'PreviousLastLoginDate',
-     'LastLoginDate',
-     'CredentialID',
-     'LastName',
-      'Address',
-      'Address2',
-      'City', 
-      'StateID', 
-      'CountryID', 
-      'PostalCode',
-      'Phone',
-      'DepartmentID', 
-      'LMS', 
-      'Active', 
-      'Beta', 
-      'ShowDemoReporting', 
-      'PasswordChangedByAdmin', 
-      'Locale', 
-      'oldUser',
-      'SecurityAnswer',
-      'StateOfLicensureID',
-      'StateLicenseNumber',
-      'StateLicenseExpirationDate',
-      'NEMSID',
-      'NREMTCertificationNumber',
-      'NREMTReregistrationDate',
-      'CredentialLicenseTypeID'];
+    protected $fillable = ['Login',
+        'FirstName',
+        'Password',
+        'CreationDate',
+        'PreviousLastLoginDate',
+        'LastLoginDate',
+        'CredentialID',
+        'LastName',
+        'Address',
+        'Address2',
+        'City',
+        'StateID',
+        'CountryID',
+        'PostalCode',
+        'Phone',
+        'DepartmentID',
+        'LMS',
+        'Active',
+        'Beta',
+        'ShowDemoReporting',
+        'PasswordChangedByAdmin',
+        'Locale',
+        'oldUser',
+        'SecurityAnswer',
+        'StateOfLicensureID',
+        'StateLicenseNumber',
+        'StateLicenseExpirationDate',
+        'NEMSID',
+        'NREMTCertificationNumber',
+        'NREMTReregistrationDate',
+        'CredentialLicenseTypeID'];
 
     /**
      * The attributes that should be hidden for arrays.
@@ -76,9 +77,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-
-
 
     public function id()
     {
@@ -111,56 +109,50 @@ class User extends Authenticatable
             'token' => $token,
             'email' => $this->getEmailForPasswordReset(),
         ], false));
-        Mail::to($this->Login)->send(new ResetPassword($url,$this));
+        Mail::to($this->Login)->send(new ResetPassword($url, $this));
     }
+
     public function department()
     {
-        return $this->hasOne(Department::class,'ID','DepartmentID');
+        return $this->hasOne(Department::class, 'ID', 'DepartmentID');
     }
 
     public function getPasswordRequirements()
     {
-		$Org = $this->department->org;
+        $Org = $this->department->org;
 
-		
-		$requirementTypes = ["PasswordMinLength", "PasswordComplexityNumeric", "PasswordComplexitySpecial", "PasswordComplexityUppercase", "PasswordComplexityLowercase"];
-        $requirements = ['required','confirmed'];
+        $requirementTypes = ['PasswordMinLength', 'PasswordComplexityNumeric', 'PasswordComplexitySpecial', 'PasswordComplexityUppercase', 'PasswordComplexityLowercase'];
+        $requirements = ['required', 'confirmed'];
 
-		foreach ($requirementTypes as $requirement) 
-		{
-			switch($requirement)
-			{
-				case "PasswordMinLength":
-					$requirements[] = 'min:' . $Org->PasswordMinLength;
-					break;
-				case "PasswordComplexityNumeric":
-					if($Org->PasswordComplexityNumeric == "Y")
-					{
-						$requirements[] = new HasNumbers;
-					}
-					break;
-				case "PasswordComplexitySpecial":
-					if($Org->PasswordComplexitySpecial == "Y")
-					{
-						$requirements[] = new HasNonAlphanumeric;
-					}
-					break;
-				case "PasswordComplexityUppercase":
-					if($Org->PasswordComplexityUppercase == "Y")
-					{
-						$requirements[] = new HasUppercase;
-					}
-					break;
-				case "PasswordComplexityLowercase":
-					if($Org->PasswordComplexityLowercase == "Y")
-					{
-						$requirements[] = new HasLowercase;
-					}
-					break;
-			}
+        foreach ($requirementTypes as $requirement) {
+            switch ($requirement) {
+                case 'PasswordMinLength':
+                    $requirements[] = 'min:'.$Org->PasswordMinLength;
+                    break;
+                case 'PasswordComplexityNumeric':
+                    if ($Org->PasswordComplexityNumeric == 'Y') {
+                        $requirements[] = new HasNumbers;
+                    }
+                    break;
+                case 'PasswordComplexitySpecial':
+                    if ($Org->PasswordComplexitySpecial == 'Y') {
+                        $requirements[] = new HasNonAlphanumeric;
+                    }
+                    break;
+                case 'PasswordComplexityUppercase':
+                    if ($Org->PasswordComplexityUppercase == 'Y') {
+                        $requirements[] = new HasUppercase;
+                    }
+                    break;
+                case 'PasswordComplexityLowercase':
+                    if ($Org->PasswordComplexityLowercase == 'Y') {
+                        $requirements[] = new HasLowercase;
+                    }
+                    break;
+            }
 
-		}
+        }
 
-		return $requirements;
+        return $requirements;
     }
 }

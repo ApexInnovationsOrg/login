@@ -155,7 +155,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN','apexinnovations.com'),
+    'domain' => env('SESSION_DOMAIN', 'apexinnovations.com'),
 
     /*
     |--------------------------------------------------------------------------

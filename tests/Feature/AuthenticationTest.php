@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,28 +17,111 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen()
+    public function test_users_can_authenticate_with_their_login_email()
     {
         $user = User::factory()->create();
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
+        // The form posts "email" via the Inertia client; the controller
+        // matches it against Users.Login
+        $response = $this->withHeader('X-Inertia', 'true')->post('/login', [
+            'email' => $user->Login,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        // Successful login hands off to the main site via Inertia::location(),
+        // which responds 409 + X-Inertia-Location to Inertia requests
+        // (plain requests get a normal 302 since inertia-laravel 0.6)
+        $response->assertStatus(409);
+        $response->assertHeader('X-Inertia-Location', 'https://www.apexinnovations.com/MyCurriculum.php');
+    }
+
+    public function test_login_sets_legacy_session_keys()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->Login,
+            'password' => 'password',
+        ]);
+
+        // The legacy site reads both spellings of each key
+        $response->assertSessionHas('userId', $user->ID);
+        $response->assertSessionHas('userID', $user->ID);
+        $response->assertSessionHas('userName', $user->FirstName.' '.$user->LastName);
+        $response->assertSessionHas('Username', $user->FirstName.' '.$user->LastName);
+    }
+
+    public function test_login_updates_last_login_date()
+    {
+        $user = User::factory()->create();
+        $this->assertNull($user->LastLoginDate);
+
+        $this->post('/login', [
+            'email' => $user->Login,
+            'password' => 'password',
+        ]);
+
+        $this->assertNotNull($user->fresh()->LastLoginDate);
     }
 
     public function test_users_can_not_authenticate_with_invalid_password()
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
-            'email' => $user->email,
+        $response = $this->post('/login', [
+            'email' => $user->Login,
             'password' => 'wrong-password',
         ]);
 
         $this->assertGuest();
+        $response->assertSessionHasErrors('email');
+    }
+
+    public function test_disabled_users_are_rejected()
+    {
+        $user = User::factory()->disabled()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->Login,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertRedirect('/login');
+        $response->assertSessionHasErrors();
+    }
+
+    public function test_admin_reset_users_are_forced_to_reset_password()
+    {
+        $user = User::factory()->adminReset()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->Login,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect('reset-made-password');
+    }
+
+    public function test_users_can_logout()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post('/logout');
+
+        $this->assertGuest();
+        $response->assertRedirect('/');
+    }
+
+    public function test_legacy_get_logout_route_works()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/auth/logout');
+
+        $this->assertGuest();
+        $response->assertRedirect('/');
     }
 }

@@ -3,25 +3,23 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
+use Illuminate\View\View;
 use Inertia\Inertia;
-use Mockery\Generator\StringManipulation\Pass\Pass;
 
 class NewPasswordController extends Controller
 {
     /**
      * Display the password reset view.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function create(Request $request)
     {
@@ -34,19 +32,18 @@ class NewPasswordController extends Controller
     /**
      * Handle an incoming new password request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function store(Request $request)
     {
         $request->validate([
             'token' => 'required',
-            'Login' => 'required|email'
+            'Login' => 'required|email',
         ]);
         $user = Password::getUser($request->only('Login', 'password', 'password_confirmation', 'token'));
-        
+
         $request->validate([
             'password' => $user->getPasswordRequirements(),
         ]);
@@ -60,7 +57,7 @@ class NewPasswordController extends Controller
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
-                    
+
                 event(new PasswordReset($user));
             }
         );

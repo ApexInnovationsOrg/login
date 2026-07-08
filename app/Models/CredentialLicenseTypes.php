@@ -9,5 +9,5 @@ class CredentialLicenseTypes extends Model
 {
     use HasFactory;
 
-    protected $table = "CredentialLicenseTypes";
+    protected $table = 'CredentialLicenseTypes';
 }
