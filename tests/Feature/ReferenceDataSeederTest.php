@@ -28,4 +28,21 @@ class ReferenceDataSeederTest extends TestCase
         $this->assertSame(12, (int) $org2->PasswordMinLength);
         $this->assertSame('Y', $org2->PasswordComplexityNumeric);
     }
+
+    public function test_seeding_commits_no_random_organizations(): void
+    {
+        // The seed pass is committed outside test transactions, so any
+        // faker-named organization it leaves behind can later collide with a
+        // test-created org (Organizations.Name is unique and faker's unique()
+        // memory resets each test). Only the fixed rows may exist.
+        $this->assertSame(
+            ['Local Dev Organization', 'SSO Organization', 'Strict Password Organization'],
+            DB::table('Organizations')->orderBy('Name')->pluck('Name')->all()
+        );
+
+        // The dev user rides on seeded Department 1 instead of minting
+        // a department/organization pair of its own. (Matched by name, not
+        // Login, so the assertion survives dev-domain renames.)
+        $this->assertDatabaseHas('Users', ['FirstName' => 'Dev', 'LastName' => 'User', 'DepartmentID' => 1]);
+    }
 }
