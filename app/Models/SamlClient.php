@@ -19,6 +19,7 @@ class SamlClient extends Model
         'organization_id',
         'department_id',
         'jit_enabled',
+        'admin_portal',
         'attribute_map',
         'email_domains',
     ];
@@ -26,6 +27,7 @@ class SamlClient extends Model
     protected $casts = [
         'enabled' => 'boolean',
         'jit_enabled' => 'boolean',
+        'admin_portal' => 'boolean',
         'attribute_map' => 'array',
         'email_domains' => 'array',
     ];
@@ -47,6 +49,7 @@ class SamlClient extends Model
     public static function forEmailDomain(string $domain): ?self
     {
         return static::where('enabled', true)
+            ->where('admin_portal', false)
             ->whereJsonContains('email_domains', strtolower($domain))
             ->first();
     }

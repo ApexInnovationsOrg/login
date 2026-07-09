@@ -57,4 +57,25 @@ class SamlClientModelTest extends TestCase
 
         $this->assertNull(SamlClient::forEmailDomain('gmail.com'));
     }
+
+    public function test_admin_portal_defaults_to_false(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        $this->assertFalse($client->admin_portal);
+    }
+
+    public function test_admin_portal_state_sets_flag(): void
+    {
+        $client = SamlClient::factory()->adminPortal()->create();
+
+        $this->assertTrue($client->refresh()->admin_portal);
+    }
+
+    public function test_email_domain_lookup_never_matches_admin_portal_clients(): void
+    {
+        SamlClient::factory()->adminPortal()->create(['email_domains' => ['apexinnovations.com']]);
+
+        $this->assertNull(SamlClient::forEmailDomain('apexinnovations.com'));
+    }
 }

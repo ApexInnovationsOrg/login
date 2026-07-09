@@ -24,6 +24,7 @@ class SamlClientFactory extends Factory
             'organization_id' => 1,
             'department_id' => null,
             'jit_enabled' => true,
+            'admin_portal' => false,
             'attribute_map' => [
                 'email' => 'email',
                 'first_name' => 'firstName',
@@ -31,5 +32,11 @@ class SamlClientFactory extends Factory
             ],
             'email_domains' => [],
         ];
+    }
+
+    /** A client asserting Employee (admin portal) identities. */
+    public function adminPortal(): static
+    {
+        return $this->state(fn () => ['admin_portal' => true]);
     }
 }
