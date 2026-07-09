@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\SamlClient;
 use App\Models\User;
+use App\Saml\AdminSsoHandoff;
 use App\Saml\SamlClientManager;
 use App\Saml\SamlLoginRejected;
 use App\Saml\SamlSettingsFactory;
@@ -21,6 +22,7 @@ class SamlController extends Controller
     public function __construct(
         private SamlSettingsFactory $settings,
         private SamlUserProvisioner $provisioner,
+        private AdminSsoHandoff $adminHandoff,
     ) {}
 
     public function acs(Request $request, string $slug)
@@ -63,6 +65,19 @@ class SamlController extends Controller
 
         if ($email === null) {
             return $this->reject($client, ['reason' => 'no_email_attribute']);
+        }
+
+        // Admin-portal clients assert Employee identities: no JIT, no Users
+        // lookup, no Laravel session — hand off to the portal's own session
+        // world via a single-use token (spec: admin portal SSO).
+        if ($client->admin_portal) {
+            try {
+                $redirect = $this->adminHandoff->initiate($client, $email);
+            } catch (SamlLoginRejected $e) {
+                return $this->reject($client, $e->logContext, $e->publicMessage);
+            }
+
+            return redirect()->away($redirect);
         }
 
         try {
