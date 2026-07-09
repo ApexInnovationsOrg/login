@@ -8,6 +8,7 @@ use App\Saml\SamlLoginRejected;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class AdminSsoHandoffTest extends TestCase
@@ -86,5 +87,14 @@ class AdminSsoHandoffTest extends TestCase
         Cache::store('array')->put('admin_sso:token:'.$query['token'], ['employee_id' => 1, 'name' => 'Ghost'], 60);
 
         $this->assertNull($this->handoff->redeem($query['token']));
+    }
+
+    public function test_failed_redemption_is_logged(): void
+    {
+        Log::spy();
+
+        $this->assertNull($this->handoff->redeem('unknown-token'));
+
+        Log::shouldHaveReceived('warning')->with('Admin SSO handoff redemption failed', ['already_claimed' => false]);
     }
 }

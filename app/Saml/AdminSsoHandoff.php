@@ -37,7 +37,7 @@ class AdminSsoHandoff
             (int) config('saml.admin_handoff_ttl'),
         );
 
-        Log::info('SAML admin portal login', [
+        Log::info('Admin portal SSO handoff initiated', [
             'client' => $client->slug,
             'employee_id' => $employee->ID,
         ]);
@@ -56,9 +56,17 @@ class AdminSsoHandoff
         $store = Cache::store(config('saml.replay_store'));
 
         if (! $store->add(self::KEY_PREFIX.'claim:'.$token, 1, (int) config('saml.admin_handoff_ttl'))) {
+            Log::warning('Admin SSO handoff redemption failed', ['already_claimed' => true]);
+
             return null;
         }
 
-        return $store->pull(self::KEY_PREFIX.$token);
+        $payload = $store->pull(self::KEY_PREFIX.$token);
+
+        if ($payload === null) {
+            Log::warning('Admin SSO handoff redemption failed', ['already_claimed' => false]);
+        }
+
+        return $payload;
     }
 }
