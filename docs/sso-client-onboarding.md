@@ -202,6 +202,30 @@ belongs to other applications and is never read or written. No manual
 migration step is needed; a failed migration stops the new container before
 it serves, leaving the previous deployment running.
 
+## Admin portal SSO (apex-admin)
+
+The admin portal itself can sit behind SSO. A SAML client marked
+`--admin-portal` asserts *Employee* identities (the portal's own auth table):
+the ACS matches `Employees.Email` (active rows only, never JIT-provisions),
+mints a 60-second single-use token, and redirects to the portal's
+`ssoLogon.php`, which redeems it server-to-server (`POST
+/api/admin/sso-handoff/redeem`, same `ADMIN_API_TOKEN` bridge as the SSO
+Clients page) and establishes the normal portal session. Password login is
+unaffected; both paths coexist.
+
+**The feature flag is the client's `enabled` state.** `saml:client disable
+apex-admin` (or the portal toggle) turns admin SSO off at runtime: the
+login/ACS endpoints 404 and the portal's "Sign in with SSO" button hides
+itself within a minute. Admin-portal clients cannot claim email domains and
+never appear in `/sso/lookup` routing.
+
+Rollout: deploy login app, deploy website_admin, then
+`saml:client create --name="Apex Admin" --org=<org> --admin-portal`,
+apply the internal IdP's metadata, verify with a test employee, and
+`saml:client enable apex-admin`. Set `LOGIN_SSO_CLIENT=apex-admin` in the
+portal's env. Local dev uses the second mock IdP (`mock-idp-admin`,
+client `local-admin-idp`, login user1/user1pass).
+
 ## Troubleshooting
 
 The application logs a `reason` value on every rejected SAML login. Use this
