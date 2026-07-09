@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\LookupController;
 use App\Http\Controllers\Api\Admin\SamlClientController;
 use App\Http\Controllers\Api\Admin\SsoGrantController;
+use App\Http\Controllers\Api\Admin\SsoHandoffController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,4 +35,5 @@ Route::prefix('admin')->middleware('admin.api')->name('admin.')->group(function 
     Route::post('/saml-clients/{slug}/disable', [SamlClientController::class, 'disable'])->name('saml-clients.disable');
     Route::get('/saml-clients/{slug}/grants', [SsoGrantController::class, 'index'])->name('saml-clients.grants.index');
     Route::put('/saml-clients/{slug}/grants', [SsoGrantController::class, 'replace'])->name('saml-clients.grants.replace');
+    Route::post('/sso-handoff/redeem', [SsoHandoffController::class, 'redeem'])->name('sso-handoff.redeem');
 });
