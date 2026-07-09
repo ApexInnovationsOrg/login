@@ -34,5 +34,23 @@ class LocalSamlClientSeeder extends Seeder
             ],
             'email_domains' => ['example.com'],
         ]);
+
+        // Local mock IdP for the *admin portal* SSO flow (second container,
+        // mock-idp-admin, because the image only supports one SP ACS URL).
+        // user1@example.com is seeded as an Employee by LocalEmployeeSeeder.
+        SamlClient::updateOrCreate(['slug' => 'local-admin-idp'], [
+            'name' => 'Local Mock IdP (Admin Portal)',
+            'enabled' => false,
+            'admin_portal' => true,
+            'idp_entity_id' => 'pending',
+            'idp_sso_url' => 'pending',
+            'idp_certificate' => 'pending',
+            'organization_id' => 933,
+            'department_id' => null,
+            'jit_enabled' => false,
+            'attribute_map' => [
+                'email' => 'email',
+            ],
+        ]);
     }
 }

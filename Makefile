@@ -64,6 +64,10 @@ db:
 		&& php artisan saml:client update local-idp --metadata=/tmp/mock-idp-metadata.xml \
 		&& php artisan saml:client enable local-idp" \
 		|| echo "mock-idp not reachable; SAML client left disabled (run 'docker compose up -d mock-idp' then 'make db')"
+	$(EXEC) sh -c "curl -sf -H 'Host: localhost:$${MOCK_IDP_ADMIN_PORT:-8093}' http://mock-idp-admin:8080/simplesaml/saml2/idp/metadata.php -o /tmp/mock-idp-admin-metadata.xml \
+		&& php artisan saml:client update local-admin-idp --metadata=/tmp/mock-idp-admin-metadata.xml \
+		&& php artisan saml:client enable local-admin-idp" \
+		|| echo "mock-idp-admin not reachable; admin SSO client left disabled (run 'docker compose up -d mock-idp-admin' then 'make db')"
 
 users:
 	$(EXEC) php artisan local:users
