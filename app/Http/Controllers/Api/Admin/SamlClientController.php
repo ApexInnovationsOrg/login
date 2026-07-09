@@ -16,7 +16,7 @@ use InvalidArgumentException;
 class SamlClientController extends Controller
 {
     /** Field names the manager's validators accept — the audit trail logs only these. */
-    private const EDITABLE_FIELDS = ['name', 'slug', 'organization_id', 'department_id', 'jit_enabled', 'email_domains', 'attribute_map'];
+    private const EDITABLE_FIELDS = ['name', 'slug', 'organization_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map'];
 
     public function __construct(private SamlClientManager $manager) {}
 
@@ -128,6 +128,7 @@ class SamlClientController extends Controller
             'slug' => $client->slug,
             'enabled' => $client->enabled,
             'jit_enabled' => $client->jit_enabled,
+            'admin_portal' => $client->admin_portal,
             'organization_id' => $client->organization_id,
             'department_id' => $client->department_id,
             'email_domains' => $client->email_domains ?? [],

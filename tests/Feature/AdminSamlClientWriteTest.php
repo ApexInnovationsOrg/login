@@ -105,4 +105,13 @@ class AdminSamlClientWriteTest extends TestCase
                    ! array_key_exists('email_domains', $context);
         })->once();
     }
+
+    public function test_api_rejects_domains_on_admin_portal_client(): void
+    {
+        SamlClient::factory()->adminPortal()->create(['slug' => 'apex-admin']);
+
+        $this->patchJson('/api/admin/saml-clients/apex-admin', ['email_domains' => ['apexinnovations.com']], $this->headers())
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email_domains');
+    }
 }
