@@ -6,6 +6,7 @@ use App\Models\SamlClient;
 use App\Saml\AdminSsoHandoff;
 use App\Saml\SamlLoginRejected;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -72,5 +73,18 @@ class AdminSsoHandoffTest extends TestCase
     public function test_redeem_of_garbage_token_is_null(): void
     {
         $this->assertNull($this->handoff->redeem('nope'));
+    }
+
+    public function test_redemption_is_blocked_by_the_claim_even_if_payload_survives(): void
+    {
+        $url = $this->handoff->initiate($this->client, 'jane@apexinnovations.com');
+        parse_str(parse_url($url, PHP_URL_QUERY), $query);
+
+        $this->assertNotNull($this->handoff->redeem($query['token']));
+
+        // Simulate the get-then-forget race remnant: re-insert the payload.
+        Cache::store('array')->put('admin_sso:token:'.$query['token'], ['employee_id' => 1, 'name' => 'Ghost'], 60);
+
+        $this->assertNull($this->handoff->redeem($query['token']));
     }
 }

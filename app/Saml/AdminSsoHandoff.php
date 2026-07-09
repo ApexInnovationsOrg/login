@@ -46,10 +46,19 @@ class AdminSsoHandoff
     }
 
     /**
-     * Single-use: pull deletes atomically, so a second redemption is null.
+     * Single-use: Cache::pull() alone is get-then-forget (not atomic on
+     * redis), so claim the token with an atomic add() first — the same
+     * discipline as the SAML assertion replay guard — making concurrent
+     * redemptions of one token impossible.
      */
     public function redeem(string $token): ?array
     {
-        return Cache::store(config('saml.replay_store'))->pull(self::KEY_PREFIX.$token);
+        $store = Cache::store(config('saml.replay_store'));
+
+        if (! $store->add(self::KEY_PREFIX.'claim:'.$token, 1, (int) config('saml.admin_handoff_ttl'))) {
+            return null;
+        }
+
+        return $store->pull(self::KEY_PREFIX.$token);
     }
 }
