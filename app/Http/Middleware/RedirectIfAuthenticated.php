@@ -12,8 +12,6 @@ class RedirectIfAuthenticated
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @param  string|null  ...$guards
      * @return mixed
      */
@@ -22,8 +20,7 @@ class RedirectIfAuthenticated
         $guards = empty($guards) ? [null] : $guards;
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                if(Auth::user()->DepartmentID === 0)//saml user that needs to get setup. 
-                {
+                if (Auth::user()->DepartmentID === 0) {// saml user that needs to get setup.
                     return redirect('/finishAccountCreation');
                 }
 

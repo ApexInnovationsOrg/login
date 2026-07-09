@@ -9,5 +9,5 @@ class ProfessionalRole extends Model
 {
     use HasFactory;
 
-    protected $table = "ProfessionalRoles";
+    protected $table = 'ProfessionalRoles';
 }

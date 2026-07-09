@@ -9,8 +9,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+
   docker-php:
     runs-on: ubuntu-latest
+    needs: quality
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -18,8 +22,13 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        coverage: none
     - name: Composer
-      run: composer update --working-dir ${{ github.workspace }}/
+      run: composer install --no-dev --optimize-autoloader --no-interaction --working-dir ${{ github.workspace }}/
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: login to ECR
@@ -44,4 +53,3 @@ jobs:
         tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-nginx-login
     - name: update login service
       run: aws ecs update-service --cluster ApexInnovations --service login --force-new-deployment
-    

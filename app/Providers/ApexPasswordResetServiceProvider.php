@@ -2,17 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Auth\Passwords\PasswordResetServiceProvider;
 use App\Auth\Passwords\ApexPasswordBrokerManager;
-use Illuminate\Validation\Validator;
+use Illuminate\Auth\Passwords\PasswordResetServiceProvider;
 
 class ApexPasswordResetServiceProvider extends PasswordResetServiceProvider
 {
+    public function boot() {}
 
-    public function boot()
-    {
-
-    }
     // Override the method registerPasswordBroker
     // in order to specify your customized manager
     protected function registerPasswordBroker()

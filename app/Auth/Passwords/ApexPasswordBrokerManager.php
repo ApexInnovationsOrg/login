@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 
 class ApexPasswordBrokerManager extends PasswordBrokerManager
 {
-
     // Override the createTokenRepository function to return your
     // custom token repository instead of the standard one
     protected function createTokenRepository(array $config)
@@ -28,5 +27,4 @@ class ApexPasswordBrokerManager extends PasswordBrokerManager
             $config['expire']
         );
     }
-
 }
