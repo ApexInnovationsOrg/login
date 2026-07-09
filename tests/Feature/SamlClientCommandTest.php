@@ -114,4 +114,34 @@ class SamlClientCommandTest extends TestCase
             ->expectsOutputToContain('acme.com')
             ->assertSuccessful();
     }
+
+    public function test_create_with_admin_portal_flag(): void
+    {
+        $this->artisan('saml:client', [
+            'action' => 'create', '--name' => 'Apex Admin', '--org' => 933, '--admin-portal' => true,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('saml_clients', ['slug' => 'apex-admin', 'admin_portal' => 1]);
+    }
+
+    public function test_admin_portal_client_cannot_claim_domains(): void
+    {
+        $this->artisan('saml:client', [
+            'action' => 'create', '--name' => 'Apex Admin', '--org' => 933,
+            '--admin-portal' => true, '--domains' => 'apexinnovations.com',
+        ])->assertFailed();
+
+        $this->assertDatabaseMissing('saml_clients', ['slug' => 'apex-admin']);
+    }
+
+    public function test_update_can_toggle_admin_portal_off(): void
+    {
+        SamlClient::factory()->adminPortal()->create(['slug' => 'apex-admin']);
+
+        $this->artisan('saml:client', [
+            'action' => 'update', 'slug' => 'apex-admin', '--no-admin-portal' => true,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('saml_clients', ['slug' => 'apex-admin', 'admin_portal' => 0]);
+    }
 }

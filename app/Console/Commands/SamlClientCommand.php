@@ -28,6 +28,8 @@ class SamlClientCommand extends Command
         {--no-jit : disable just-in-time provisioning}
         {--metadata= : path to an IdP metadata XML file}
         {--domains= : comma-separated email domains for SP-initiated SSO routing (replaces the list)}
+        {--admin-portal : mark the client as asserting admin-portal (Employee) identities}
+        {--no-admin-portal : clear the admin-portal marker}
         {--wizard : create a client interactively (create action only)}';
 
     protected $description = 'Manage SAML SSO client configurations';
@@ -76,6 +78,7 @@ class SamlClientCommand extends Command
                 $client->name,
                 $client->enabled ? 'yes' : 'no',
                 $client->jit_enabled ? 'yes' : 'no',
+                $client->admin_portal ? 'yes' : '',
                 $client->organization_id,
                 $client->department_id ?? '-',
                 implode(', ', $client->email_domains ?? []),
@@ -84,7 +87,7 @@ class SamlClientCommand extends Command
             ];
         });
 
-        $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Org', 'Dept', 'Domains', 'Cert expires', ''], $rows->all());
+        $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Admin', 'Org', 'Dept', 'Domains', 'Cert expires', ''], $rows->all());
 
         return self::SUCCESS;
     }
@@ -98,6 +101,7 @@ class SamlClientCommand extends Command
         $this->line("Slug: {$client->slug}");
         $this->line('Enabled: '.($client->enabled ? 'yes' : 'no'));
         $this->line('JIT provisioning: '.($client->jit_enabled ? 'yes' : 'no'));
+        $this->line('Admin portal: '.($client->admin_portal ? 'yes' : 'no'));
         $this->line("Organization ID: {$client->organization_id}");
         $this->line('Department ID: '.($client->department_id ?? 'none (users select their department at finish-account)'));
         $this->line('Email domains: '.(implode(', ', $client->email_domains ?? []) ?: 'none (IdP-initiated only)'));
@@ -126,6 +130,10 @@ class SamlClientCommand extends Command
 
         if (! $this->option('wizard') && ($domains = $this->domainsOption()) !== null) {
             $input['email_domains'] = $domains;
+        }
+
+        if (! $this->option('wizard') && $this->option('admin-portal')) {
+            $input['admin_portal'] = true;
         }
 
         $client = $manager->create($input);
@@ -266,6 +274,12 @@ class SamlClientCommand extends Command
         }
         if ($this->option('no-jit')) {
             $client = $manager->update($client, ['jit_enabled' => false]);
+        }
+        if ($this->option('admin-portal')) {
+            $client = $manager->update($client, ['admin_portal' => true]);
+        }
+        if ($this->option('no-admin-portal')) {
+            $client = $manager->update($client, ['admin_portal' => false]);
         }
 
         return $client;

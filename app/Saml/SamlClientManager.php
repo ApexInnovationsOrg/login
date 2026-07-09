@@ -61,6 +61,7 @@ class SamlClientManager
             'organization_id' => ['required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
+            'admin_portal' => ['sometimes', 'boolean'],
             'attribute_map' => ['sometimes', 'array'],
             'attribute_map.email' => ['required_with:attribute_map', 'string'],
             'attribute_map.first_name' => ['sometimes', 'string'],
@@ -70,6 +71,11 @@ class SamlClientManager
         ])->validate();
 
         $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], null);
+
+        $this->assertAdminPortalHoldsNoDomains(
+            (bool) ($validated['admin_portal'] ?? false),
+            $validated['email_domains'] ?? [],
+        );
 
         return SamlClient::create($validated + [
             'enabled' => false, // enabled explicitly once IdP metadata is in place
@@ -94,6 +100,7 @@ class SamlClientManager
             'organization_id' => ['sometimes', 'required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
+            'admin_portal' => ['sometimes', 'boolean'],
             'attribute_map' => ['sometimes', 'array'],
             'attribute_map.email' => ['required_with:attribute_map', 'string'],
             'attribute_map.first_name' => ['sometimes', 'string'],
@@ -103,6 +110,11 @@ class SamlClientManager
         ])->validate();
 
         $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], $client);
+
+        $this->assertAdminPortalHoldsNoDomains(
+            (bool) ($validated['admin_portal'] ?? $client->admin_portal),
+            $validated['email_domains'] ?? ($client->email_domains ?? []),
+        );
 
         $client->update($validated);
 
@@ -171,6 +183,19 @@ class SamlClientManager
                     'email_domains' => "Domain {$domain} is already claimed by another SAML client.",
                 ]);
             }
+        }
+    }
+
+    /**
+     * Admin-portal clients assert Employee identities and never participate
+     * in customer email-domain routing (spec: admin portal SSO).
+     */
+    private function assertAdminPortalHoldsNoDomains(bool $adminPortal, array $domains): void
+    {
+        if ($adminPortal && $domains !== []) {
+            throw ValidationException::withMessages([
+                'email_domains' => 'An admin-portal client cannot claim email domains.',
+            ]);
         }
     }
 }
