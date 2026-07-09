@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class LocalEmployeeSeeder extends Seeder
 {
@@ -28,6 +29,19 @@ class LocalEmployeeSeeder extends Seeder
                 'FirstName' => 'Dev',
                 'LastName' => 'Admin',
                 'Password' => md5('p6^8&password'),
+                'Active' => 'Y',
+                'PasswordLastChanged' => now()->format('Y-m-d H:i:s'),
+            ],
+        );
+
+        // The mock IdP's static user1 assertion (email user1@example.com),
+        // seeded as an active Employee so admin-portal SSO can match it.
+        DB::table('Employees')->updateOrInsert(
+            ['Email' => 'user1@example.com'],
+            [
+                'FirstName' => 'Mock',
+                'LastName' => 'IdPAdmin',
+                'Password' => md5('p6^8&'.Str::random(32)), // never used; SSO only
                 'Active' => 'Y',
                 'PasswordLastChanged' => now()->format('Y-m-d H:i:s'),
             ],

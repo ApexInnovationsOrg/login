@@ -45,4 +45,10 @@ class ReferenceDataSeederTest extends TestCase
         // Login, so the assertion survives dev-domain renames.)
         $this->assertDatabaseHas('Users', ['FirstName' => 'Dev', 'LastName' => 'User', 'DepartmentID' => 1]);
     }
+
+    public function test_seeder_creates_admin_portal_mock_client_and_employee(): void
+    {
+        $this->assertDatabaseHas('saml_clients', ['slug' => 'local-admin-idp', 'admin_portal' => 1, 'enabled' => 0]);
+        $this->assertDatabaseHas('Employees', ['Email' => 'user1@example.com', 'Active' => 'Y']);
+    }
 }
