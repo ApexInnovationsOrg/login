@@ -238,6 +238,7 @@ table to translate a logged reason into a cause and fix.
 | `no_email_attribute`          | The assertion did not carry an email in the attribute named by the client's attribute map, and no usable NameID was present either. | Fix the customer's attribute mapping (Okta attribute statements or Entra claim names) so the app's mapped `email` field is actually sent; verify with `saml:client list`/`update` that the attribute map matches what the IdP sends. |
 | `disabled_user`               | The matched Apex user has `Disabled='Y'`.                                                       | Reactivate the account in the admin site if the user should regain access.                              |
 | `unknown_user_jit_disabled`   | No existing Apex user matches the login, and JIT provisioning is off for this client.            | Either enable JIT (`saml:client update <slug> --jit`) or pre-create the user account manually before the customer's users start logging in. |
+| `no_employee_match`           | SAML login on an admin-portal client asserted an email with no active Employees row.             | Verify the employee's Email and Active='Y' in the Employees table; admin SSO never auto-creates accounts. |
 
 ## Validation checklist (run once against the Okta integrator account)
 

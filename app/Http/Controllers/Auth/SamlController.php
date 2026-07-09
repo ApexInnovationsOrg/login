@@ -67,6 +67,15 @@ class SamlController extends Controller
             return $this->reject($client, ['reason' => 'no_email_attribute']);
         }
 
+        // Spec: warn while assertions still validate but the IdP cert nears expiry
+        $certStatus = app(SamlClientManager::class)->certificateStatus($client);
+        if ($certStatus['expiring']) {
+            Log::warning('SAML client IdP certificate expires soon', [
+                'client' => $client->slug,
+                'expires_at' => $certStatus['expires_at']?->toDateString(),
+            ]);
+        }
+
         // Admin-portal clients assert Employee identities: no JIT, no Users
         // lookup, no Laravel session — hand off to the portal's own session
         // world via a single-use token (spec: admin portal SSO).
@@ -84,15 +93,6 @@ class SamlController extends Controller
             $user = $this->provisioner->provision($client, $email, $firstName, $lastName);
         } catch (SamlLoginRejected $e) {
             return $this->reject($client, $e->logContext, $e->publicMessage);
-        }
-
-        // Spec: warn while assertions still validate but the IdP cert nears expiry
-        $certStatus = app(SamlClientManager::class)->certificateStatus($client);
-        if ($certStatus['expiring']) {
-            Log::warning('SAML client IdP certificate expires soon', [
-                'client' => $client->slug,
-                'expires_at' => $certStatus['expires_at']?->toDateString(),
-            ]);
         }
 
         $this->establishSession($request, $user, $client);
