@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Department;
+use App\Models\Organization;
+use App\Models\System;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -51,18 +54,15 @@ class CreateLocalUsers extends Command
             return 1;
         }
 
-        // A system groups organizations (Systems <- SystemOrganizations -> Organizations)
-        $systemId = DB::table('Systems')->where('Name', 'Local Health System')->value('ID');
-        if (! $systemId) {
-            $systemId = DB::table('Systems')->insertGetId([
-                'Name' => 'Local Health System',
-                'CreationDate' => now()->format('Y-m-d H:i:s'),
-            ]);
-        }
-        $this->membership('SystemOrganizations', ['SystemID' => $systemId, 'OrganizationID' => 1]);
-        $this->membership('SystemOrganizations', ['SystemID' => $systemId, 'OrganizationID' => 933]);
-        // Organization 2 deliberately stays OUTSIDE the system, so system-admin
-        // scoping has a boundary to test against.
+        // Orgs 1/2/933 and departments come from ReferenceDataSeeder; this command
+        // adds the demo departments/users/admins on top, idempotently.
+        $system = System::firstOrCreate(
+            ['Name' => 'Local Health System'],
+            ['CreationDate' => now()->format('Y-m-d')],
+        );
+        $this->membership('SystemOrganizations', ['SystemID' => $system->ID, 'OrganizationID' => 1]);
+        $this->membership('SystemOrganizations', ['SystemID' => $system->ID, 'OrganizationID' => 933]);
+        // Organization 2 stays OUTSIDE the system, so system-admin scoping has a boundary.
 
         $departments = [
             'Emergency' => ['org' => 1, 'users' => 5],
@@ -84,15 +84,15 @@ class CreateLocalUsers extends Command
         $rows[] = ['department.user@example.com', 'Regular user in Emergency (Org 1)'];
 
         $user = $this->user('department.admin@example.com', 'Department', 'Admin', $deptIds['Emergency']);
-        $this->membership('DepartmentAdmins', ['DepartmentID' => $deptIds['Emergency'], 'UserID' => $user->ID]);
+        $user->makeDepartmentAdmin(Department::find($deptIds['Emergency']));
         $rows[] = ['department.admin@example.com', 'Department admin of Emergency (5 users)'];
 
         $user = $this->user('organization.admin@example.com', 'Organization', 'Admin', $deptIds['Nursing']);
-        $this->membership('OrganizationAdmins', ['OrganizationID' => 1, 'UserID' => $user->ID]);
+        $user->makeOrganizationAdmin(Organization::find(1));
         $rows[] = ['organization.admin@example.com', 'Org admin of Org 1 (Emergency, Cardiology, Nursing)'];
 
         $user = $this->user('system.admin@example.com', 'System', 'Admin', $deptIds['Nursing']);
-        $this->membership('SystemAdmins', ['SystemID' => $systemId, 'UserID' => $user->ID]);
+        $user->makeSystemAdmin($system);
         $rows[] = ['system.admin@example.com', 'System admin (Orgs 1 + 933, NOT Org 2)'];
 
         $this->table(['Login (password: "password")', 'Role'], $rows);
@@ -113,14 +113,15 @@ class CreateLocalUsers extends Command
 
     private function department(string $name, int $orgId): int
     {
-        $id = DB::table('Departments')
-            ->where(['Name' => $name, 'OrganizationID' => $orgId])
-            ->value('ID');
+        $existing = Department::where(['Name' => $name, 'OrganizationID' => $orgId])->first();
+        if ($existing) {
+            return $existing->ID;
+        }
 
-        return $id ?? DB::table('Departments')->insertGetId([
+        return Department::factory()->create([
             'Name' => $name,
             'OrganizationID' => $orgId,
-        ]);
+        ])->ID;
     }
 
     private function fillDepartment(int $deptId, string $deptName, int $count): void

@@ -9,7 +9,6 @@ use App\Models\Department;
 use App\Models\ProfessionalCredentialFilters;
 use App\Models\ProfessionalRole;
 use App\Models\States;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -78,7 +77,9 @@ class FinishUserCreation extends Controller
 
         $user->save();
 
-        return redirect(RouteServiceProvider::HOME);
+        // Inertia flow: use Inertia::location for the external hand-off to MyCurriculum
+        // (a plain redirect to an external host triggers Inertia's 409 visit handling).
+        return Inertia::location(config('app.mycurriculum_url'));
 
     }
 }

@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class ProfessionalRole extends Model
+class ProfessionalRole extends LegacyModel
 {
     use HasFactory;
+
+    public $timestamps = false;
 
     protected $table = 'ProfessionalRoles';
 }
