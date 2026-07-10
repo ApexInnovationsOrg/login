@@ -35,7 +35,7 @@ placeholder IdP fields until those two steps are done.
 ### Step 1: Create the client
 
 ```bash
-php artisan saml:client create --name "Acme Health" --org 42 --jit
+php artisan saml:client create --name "Acme Health" --org 42 --jit --domains=acmehealth.com
 ```
 
 Options:
@@ -48,6 +48,13 @@ Options:
   pre-assigning a department.
 - `--jit` / `--no-jit` — enable or disable just-in-time provisioning. A client
   created without either flag defaults to JIT disabled.
+- `--domains=` — comma-separated email domains for SP-initiated SSO routing
+  (e.g. `--domains=acmehealth.com,acme-health.org`). SP-initiated routing only
+  activates once a client has email domains assigned; a client with no domains
+  is IdP-initiated only (its users start login from the IdP's dashboard, not
+  from `/sso/lookup`). On `update`, `--domains=` replaces the entire list;
+  passing an empty value clears it (disabling SP-initiated routing for that
+  client).
 
 The command prints the information the customer's IT admin needs:
 
@@ -90,7 +97,7 @@ where to get this from each provider's admin console.
 ### Step 3: Apply the metadata and enable the client
 
 ```bash
-php artisan saml:client update acme-health --metadata=/path/to/their-metadata.xml
+php artisan saml:client update acme-health --metadata=/path/to/their-metadata.xml --domains=acmehealth.com
 php artisan saml:client enable acme-health
 ```
 

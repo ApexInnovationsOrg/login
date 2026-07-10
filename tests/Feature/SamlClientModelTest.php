@@ -36,4 +36,25 @@ class SamlClientModelTest extends TestCase
         $this->assertSame(url('/saml/acme/acs'), $client->acsUrl());
         $this->assertSame(url('/saml/acme/metadata'), $client->metadataUrl());
     }
+
+    public function test_for_email_domain_finds_enabled_client_case_insensitively(): void
+    {
+        $client = SamlClient::factory()->create(['email_domains' => ['mdanderson.org']]);
+
+        $this->assertTrue($client->is(SamlClient::forEmailDomain('MDAnderson.ORG')));
+    }
+
+    public function test_for_email_domain_ignores_disabled_clients(): void
+    {
+        SamlClient::factory()->create(['enabled' => false, 'email_domains' => ['mdanderson.org']]);
+
+        $this->assertNull(SamlClient::forEmailDomain('mdanderson.org'));
+    }
+
+    public function test_for_email_domain_returns_null_when_no_client_claims_it(): void
+    {
+        SamlClient::factory()->create(['email_domains' => ['mdanderson.org']]);
+
+        $this->assertNull(SamlClient::forEmailDomain('gmail.com'));
+    }
 }

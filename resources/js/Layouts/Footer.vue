@@ -3,9 +3,9 @@
 		<div class="w-full bg-footer py-5 px-20 mx-auto grid">
 			
 			<div class="flex items-center flex-shrink-0 mx-auto md:w-5/6">
-				<inertia-link href="/">
+				<Link href="/">
 					<img src="/assets/ApexLogo500.svg" alt="Apex Innovations, Education Healthcare Relies On" class="w-44">
-				</inertia-link>
+				</Link>
 			</div>
 			
 			<div class="grid gap-2 grid-cols-2 md:grid-cols-4 mx-auto py-5 text-gray-500 font-medium w-5/6 text-sm">
@@ -16,9 +16,9 @@
 				<div class="ml-10 md:ml-20">Tools</div>
 				<div class="ml-10 md:ml-20">Mission</div>
 				<div class="ml-10 md:ml-20">
-					<inertia-link href="/careers" class="footerLinks">
+					<Link href="/careers" class="footerLinks">
 						Careers
-					</inertia-link>
+					</Link>
 				</div>
 				<div class="ml-10 md:ml-20">Create Account</div>
 				<div class="ml-10 md:ml-20">Quantum Competency</div>
@@ -54,14 +54,17 @@
 	}
 </style>
 <script>
+import { Link } from '@inertiajs/vue3'
+
 export default {
 	name: "apexfooter",
+	components: { Link },
 	data() {
 		return {
 		}
 	},
 	methods: {
-		
+
 	},
 }
 </script>

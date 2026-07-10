@@ -29,6 +29,13 @@ jobs:
         coverage: none
     - name: Composer
       run: composer install --no-dev --optimize-autoloader --no-interaction --working-dir ${{ github.workspace }}/
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: npm
+    - name: npm
+      run: npm ci && npm run build
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: login to ECR
@@ -42,5 +49,14 @@ jobs:
         file: ./.Dockerfile-php
         push: true
         tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-php-fpm-login-dev
+    - name: dockerignore
+      run: cp .dockerignore-nginx .dockerignore
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./.Dockerfile-nginx
+        push: true
+        tags: 685265542736.dkr.ecr.us-east-1.amazonaws.com/apexinnovations-nginx-login-dev
     - name: update login service
       run: aws ecs update-service --cluster ApexInnovations --service login-dev --force-new-deployment

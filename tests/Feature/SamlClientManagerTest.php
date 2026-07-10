@@ -88,4 +88,47 @@ class SamlClientManagerTest extends TestCase
         $this->assertNull($status['expires_at']);
         $this->assertFalse($status['expiring']);
     }
+
+    public function test_domains_are_normalized_on_create(): void
+    {
+        $client = $this->manager()->create([
+            'name' => 'Acme', 'organization_id' => 1,
+            'email_domains' => [' @MDAnderson.ORG ', 'mdanderson.org'],
+        ]);
+
+        $this->assertSame(['mdanderson.org'], $client->email_domains);
+    }
+
+    public function test_malformed_domains_are_rejected(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $this->manager()->create([
+            'name' => 'Acme', 'organization_id' => 1,
+            'email_domains' => ['not a domain'],
+        ]);
+    }
+
+    public function test_a_domain_cannot_be_claimed_by_two_clients(): void
+    {
+        SamlClient::factory()->create(['enabled' => false, 'email_domains' => ['mdanderson.org']]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->manager()->create([
+            'name' => 'Acme', 'organization_id' => 1,
+            'email_domains' => ['mdanderson.org'],
+        ]);
+    }
+
+    public function test_update_replaces_domains_and_allows_keeping_own(): void
+    {
+        $client = SamlClient::factory()->create(['email_domains' => ['mdanderson.org']]);
+
+        $updated = $this->manager()->update($client, [
+            'email_domains' => ['mdanderson.org', 'mdacc.org'],
+        ]);
+
+        $this->assertSame(['mdanderson.org', 'mdacc.org'], $updated->email_domains);
+    }
 }

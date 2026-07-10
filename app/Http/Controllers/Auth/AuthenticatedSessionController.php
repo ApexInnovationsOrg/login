@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\SamlClient;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia; // The StreamHandler sends log messages to a file on your disk
 use Inertia\Response;
 use Monolog\Formatter\JsonFormatter;
@@ -42,6 +44,14 @@ class AuthenticatedSessionController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $domain = Str::afterLast((string) $request->input('email'), '@');
+
+        if ($domain !== '' && SamlClient::forEmailDomain($domain)) {
+            return back()->withErrors([
+                'email' => 'Your organization signs in with single sign-on. Enter your work email on the login page and select Continue.',
+            ]);
+        }
 
         $translatedCreds = [
             'Login' => $request->only('email')['email'],

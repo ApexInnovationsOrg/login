@@ -29,6 +29,7 @@ class SamlClientFactory extends Factory
                 'first_name' => 'firstName',
                 'last_name' => 'lastName',
             ],
+            'email_domains' => [],
         ];
     }
 }

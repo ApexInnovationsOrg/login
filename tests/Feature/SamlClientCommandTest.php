@@ -73,4 +73,45 @@ class SamlClientCommandTest extends TestCase
 
         unlink($bad);
     }
+
+    public function test_create_accepts_domains_option(): void
+    {
+        $this->artisan('saml:client', [
+            'action' => 'create', '--name' => 'Acme', '--org' => '1',
+            '--domains' => 'Acme.com, portal.acme.com',
+        ])->assertSuccessful();
+
+        $this->assertSame(['acme.com', 'portal.acme.com'], SamlClient::where('slug', 'acme')->first()->email_domains);
+    }
+
+    public function test_update_replaces_domains(): void
+    {
+        $client = SamlClient::factory()->create(['email_domains' => ['old.com']]);
+
+        $this->artisan('saml:client', [
+            'action' => 'update', 'slug' => $client->slug, '--domains' => 'new.com',
+        ])->assertSuccessful();
+
+        $this->assertSame(['new.com'], $client->fresh()->email_domains);
+    }
+
+    public function test_update_with_empty_domains_clears_the_list(): void
+    {
+        $client = SamlClient::factory()->create(['email_domains' => ['old.com']]);
+
+        $this->artisan('saml:client', [
+            'action' => 'update', 'slug' => $client->slug, '--domains' => '',
+        ])->assertSuccessful();
+
+        $this->assertSame([], $client->fresh()->email_domains);
+    }
+
+    public function test_describe_shows_domains(): void
+    {
+        $client = SamlClient::factory()->create(['email_domains' => ['acme.com']]);
+
+        $this->artisan('saml:client', ['action' => 'describe', 'slug' => $client->slug])
+            ->expectsOutputToContain('acme.com')
+            ->assertSuccessful();
+    }
 }

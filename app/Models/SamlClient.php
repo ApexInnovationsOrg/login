@@ -20,12 +20,14 @@ class SamlClient extends Model
         'department_id',
         'jit_enabled',
         'attribute_map',
+        'email_domains',
     ];
 
     protected $casts = [
         'enabled' => 'boolean',
         'jit_enabled' => 'boolean',
         'attribute_map' => 'array',
+        'email_domains' => 'array',
     ];
 
     public function acsUrl(): string
@@ -36,5 +38,16 @@ class SamlClient extends Model
     public function metadataUrl(): string
     {
         return url("/saml/{$this->slug}/metadata");
+    }
+
+    /**
+     * The enabled client claiming this email domain, if any.
+     * Domains are stored lowercased; compare lowercased.
+     */
+    public static function forEmailDomain(string $domain): ?self
+    {
+        return static::where('enabled', true)
+            ->whereJsonContains('email_domains', strtolower($domain))
+            ->first();
     }
 }

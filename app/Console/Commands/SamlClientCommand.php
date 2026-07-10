@@ -27,6 +27,7 @@ class SamlClientCommand extends Command
         {--jit : enable just-in-time provisioning}
         {--no-jit : disable just-in-time provisioning}
         {--metadata= : path to an IdP metadata XML file}
+        {--domains= : comma-separated email domains for SP-initiated SSO routing (replaces the list)}
         {--wizard : create a client interactively (create action only)}';
 
     protected $description = 'Manage SAML SSO client configurations';
@@ -77,12 +78,13 @@ class SamlClientCommand extends Command
                 $client->jit_enabled ? 'yes' : 'no',
                 $client->organization_id,
                 $client->department_id ?? '-',
+                implode(', ', $client->email_domains ?? []),
                 $cert['expires_at']?->toDateString() ?? '-',
                 $cert['expiring'] ? 'EXPIRING' : '',
             ];
         });
 
-        $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Org', 'Dept', 'Cert expires', ''], $rows->all());
+        $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Org', 'Dept', 'Domains', 'Cert expires', ''], $rows->all());
 
         return self::SUCCESS;
     }
@@ -98,6 +100,7 @@ class SamlClientCommand extends Command
         $this->line('JIT provisioning: '.($client->jit_enabled ? 'yes' : 'no'));
         $this->line("Organization ID: {$client->organization_id}");
         $this->line('Department ID: '.($client->department_id ?? 'none (users select their department at finish-account)'));
+        $this->line('Email domains: '.(implode(', ', $client->email_domains ?? []) ?: 'none (IdP-initiated only)'));
         $this->line('ACS URL: '.$client->acsUrl());
         $this->line('Metadata URL: '.$client->metadataUrl());
         $this->line('IdP Entity ID: '.$client->idp_entity_id);
@@ -120,6 +123,10 @@ class SamlClientCommand extends Command
                 'organization_id' => $this->option('org'),
                 'department_id' => $this->option('department'),
             ], fn ($v) => $v !== null);
+
+        if (! $this->option('wizard') && ($domains = $this->domainsOption()) !== null) {
+            $input['email_domains'] = $domains;
+        }
 
         $client = $manager->create($input);
 
@@ -181,6 +188,15 @@ class SamlClientCommand extends Command
             'jit_enabled' => $jit,
         ];
 
+        $domains = text(
+            label: 'Email domains for SSO routing (comma-separated, blank to skip)',
+            default: '',
+        );
+
+        if (trim($domains) !== '') {
+            $input['email_domains'] = array_values(array_filter(array_map('trim', explode(',', $domains))));
+        }
+
         if (confirm(label: 'Customize attribute names? (needed for Entra/Azure)', default: false)) {
             $input['attribute_map'] = [
                 'email' => text(label: 'Email attribute name', default: 'email', required: true),
@@ -204,6 +220,10 @@ class SamlClientCommand extends Command
             'organization_id' => $this->option('org'),
             'department_id' => $this->option('department'),
         ], fn ($v) => $v !== null);
+
+        if (($domains = $this->domainsOption()) !== null) {
+            $fields['email_domains'] = $domains;
+        }
 
         if ($fields !== []) {
             $client = $manager->update($client, $fields);
@@ -249,6 +269,22 @@ class SamlClientCommand extends Command
         }
 
         return $client;
+    }
+
+    /**
+     * Split --domains for the manager; '' clears the list, null means not passed.
+     *
+     * @return array<int, string>|null
+     */
+    private function domainsOption(): ?array
+    {
+        $raw = $this->option('domains');
+
+        if ($raw === null) {
+            return null;
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $raw)), fn ($d) => $d !== ''));
     }
 
     private function resolveClient(): ?SamlClient

@@ -16,7 +16,7 @@ set -u
 
 LOGIN_URL="${LOGIN_URL:-http://localhost:8090}"
 SITE_URL="${SITE_URL:-http://localhost:8091}"
-E2E_EMAIL="${E2E_EMAIL:-dev@example.com}"
+E2E_EMAIL="${E2E_EMAIL:-dev@example.test}"
 E2E_PASSWORD="${E2E_PASSWORD:-password}"
 E2E_FIRSTNAME="${E2E_FIRSTNAME:-Dev}"
 

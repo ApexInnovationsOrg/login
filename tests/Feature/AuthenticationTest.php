@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SamlClient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -123,5 +124,19 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    public function test_sso_domain_emails_cannot_password_login(): void
+    {
+        SamlClient::factory()->create(['email_domains' => ['acme.com']]);
+        $user = User::factory()->create(['Login' => 'jane@acme.com']);
+
+        $response = $this->post('/login', [
+            'email' => 'jane@acme.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 }
