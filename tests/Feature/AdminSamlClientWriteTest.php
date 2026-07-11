@@ -28,7 +28,7 @@ class AdminSamlClientWriteTest extends TestCase
     {
         $this->postJson('/api/admin/saml-clients', [
             'name' => 'Acme Hospital',
-            'organization_id' => 1,
+            'owner_id' => 1,
             'email_domains' => ['acme.com'],
         ], $this->headers())
             ->assertCreated()
@@ -42,7 +42,7 @@ class AdminSamlClientWriteTest extends TestCase
         SamlClient::factory()->create(['slug' => 'taken']);
 
         $this->postJson('/api/admin/saml-clients', [
-            'name' => 'Other', 'slug' => 'taken', 'organization_id' => 1,
+            'name' => 'Other', 'slug' => 'taken', 'owner_id' => 1,
         ], $this->headers())
             ->assertStatus(422)
             ->assertJsonValidationErrors('slug');

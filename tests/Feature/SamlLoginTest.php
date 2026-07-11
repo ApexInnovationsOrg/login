@@ -33,7 +33,7 @@ class SamlLoginTest extends TestCase
             'idp_entity_id' => 'https://idp.acme.test/metadata',
             'idp_sso_url' => 'https://idp.acme.test/sso',
             'idp_certificate' => file_get_contents(base_path('tests/Fixtures/saml/idp.crt')),
-            'organization_id' => 933,
+            'owner_id' => 933,
             'department_id' => null,
             'jit_enabled' => true,
         ]);

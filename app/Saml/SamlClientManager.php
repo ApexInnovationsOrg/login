@@ -58,7 +58,7 @@ class SamlClientManager
         $validated = Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug'],
-            'organization_id' => ['required', 'integer', 'min:1'],
+            'owner_id' => ['required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
             'admin_portal' => ['sometimes', 'boolean'],
@@ -85,6 +85,9 @@ class SamlClientManager
             'idp_certificate' => 'pending',
             'attribute_map' => self::DEFAULT_ATTRIBUTE_MAP,
             'email_domains' => [],
+            // Every client created through this manager is org-owned for now;
+            // system ownership is created another way (Task 2).
+            'owner_type' => 'organization',
         ]);
     }
 
@@ -97,7 +100,7 @@ class SamlClientManager
         $validated = Validator::make($input, [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => ['sometimes', 'required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug,'.$client->id],
-            'organization_id' => ['sometimes', 'required', 'integer', 'min:1'],
+            'owner_id' => ['sometimes', 'required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
             'admin_portal' => ['sometimes', 'boolean'],

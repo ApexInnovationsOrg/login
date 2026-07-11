@@ -40,7 +40,7 @@ class SamlClientWizardTest extends TestCase
 
         $this->assertDatabaseHas('saml_clients', [
             'slug' => 'wizard-acme-health',
-            'organization_id' => 4242,
+            'owner_id' => 4242,
             'department_id' => 5000,
             'jit_enabled' => true,
             'enabled' => false,
@@ -104,6 +104,6 @@ class SamlClientWizardTest extends TestCase
             ->expectsOutputToContain('/saml/plain-co/acs')
             ->assertSuccessful();
 
-        $this->assertDatabaseHas('saml_clients', ['slug' => 'plain-co', 'organization_id' => 7]);
+        $this->assertDatabaseHas('saml_clients', ['slug' => 'plain-co', 'owner_id' => 7]);
     }
 }

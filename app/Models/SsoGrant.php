@@ -10,7 +10,7 @@ class SsoGrant extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'organization_id', 'granted_by'];
+    protected $fillable = ['user_id', 'owner_type', 'owner_id', 'granted_by'];
 
     public function user(): BelongsTo
     {

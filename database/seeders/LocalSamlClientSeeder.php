@@ -26,7 +26,8 @@ class LocalSamlClientSeeder extends Seeder
             'idp_entity_id' => 'pending',
             'idp_sso_url' => 'pending',
             'idp_certificate' => 'pending',
-            'organization_id' => 933,
+            'owner_type' => 'organization',
+            'owner_id' => 933,
             'department_id' => null,
             'jit_enabled' => true,
             'attribute_map' => [
@@ -45,7 +46,8 @@ class LocalSamlClientSeeder extends Seeder
             'idp_entity_id' => 'pending',
             'idp_sso_url' => 'pending',
             'idp_certificate' => 'pending',
-            'organization_id' => 933,
+            'owner_type' => 'organization',
+            'owner_id' => 933,
             'department_id' => null,
             'jit_enabled' => false,
             'attribute_map' => [

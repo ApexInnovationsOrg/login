@@ -35,7 +35,7 @@ class SsoClientsPageTest extends DuskTestCase
         // second `make dusk` run (without an intervening `make db`) hits
         // "slug already taken" and stale grant state from the previous run.
         SamlClient::where('slug', 'dusk-acme')->delete();
-        SsoGrant::where('organization_id', 933)->delete();
+        SsoGrant::where('owner_type', 'organization')->where('owner_id', 933)->delete();
     }
 
     /**

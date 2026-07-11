@@ -32,7 +32,7 @@ class AdminSsoGrantTest extends TestCase
         $this->department = Department::factory()->create();
         $this->client = SamlClient::factory()->create([
             'slug' => 'acme',
-            'organization_id' => $this->department->OrganizationID,
+            'owner_id' => $this->department->OrganizationID,
         ]);
     }
 
@@ -55,7 +55,7 @@ class AdminSsoGrantTest extends TestCase
 
         $this->assertDatabaseHas('sso_grants', [
             'user_id' => $user->ID,
-            'organization_id' => $this->client->organization_id,
+            'owner_id' => $this->client->owner_id,
         ]);
     }
 
@@ -63,7 +63,7 @@ class AdminSsoGrantTest extends TestCase
     {
         $keep = User::factory()->create(['Login' => 'keep@acme.com', 'DepartmentID' => $this->department->ID]);
         $drop = User::factory()->create(['Login' => 'drop@acme.com', 'DepartmentID' => $this->department->ID]);
-        SsoGrant::factory()->create(['user_id' => $drop->ID, 'organization_id' => $this->client->organization_id]);
+        SsoGrant::factory()->create(['user_id' => $drop->ID, 'owner_id' => $this->client->owner_id]);
 
         $this->putJson('/api/admin/saml-clients/acme/grants', ['logins' => ['keep@acme.com']],
             $this->headers())->assertOk()->assertJsonCount(1, 'data');
@@ -86,7 +86,7 @@ class AdminSsoGrantTest extends TestCase
     public function test_empty_logins_list_clears_all_grants(): void
     {
         $user = User::factory()->create(['Login' => 'grantee@acme.com', 'DepartmentID' => $this->department->ID]);
-        SsoGrant::factory()->create(['user_id' => $user->ID, 'organization_id' => $this->client->organization_id]);
+        SsoGrant::factory()->create(['user_id' => $user->ID, 'owner_id' => $this->client->owner_id]);
 
         $this->putJson('/api/admin/saml-clients/acme/grants', ['logins' => []], $this->headers())
             ->assertOk()

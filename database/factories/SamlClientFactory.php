@@ -21,7 +21,8 @@ class SamlClientFactory extends Factory
             'idp_entity_id' => 'https://idp.example.com/'.Str::slug($name),
             'idp_sso_url' => 'https://idp.example.com/'.Str::slug($name).'/sso',
             'idp_certificate' => 'MIIC-placeholder-not-a-real-cert',
-            'organization_id' => 1,
+            'owner_type' => 'organization',
+            'owner_id' => 1,
             'department_id' => null,
             'jit_enabled' => true,
             'admin_portal' => false,
@@ -38,5 +39,11 @@ class SamlClientFactory extends Factory
     public function adminPortal(): static
     {
         return $this->state(fn () => ['admin_portal' => true]);
+    }
+
+    /** Owned by a system: spans that system's organizations. */
+    public function forSystem(int $systemId): static
+    {
+        return $this->state(fn () => ['owner_type' => 'system', 'owner_id' => $systemId]);
     }
 }

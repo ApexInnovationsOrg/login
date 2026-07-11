@@ -54,7 +54,7 @@ class LookupController extends Controller
 
         $q = (string) $request->query('q', '');
 
-        $departmentIds = Department::where('OrganizationID', $client->organization_id)->pluck('ID');
+        $departmentIds = Department::where('OrganizationID', $client->owner_id)->pluck('ID');
 
         return response()->json([
             'data' => User::query()

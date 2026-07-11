@@ -21,7 +21,7 @@ class SamlClientManagerTest extends TestCase
     {
         $client = $this->manager()->create([
             'name' => 'Health System One',
-            'organization_id' => 1,
+            'owner_id' => 1,
         ]);
 
         $this->assertSame('health-system-one', $client->slug);
@@ -44,7 +44,7 @@ class SamlClientManagerTest extends TestCase
 
         $this->expectException(ValidationException::class);
 
-        $this->manager()->create(['name' => 'Acme', 'slug' => 'acme', 'organization_id' => 1]);
+        $this->manager()->create(['name' => 'Acme', 'slug' => 'acme', 'owner_id' => 1]);
     }
 
     public function test_update_from_idp_metadata_fills_idp_fields(): void
@@ -92,7 +92,7 @@ class SamlClientManagerTest extends TestCase
     public function test_domains_are_normalized_on_create(): void
     {
         $client = $this->manager()->create([
-            'name' => 'Acme', 'organization_id' => 1,
+            'name' => 'Acme', 'owner_id' => 1,
             'email_domains' => [' @MDAnderson.ORG ', 'mdanderson.org'],
         ]);
 
@@ -104,7 +104,7 @@ class SamlClientManagerTest extends TestCase
         $this->expectException(ValidationException::class);
 
         $this->manager()->create([
-            'name' => 'Acme', 'organization_id' => 1,
+            'name' => 'Acme', 'owner_id' => 1,
             'email_domains' => ['not a domain'],
         ]);
     }
@@ -116,7 +116,7 @@ class SamlClientManagerTest extends TestCase
         $this->expectException(ValidationException::class);
 
         $this->manager()->create([
-            'name' => 'Acme', 'organization_id' => 1,
+            'name' => 'Acme', 'owner_id' => 1,
             'email_domains' => ['mdanderson.org'],
         ]);
     }

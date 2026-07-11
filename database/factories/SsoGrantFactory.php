@@ -14,7 +14,8 @@ class SsoGrantFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'organization_id' => 1,
+            'owner_type' => 'organization',
+            'owner_id' => 1,
             'granted_by' => '1:Test Admin',
         ];
     }

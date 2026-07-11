@@ -38,7 +38,7 @@ class SsoGrantController extends Controller
                 ]);
             }
 
-            if ($user->department === null || (int) $user->department->OrganizationID !== (int) $client->organization_id) {
+            if ($user->department === null || (int) $user->department->OrganizationID !== (int) $client->owner_id) {
                 throw ValidationException::withMessages([
                     'logins' => "{$login} does not belong to this client's organization.",
                 ]);
@@ -48,11 +48,12 @@ class SsoGrantController extends Controller
         });
 
         DB::transaction(function () use ($users, $client, $request) {
-            SsoGrant::where('organization_id', $client->organization_id)->delete();
+            SsoGrant::where('owner_type', $client->owner_type)->where('owner_id', $client->owner_id)->delete();
 
             $users->each(fn (User $user) => SsoGrant::create([
                 'user_id' => $user->ID,
-                'organization_id' => $client->organization_id,
+                'owner_type' => $client->owner_type,
+                'owner_id' => $client->owner_id,
                 'granted_by' => (string) $request->header('X-Acting-Admin'),
             ]));
         });
@@ -72,7 +73,8 @@ class SsoGrantController extends Controller
     private function grantsFor(SamlClient $client): array
     {
         return SsoGrant::with('user')
-            ->where('organization_id', $client->organization_id)
+            ->where('owner_type', $client->owner_type)
+            ->where('owner_id', $client->owner_id)
             ->orderBy('created_at')
             ->get()
             ->map(fn (SsoGrant $grant) => [

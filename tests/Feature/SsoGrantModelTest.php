@@ -20,7 +20,8 @@ class SsoGrantModelTest extends TestCase
 
         $grant = SsoGrant::create([
             'user_id' => $user->ID,
-            'organization_id' => 933,
+            'owner_type' => 'organization',
+            'owner_id' => 933,
             'granted_by' => '1:Test Admin',
         ]);
 
@@ -30,7 +31,8 @@ class SsoGrantModelTest extends TestCase
 
         SsoGrant::create([
             'user_id' => $user->ID,
-            'organization_id' => 933,
+            'owner_type' => 'organization',
+            'owner_id' => 933,
             'granted_by' => '2:Other Admin',
         ]);
     }

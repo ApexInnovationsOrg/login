@@ -189,7 +189,7 @@ class SamlController extends Controller
         $request->session()->put('userName', $user->FirstName.' '.$user->LastName);
         $request->session()->put('Username', $user->FirstName.' '.$user->LastName);
         // finishAccountCreation lists departments from this key
-        $request->session()->put('Organization', $client->organization_id);
+        $request->session()->put('Organization', $client->owner_id);
         // dashboard route uses a plain 302 for SAML sessions (IdPs can't follow Inertia 409s)
         $request->session()->put('SAML', true);
 

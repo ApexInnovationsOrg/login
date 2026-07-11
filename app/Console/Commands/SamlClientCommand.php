@@ -79,7 +79,7 @@ class SamlClientCommand extends Command
                 $client->enabled ? 'yes' : 'no',
                 $client->jit_enabled ? 'yes' : 'no',
                 $client->admin_portal ? 'yes' : '',
-                $client->organization_id,
+                $client->owner_id,
                 $client->department_id ?? '-',
                 implode(', ', $client->email_domains ?? []),
                 $cert['expires_at']?->toDateString() ?? '-',
@@ -102,7 +102,7 @@ class SamlClientCommand extends Command
         $this->line('Enabled: '.($client->enabled ? 'yes' : 'no'));
         $this->line('JIT provisioning: '.($client->jit_enabled ? 'yes' : 'no'));
         $this->line('Admin portal: '.($client->admin_portal ? 'yes' : 'no'));
-        $this->line("Organization ID: {$client->organization_id}");
+        $this->line("Organization ID: {$client->owner_id}");
         $this->line('Department ID: '.($client->department_id ?? 'none (users select their department at finish-account)'));
         $this->line('Email domains: '.(implode(', ', $client->email_domains ?? []) ?: 'none (IdP-initiated only)'));
         $this->line('ACS URL: '.$client->acsUrl());
@@ -124,7 +124,7 @@ class SamlClientCommand extends Command
             : array_filter([
                 'name' => $this->option('name'),
                 'slug' => $this->option('slug'),
-                'organization_id' => $this->option('org'),
+                'owner_id' => $this->option('org'),
                 'department_id' => $this->option('department'),
             ], fn ($v) => $v !== null);
 
@@ -154,7 +154,7 @@ class SamlClientCommand extends Command
     /**
      * Gather client-creation input interactively.
      *
-     * @return array{name: string, slug: string, organization_id: int,
+     * @return array{name: string, slug: string, owner_id: int,
      *               department_id: int|null, jit_enabled: bool, attribute_map?: array}
      */
     private function runWizard(): array
@@ -191,7 +191,7 @@ class SamlClientCommand extends Command
         $input = [
             'name' => $name,
             'slug' => $slug,
-            'organization_id' => $organizationId,
+            'owner_id' => $organizationId,
             'department_id' => $departmentId,
             'jit_enabled' => $jit,
         ];
@@ -225,7 +225,7 @@ class SamlClientCommand extends Command
 
         $fields = array_filter([
             'name' => $this->option('name'),
-            'organization_id' => $this->option('org'),
+            'owner_id' => $this->option('org'),
             'department_id' => $this->option('department'),
         ], fn ($v) => $v !== null);
 

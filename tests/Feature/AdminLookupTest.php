@@ -57,7 +57,7 @@ class AdminLookupTest extends TestCase
     public function test_user_search_scoped_to_client_org_matches_login_and_name(): void
     {
         $dept = Department::factory()->create();
-        $client = SamlClient::factory()->create(['slug' => 'acme', 'organization_id' => $dept->OrganizationID]);
+        $client = SamlClient::factory()->create(['slug' => 'acme', 'owner_id' => $dept->OrganizationID]);
         User::factory()->create(['Login' => 'jane@acme.com', 'FirstName' => 'Jane', 'LastName' => 'Smith', 'DepartmentID' => $dept->ID]);
         $otherDept = Department::factory()->create();
         User::factory()->create(['Login' => 'jane@other.com', 'FirstName' => 'Jane', 'LastName' => 'Elsewhere', 'DepartmentID' => $otherDept->ID]);
@@ -100,7 +100,7 @@ class AdminLookupTest extends TestCase
     public function test_lookup_routes_require_a_valid_token(): void
     {
         $org = Organization::factory()->create();
-        $client = SamlClient::factory()->create(['slug' => 'acme', 'organization_id' => $org->ID]);
+        $client = SamlClient::factory()->create(['slug' => 'acme', 'owner_id' => $org->ID]);
 
         $routes = [
             '/api/admin/organizations',
