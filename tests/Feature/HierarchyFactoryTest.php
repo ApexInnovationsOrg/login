@@ -120,6 +120,9 @@ class HierarchyFactoryTest extends TestCase
 
         $this->assertSame(1, System::where('Name', 'Memorial Health System')->count());
         $this->assertSame($orgA->system->ID, $orgB->system->ID);
+        // Scoped to this system, not table-wide: $seed = true tests run migrate:fresh --seed
+        // once per process, before any per-test transaction starts, so ReferenceDataSeeder's
+        // 2 SystemOrganizations rows are committed and persist across the rest of the suite.
         $this->assertSame(2, SystemOrganization::where('SystemID', $orgA->system->ID)->count());
     }
 
