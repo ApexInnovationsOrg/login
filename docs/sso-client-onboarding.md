@@ -80,6 +80,14 @@ that system. System-owned clients cannot hold a default department; new users
 on them are rejected (`unrouted_user` in the logs) until attribute routing
 rules (milestone 5) place them — configure rules before enabling such a
 client. The SSO-manager grant list of a system-owned client is system-wide.
+Re-parenting a client to a different owner (CLI-only, `saml:client update
+<slug> --org=` / `--system=`) strands the old owner's grant list — the rows
+aren't deleted, they just stop applying to this client, and the new owner
+starts with an empty list of its own. For the same reason, retire a client by
+disabling it (`saml:client disable <slug>`) rather than deleting its
+`saml_clients` row by hand — there is no cascade, so a manually deleted row
+strands its grants and routing rules as orphaned data instead of cleanly
+removing them.
 
 #### Interactive alternative: `--wizard`
 
@@ -211,6 +219,95 @@ history in its own `migrations_login` table — the shared `migrations` table
 belongs to other applications and is never read or written. No manual
 migration step is needed; a failed migration stops the new container before
 it serves, leaving the previous deployment running.
+
+## Attribute-based routing
+
+Beyond the client's single static default department, a client can carry
+**routing rules** that place (and, on repeat logins, move) users based on
+what the customer's IdP actually asserts — department, role, group, or any
+other attribute — instead of a fixed default. Rules read like Cloudflare page
+rules: "if the assertion matches `[attribute] [operator] [value]`, then
+place here." Manage them via `saml:client routing <slug>` (CLI —
+list/`--set`/`--set-file`/`--clear`) or the "Routing rules" panel on a
+client's edit dialog in the admin portal; both talk to the same
+`/api/admin/saml-clients/{slug}/routing-rules` API endpoint (GET/PUT).
+
+There are two rule kinds, because they answer two different questions:
+
+- **Organization rules** — "which organization does this user belong to?"
+  Only meaningful on system-owned clients (an org-owned client's organization
+  *is* its owner, so this stage is skipped for it). Each rule targets a
+  specific `organization_id` from the client's owner scope. The portal only
+  shows this section for system-owned clients.
+- **Department rules** — "which department within that organization?" These
+  target a **department name**, not a numeric ID. A hospital system with a
+  dozen identically-structured organizations writes its department mappings
+  *once* — a rule naming "ICU Nursing" resolves independently against
+  whichever organization stage 1 picked, rather than needing one rule per
+  org/department pair. If the named department doesn't exist in the resolved
+  org, that's expected and not an error: evaluation just falls through to the
+  next rule (or falls through to the client's static default, or the
+  finish-account flow, if nothing resolves).
+
+**Ordering and fall-through:** within each list, rules are evaluated in
+order and the **first match wins** — with one refinement for department
+rules: a department rule only "wins" if it both matches the assertion *and*
+its named department actually resolves (exists and active) in the
+organization stage 1 picked. A matching rule whose department doesn't exist
+here yields to the next rule rather than stopping evaluation, which is what
+makes shared rule sets safe to reuse across organizations that don't all
+have the same departments.
+
+**Operators** (a closed set, shared by both rule kinds): `equals`,
+`not_equals`, `starts_with`, `not_starts_with`, `contains`, `not_contains`,
+`ends_with`, `not_ends_with`, `wildcard`, `strict_wildcard`. Two things to
+know before writing a rule:
+
+- SAML attributes are multi-valued. The positive operators (`equals`,
+  `contains`, …) match when **any** asserted value satisfies the comparison;
+  an absent attribute never matches. The negated operators (`not_equals`,
+  `not_contains`, …) match when **no** asserted value satisfies the positive
+  form — which means they match vacuously when the attribute is absent
+  entirely. Keep that in mind for a `not_equals` rule meant to exclude a
+  specific group: it also matches everyone who was never asserted a group at
+  all.
+- `wildcard` and `strict_wildcard` are `*`-pattern matches (zero or more
+  characters, anchored over the whole value). `wildcard` is
+  case-insensitive, matching every other operator; `strict_wildcard` is the
+  one case-sensitive operator in the set — reach for it only when a
+  customer's IdP asserts values whose casing is meaningful.
+
+**Catch-alls:** the reserved triple `attribute = *`, `operator = wildcard`,
+`value = *` matches every login. It's the only legal use of `*` as an
+attribute name, and it is only legal as the **last** rule in its list —
+anything placed after a catch-all can never be reached and is rejected at
+save time. An org-rule catch-all is how a system-owned client says
+"everyone else belongs to org X"; a department-rule catch-all says
+"everyone else lands in the department named Y, where it exists." The
+portal's "match everyone" checkbox on the last row of a list fills in this
+triple for you.
+
+**Owner-scope confinement:** an org rule's `organization_id` must be one of
+the client's `scopedOrganizationIds()` — the owning org itself for an
+org-owned client, or a member organization for a system-owned one. Rules
+that reach outside that scope are rejected, same as grants.
+
+**The IdP is authoritative, every login.** Department rules aren't a
+one-time placement — they're re-evaluated on every login. If a rule resolves
+to a department different from the user's current one, the user moves
+(including across organizations, if stage 1 says so). No-match logins never
+demote or unplace anyone, but a resolvable match always wins: a department
+an Apex admin sets by hand survives only until the next login where a
+department rule resolves to something else. Don't hand-place a user into a
+department a routing rule will contest.
+
+**Entra/Okta attribute names:** write the `attribute` field exactly as the
+IdP sends it. Okta sends short attribute names (`department`, `role`, …), so
+those work directly. Entra emits URI-style claim names by default (e.g.
+`http://schemas.xmlsoap.org/ws/2005/05/identity/claims/department`, or a
+custom claim's full URI) — for an Entra client, the rule's `attribute` field
+needs the full claim URI, not the short name, the same reminder as the
+attribute map in Step 4 above.
 
 ## Admin portal SSO (apex-admin)
 

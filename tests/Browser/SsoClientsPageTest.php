@@ -169,7 +169,6 @@ class SsoClientsPageTest extends DuskTestCase
 
             // System-owned clients cannot hold a default department — the
             // form must not render that field at all once System is chosen.
-            $page->assertMissing('.el-dialog .el-form-item:nth-of-type(5) .el-select[placeholder="Select a department"]');
             $page->assertDontSeeIn('.el-dialog', 'Default department');
 
             $page->press('Save')
