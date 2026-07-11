@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Department;
+use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Models\SsoGrant;
+use App\Models\System;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AdminSsoGrantTest extends TestCase
@@ -101,5 +104,34 @@ class AdminSsoGrantTest extends TestCase
 
         $this->putJson('/api/admin/saml-clients/acme/grants', ['logins' => ['nodept@acme.com']],
             $this->headers())->assertStatus(422)->assertJsonValidationErrors('logins');
+    }
+
+    public function test_system_owned_client_accepts_grants_across_its_orgs(): void
+    {
+        $system = System::factory()->create();
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        foreach ([$orgA, $orgB] as $org) {
+            DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+        }
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'sys', 'department_id' => null]);
+        $userA = User::factory()->create(['DepartmentID' => Department::factory()->create(['OrganizationID' => $orgA->ID])->ID]);
+        $userB = User::factory()->create(['DepartmentID' => Department::factory()->create(['OrganizationID' => $orgB->ID])->ID]);
+
+        $this->putJson('/api/admin/saml-clients/sys/grants', ['logins' => [$userA->Login, $userB->Login]], $this->headers())
+            ->assertOk();
+
+        $this->assertDatabaseHas('sso_grants', ['user_id' => $userA->ID, 'owner_type' => 'system', 'owner_id' => $system->ID]);
+        $this->assertDatabaseHas('sso_grants', ['user_id' => $userB->ID, 'owner_type' => 'system', 'owner_id' => $system->ID]);
+    }
+
+    public function test_grant_outside_owner_scope_is_rejected(): void
+    {
+        $system = System::factory()->create();
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'sys', 'department_id' => null]);
+        $outsider = User::factory()->create();
+
+        $this->putJson('/api/admin/saml-clients/sys/grants', ['logins' => [$outsider->Login]], $this->headers())
+            ->assertStatus(422);
     }
 }

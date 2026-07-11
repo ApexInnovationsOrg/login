@@ -29,7 +29,9 @@ class SsoGrantController extends Controller
 
         $logins = $request->validate(['logins' => ['present', 'array'], 'logins.*' => ['string']])['logins'];
 
-        $users = collect($logins)->map(function (string $login) use ($client) {
+        $scope = $client->scopedOrganizationIds();
+
+        $users = collect($logins)->map(function (string $login) use ($scope) {
             $user = User::with('department')->where('Login', $login)->first();
 
             if (! $user) {
@@ -38,9 +40,9 @@ class SsoGrantController extends Controller
                 ]);
             }
 
-            if ($user->department === null || (int) $user->department->OrganizationID !== (int) $client->owner_id) {
+            if ($user->department === null || ! in_array((int) $user->department->OrganizationID, $scope, true)) {
                 throw ValidationException::withMessages([
-                    'logins' => "{$login} does not belong to this client's organization.",
+                    'logins' => "{$login} does not belong to this client's scope.",
                 ]);
             }
 

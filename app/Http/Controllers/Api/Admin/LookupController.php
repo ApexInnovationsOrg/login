@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\System;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -54,7 +55,7 @@ class LookupController extends Controller
 
         $q = (string) $request->query('q', '');
 
-        $departmentIds = Department::where('OrganizationID', $client->owner_id)->pluck('ID');
+        $departmentIds = Department::whereIn('OrganizationID', $client->scopedOrganizationIds())->pluck('ID');
 
         return response()->json([
             'data' => User::query()
@@ -74,6 +75,21 @@ class LookupController extends Controller
                     'last_name' => $user->LastName,
                     'department' => $user->department?->Name,
                 ])
+                ->values(),
+        ]);
+    }
+
+    public function systems(Request $request): JsonResponse
+    {
+        $q = (string) $request->query('q', '');
+
+        return response()->json([
+            'data' => System::query()
+                ->when($q !== '', fn ($query) => $query->where('Name', 'like', '%'.$q.'%'))
+                ->orderBy('Name')
+                ->limit(25)
+                ->get()
+                ->map(fn (System $system) => ['id' => $system->ID, 'name' => $system->Name])
                 ->values(),
         ]);
     }

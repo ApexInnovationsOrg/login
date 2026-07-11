@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\System;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -112,5 +113,17 @@ class AdminLookupTest extends TestCase
             $this->getJson($route)->assertUnauthorized();
             $this->getJson($route, ['Authorization' => 'Bearer wrong-token'])->assertUnauthorized();
         }
+    }
+
+    public function test_systems_lookup_searches_by_name(): void
+    {
+        $system = System::factory()->create(['Name' => 'Mercy Health System']);
+        System::factory()->create(['Name' => 'Other']);
+
+        $this->getJson('/api/admin/systems?q=mercy', $this->headers())
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $system->ID)
+            ->assertJsonPath('data.0.name', 'Mercy Health System');
     }
 }
