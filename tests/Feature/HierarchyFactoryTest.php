@@ -136,21 +136,19 @@ class HierarchyFactoryTest extends TestCase
 
     public function test_for_system_without_argument_creates_a_fresh_system(): void
     {
-        $org = Organization::factory()->forSystem()->create();
+        $orgA = Organization::factory()->forSystem()->create();
+        $orgB = Organization::factory()->forSystem()->create();
 
-        $this->assertNotNull($org->system);
+        $this->assertNotNull($orgA->system);
+        $this->assertNotNull($orgB->system);
+        $this->assertNotSame($orgA->system->ID, $orgB->system->ID);
     }
 
     public function test_reattaching_an_org_replaces_its_system(): void
     {
         $first = System::factory()->create();
         $second = System::factory()->create();
-        $org = Organization::factory()->forSystem($first)->create();
-
-        SystemOrganization::updateOrCreate(
-            ['OrganizationID' => $org->ID],
-            ['SystemID' => $second->ID],
-        );
+        $org = Organization::factory()->forSystem($first)->forSystem($second)->create();
 
         $this->assertSame(1, SystemOrganization::where('OrganizationID', $org->ID)->count());
         $this->assertSame($second->ID, $org->fresh()->system->ID);
