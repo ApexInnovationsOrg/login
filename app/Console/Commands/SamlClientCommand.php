@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\SamlDepartmentRule;
+use App\Models\SamlOrgRule;
 use App\Models\System;
 use App\Saml\SamlClientManager;
 use Illuminate\Console\Command;
@@ -20,20 +22,24 @@ use function Laravel\Prompts\text;
 class SamlClientCommand extends Command
 {
     protected $signature = 'saml:client
-        {action : list, describe, create, update, enable, or disable}
+        {action : list, describe, create, update, enable, disable, or routing}
         {slug? : client slug (all actions except list/create)}
         {--name= : display name}
         {--slug= : explicit slug (create only; defaults to slugged name)}
         {--org= : owning organization ID (exactly one of --org/--system)}
         {--system= : owning system ID (exactly one of --org/--system)}
         {--department= : default department ID (omit for the finish-account flow)}
+        {--no-department : clear the default department (update only; conflicts with --department)}
         {--jit : enable just-in-time provisioning}
         {--no-jit : disable just-in-time provisioning}
         {--metadata= : path to an IdP metadata XML file}
         {--domains= : comma-separated email domains for SP-initiated SSO routing (replaces the list)}
         {--admin-portal : mark the client as asserting admin-portal (Employee) identities}
         {--no-admin-portal : clear the admin-portal marker}
-        {--wizard : create a client interactively (create action only)}';
+        {--wizard : create a client interactively (create action only)}
+        {--set= : inline JSON object with org_rules/department_rules keys (routing action only)}
+        {--set-file= : path to a JSON file with org_rules/department_rules keys (routing action only)}
+        {--clear : replace routing rules with empty lists (routing action only)}';
 
     protected $description = 'Manage SAML SSO client configurations';
 
@@ -54,7 +60,8 @@ class SamlClientCommand extends Command
                 'update' => $this->updateClient($manager),
                 'enable' => $this->toggle($manager, true),
                 'disable' => $this->toggle($manager, false),
-                default => $this->failWith('Unknown action. Use: list, describe, create, update, enable, disable.'),
+                'routing' => $this->routingAction($manager),
+                default => $this->failWith('Unknown action. Use: list, describe, create, update, enable, disable, routing.'),
             };
         } catch (ValidationException $e) {
             foreach ($e->errors() as $messages) {
@@ -116,6 +123,8 @@ class SamlClientCommand extends Command
         if ($cert['expiring']) {
             $this->warn('IdP certificate is expiring soon!');
         }
+        $this->line('Org rules: '.$client->orgRules()->count());
+        $this->line('Department rules: '.$client->departmentRules()->count());
 
         return self::SUCCESS;
     }
@@ -131,15 +140,13 @@ class SamlClientCommand extends Command
                 'department_id' => $this->option('department'),
             ], fn ($v) => $v !== null);
 
-            $org = $this->option('org');
-            $system = $this->option('system');
+            $owner = $this->ownerOptionPair();
 
-            if (($org === null) === ($system === null)) {
+            if ($owner === null) {
                 return $this->failWith('Provide exactly one of --org or --system.');
             }
 
-            $input['owner_type'] = $org !== null ? 'organization' : 'system';
-            $input['owner_id'] = $org ?? $system;
+            $input += $owner;
         }
 
         if (! $this->option('wizard') && ($domains = $this->domainsOption()) !== null) {
@@ -259,16 +266,22 @@ class SamlClientCommand extends Command
             'department_id' => $this->option('department'),
         ], fn ($v) => $v !== null);
 
-        $org = $this->option('org');
-        $system = $this->option('system');
+        if ($this->option('org') !== null || $this->option('system') !== null) {
+            $owner = $this->ownerOptionPair();
 
-        if ($org !== null || $system !== null) {
-            if ($org !== null && $system !== null) {
+            if ($owner === null) {
                 return $this->failWith('Provide exactly one of --org or --system.');
             }
 
-            $fields['owner_type'] = $org !== null ? 'organization' : 'system';
-            $fields['owner_id'] = $org ?? $system;
+            $fields += $owner;
+        }
+
+        if ($this->option('no-department') && $this->option('department') !== null) {
+            return $this->failWith('Provide --department or --no-department, not both.');
+        }
+
+        if ($this->option('no-department')) {
+            $fields['department_id'] = null;
         }
 
         if (($domains = $this->domainsOption()) !== null) {
@@ -309,6 +322,115 @@ class SamlClientCommand extends Command
         return self::SUCCESS;
     }
 
+    private function routingAction(SamlClientManager $manager): int
+    {
+        $client = $this->resolveClient();
+        if (! $client) {
+            return self::FAILURE;
+        }
+
+        if ($this->option('clear') || $this->option('set') !== null || $this->option('set-file') !== null) {
+            return $this->replaceRoutingRules($manager, $client);
+        }
+
+        $this->renderRoutingRules($client);
+
+        return self::SUCCESS;
+    }
+
+    private function replaceRoutingRules(SamlClientManager $manager, SamlClient $client): int
+    {
+        if ($this->option('clear')) {
+            $orgRules = [];
+            $departmentRules = [];
+        } else {
+            $json = $this->option('set') !== null
+                ? $this->option('set')
+                : $this->readSetFile((string) $this->option('set-file'));
+
+            if ($json === null) {
+                return self::FAILURE;
+            }
+
+            $decoded = json_decode($json, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+                $this->error('Invalid JSON: '.json_last_error_msg());
+
+                return self::FAILURE;
+            }
+
+            $orgRules = $decoded['org_rules'] ?? [];
+            $departmentRules = $decoded['department_rules'] ?? [];
+        }
+
+        $manager->replaceRoutingRules($client, $orgRules, $departmentRules);
+
+        $this->info("Routing rules replaced for {$client->slug}.");
+
+        return self::SUCCESS;
+    }
+
+    private function readSetFile(string $path): ?string
+    {
+        if (! is_file($path)) {
+            $this->error("Routing rules file not found: $path");
+
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            $this->error("Could not read routing rules file: $path");
+
+            return null;
+        }
+
+        return $contents;
+    }
+
+    private function renderRoutingRules(SamlClient $client): void
+    {
+        $orgRules = $client->orgRules;
+        $departmentRules = $client->departmentRules;
+
+        if ($orgRules->isEmpty()) {
+            $this->line('Org rules: none');
+        } else {
+            $orgNames = Organization::whereIn('ID', $orgRules->pluck('organization_id')->unique())->pluck('Name', 'ID');
+
+            $this->line('Org rules:');
+            foreach ($orgRules as $index => $rule) {
+                $orgLabel = ($orgNames->get($rule->organization_id) ?? 'unknown')." ({$rule->organization_id})";
+                $this->line('org '.($index + 1).'. '.$this->describeRuleSentence($rule, $orgLabel));
+            }
+        }
+
+        if ($departmentRules->isEmpty()) {
+            $this->line('Department rules: none');
+        } else {
+            $this->line('Department rules:');
+            foreach ($departmentRules as $index => $rule) {
+                $this->line('dept '.($index + 1).'. '.$this->describeRuleSentence($rule, "\"{$rule->department_name}\""));
+            }
+        }
+    }
+
+    /**
+     * @param  SamlOrgRule|SamlDepartmentRule  $rule
+     */
+    private function describeRuleSentence($rule, string $target): string
+    {
+        if ($rule->isCatchAll()) {
+            return 'everyone →';
+        }
+
+        $operator = str_replace('_', ' ', $rule->operator->value);
+
+        return "{$rule->attribute} {$operator} \"{$rule->value}\" → {$target}";
+    }
+
     private function applyCommonOptions(SamlClientManager $manager, SamlClient $client): SamlClient
     {
         if ($this->option('jit')) {
@@ -325,6 +447,31 @@ class SamlClientCommand extends Command
         }
 
         return $client;
+    }
+
+    /**
+     * Resolve --org/--system into an owner_type/owner_id pair, shared by
+     * create (where exactly one is required) and update (where re-parenting
+     * is optional, but both is still an error). Both call sites emit the
+     * same "Provide exactly one of --org or --system." failure via
+     * failWith() when this returns null; neither call site distinguishes
+     * "neither given" from "both given" in the message.
+     *
+     * @return array{owner_type: string, owner_id: string}|null
+     */
+    private function ownerOptionPair(): ?array
+    {
+        $org = $this->option('org');
+        $system = $this->option('system');
+
+        if (($org === null) === ($system === null)) {
+            return null;
+        }
+
+        return [
+            'owner_type' => $org !== null ? 'organization' : 'system',
+            'owner_id' => $org ?? $system,
+        ];
     }
 
     /**

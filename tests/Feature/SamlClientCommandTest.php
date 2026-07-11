@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\SamlDepartmentRule;
+use App\Models\SamlOrgRule;
 use App\Models\System;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SamlClientCommandTest extends TestCase
@@ -182,5 +186,155 @@ class SamlClientCommandTest extends TestCase
         ])->assertFailed();
 
         $this->assertDatabaseMissing('saml_clients', ['slug' => 'sys-client']);
+    }
+
+    public function test_describe_shows_routing_rule_counts(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create();
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'acme']);
+
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id, 'organization_id' => $org->ID]);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id]);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id, 'position' => 2]);
+
+        $this->artisan('saml:client', ['action' => 'describe', 'slug' => 'acme'])
+            ->expectsOutputToContain('Org rules: 1')
+            ->expectsOutputToContain('Department rules: 2')
+            ->assertSuccessful();
+    }
+
+    public function test_routing_action_renders_numbered_sentences_with_catch_all(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create(['Name' => 'Mercy West']);
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'acme']);
+
+        SamlOrgRule::factory()->create([
+            'saml_client_id' => $client->id,
+            'position' => 1,
+            'attribute' => 'hospital',
+            'operator' => 'equals',
+            'value' => 'Mercy West',
+            'organization_id' => $org->ID,
+        ]);
+        SamlOrgRule::factory()->catchAll()->create([
+            'saml_client_id' => $client->id,
+            'position' => 2,
+            'organization_id' => $org->ID,
+        ]);
+        SamlDepartmentRule::factory()->create([
+            'saml_client_id' => $client->id,
+            'position' => 1,
+            'attribute' => 'group',
+            'operator' => 'contains',
+            'value' => 'nurse',
+            'department_name' => 'ICU Nursing',
+        ]);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme'])
+            ->expectsOutputToContain("org 1. hospital equals \"Mercy West\" → Mercy West ({$org->ID})")
+            ->expectsOutputToContain('org 2. everyone →')
+            ->expectsOutputToContain('dept 1. group contains "nurse" → "ICU Nursing"')
+            ->assertSuccessful();
+    }
+
+    public function test_routing_action_set_inline_json_replaces_rules(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create();
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'acme']);
+
+        $json = json_encode([
+            'org_rules' => [
+                ['attribute' => 'hospital', 'operator' => 'equals', 'value' => 'Mercy West', 'organization_id' => $org->ID],
+            ],
+            'department_rules' => [],
+        ]);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme', '--set' => $json])
+            ->assertSuccessful();
+
+        $this->assertDatabaseCount('saml_org_rules', 1);
+        $this->assertDatabaseHas('saml_org_rules', ['saml_client_id' => $client->id, 'attribute' => 'hospital']);
+    }
+
+    public function test_routing_action_set_file_replaces_rules(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create();
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'acme']);
+
+        $json = json_encode([
+            'org_rules' => [
+                ['attribute' => 'hospital', 'operator' => 'equals', 'value' => 'Mercy West', 'organization_id' => $org->ID],
+            ],
+            'department_rules' => [],
+        ]);
+
+        $path = tempnam(sys_get_temp_dir(), 'routing').'.json';
+        file_put_contents($path, $json);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme', '--set-file' => $path])
+            ->assertSuccessful();
+
+        unlink($path);
+
+        $this->assertDatabaseCount('saml_org_rules', 1);
+    }
+
+    public function test_routing_action_clear_empties_both_lists(): void
+    {
+        $org = Organization::factory()->create();
+        $client = SamlClient::factory()->create(['slug' => 'acme', 'owner_id' => $org->ID]);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id]);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme', '--clear' => true])
+            ->assertSuccessful();
+
+        $this->assertDatabaseCount('saml_org_rules', 0);
+        $this->assertDatabaseCount('saml_department_rules', 0);
+    }
+
+    public function test_routing_action_malformed_json_fails_cleanly(): void
+    {
+        SamlClient::factory()->create(['slug' => 'acme']);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme', '--set' => '{not valid json'])
+            ->assertFailed();
+    }
+
+    public function test_routing_action_unreadable_set_file_fails_cleanly(): void
+    {
+        SamlClient::factory()->create(['slug' => 'acme']);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme', '--set-file' => '/no/such/file.json'])
+            ->assertFailed();
+    }
+
+    public function test_no_department_clears_default_department(): void
+    {
+        $dept = Department::factory()->create();
+        $client = SamlClient::factory()->create(['slug' => 'acme', 'owner_id' => $dept->OrganizationID, 'department_id' => $dept->ID]);
+
+        $this->artisan('saml:client', [
+            'action' => 'update', 'slug' => 'acme', '--no-department' => true,
+        ])->assertSuccessful();
+
+        $this->assertNull($client->fresh()->department_id);
+    }
+
+    public function test_no_department_and_department_together_fails(): void
+    {
+        $dept = Department::factory()->create();
+        SamlClient::factory()->create(['slug' => 'acme', 'owner_id' => $dept->OrganizationID]);
+
+        $this->artisan('saml:client', [
+            'action' => 'update', 'slug' => 'acme', '--no-department' => true, '--department' => $dept->ID,
+        ])->assertFailed();
     }
 }

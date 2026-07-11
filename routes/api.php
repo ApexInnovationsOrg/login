@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\LookupController;
+use App\Http\Controllers\Api\Admin\RoutingRuleController;
 use App\Http\Controllers\Api\Admin\SamlClientController;
 use App\Http\Controllers\Api\Admin\SsoGrantController;
 use App\Http\Controllers\Api\Admin\SsoHandoffController;
@@ -36,5 +37,8 @@ Route::prefix('admin')->middleware('admin.api')->name('admin.')->group(function 
     Route::post('/saml-clients/{slug}/disable', [SamlClientController::class, 'disable'])->name('saml-clients.disable');
     Route::get('/saml-clients/{slug}/grants', [SsoGrantController::class, 'index'])->name('saml-clients.grants.index');
     Route::put('/saml-clients/{slug}/grants', [SsoGrantController::class, 'replace'])->name('saml-clients.grants.replace');
+    Route::get('/saml-clients/{slug}/routing-rules', [RoutingRuleController::class, 'show'])->name('saml-clients.routing-rules.show');
+    Route::put('/saml-clients/{slug}/routing-rules', [RoutingRuleController::class, 'replace'])->name('saml-clients.routing-rules.replace');
+    Route::get('/saml-clients/{slug}/routable-organizations', [RoutingRuleController::class, 'routableOrganizations'])->name('saml-clients.routable-organizations');
     Route::post('/sso-handoff/redeem', [SsoHandoffController::class, 'redeem'])->name('sso-handoff.redeem');
 });
