@@ -120,7 +120,7 @@ class HierarchyFactoryTest extends TestCase
 
         $this->assertSame(1, System::where('Name', 'Memorial Health System')->count());
         $this->assertSame($orgA->system->ID, $orgB->system->ID);
-        $this->assertDatabaseCount('SystemOrganizations', 2);
+        $this->assertSame(2, SystemOrganization::where('SystemID', $orgA->system->ID)->count());
     }
 
     public function test_for_system_with_model_attaches_to_it(): void

@@ -4,7 +4,6 @@ namespace Tests\Support;
 
 use App\Models\Organization;
 use App\Models\System;
-use Illuminate\Support\Facades\DB;
 
 trait SeedsSystemHierarchy
 {
@@ -12,11 +11,8 @@ trait SeedsSystemHierarchy
     private function seedSystemWithTwoOrgs(): array
     {
         $system = System::factory()->create();
-        $orgA = Organization::factory()->create();
-        $orgB = Organization::factory()->create();
-
-        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgA->ID]);
-        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgB->ID]);
+        $orgA = Organization::factory()->forSystem($system)->create();
+        $orgB = Organization::factory()->forSystem($system)->create();
 
         return [$system, $orgA, $orgB];
     }
