@@ -20,7 +20,12 @@ class OrganizationFactory extends Factory
         );
 
         return [
-            'Name' => $this->faker->unique()->company(),
+            // City carries the uniqueness (Organizations.Name is globally
+            // unique); the suffix carries the healthcare flavor.
+            'Name' => $this->faker->unique()->city().' '.$this->faker->randomElement([
+                'Medical Center', 'Regional Hospital', 'Community Hospital',
+                'Memorial Hospital', 'General Hospital',
+            ]),
             'Address' => $this->faker->streetAddress(),
             'City' => $this->faker->city(),
             'PostalCode' => $this->faker->postcode(),

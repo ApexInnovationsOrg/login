@@ -12,7 +12,7 @@ class SystemFactory extends Factory
     public function definition(): array
     {
         return [
-            'Name' => $this->faker->unique()->company().' System',
+            'Name' => $this->faker->unique()->city().' Health System',
             'CreationDate' => now()->format('Y-m-d'),
         ];
     }
