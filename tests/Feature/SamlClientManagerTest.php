@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
+use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\System;
 use App\Saml\SamlClientManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -19,9 +22,12 @@ class SamlClientManagerTest extends TestCase
 
     public function test_create_with_minimal_input_slugs_the_name(): void
     {
+        $org = Organization::factory()->create();
+
         $client = $this->manager()->create([
             'name' => 'Health System One',
-            'owner_id' => 1,
+            'owner_type' => 'organization',
+            'owner_id' => $org->ID,
         ]);
 
         $this->assertSame('health-system-one', $client->slug);
@@ -91,8 +97,10 @@ class SamlClientManagerTest extends TestCase
 
     public function test_domains_are_normalized_on_create(): void
     {
+        $org = Organization::factory()->create();
+
         $client = $this->manager()->create([
-            'name' => 'Acme', 'owner_id' => 1,
+            'name' => 'Acme', 'owner_type' => 'organization', 'owner_id' => $org->ID,
             'email_domains' => [' @MDAnderson.ORG ', 'mdanderson.org'],
         ]);
 
@@ -130,5 +138,36 @@ class SamlClientManagerTest extends TestCase
         ]);
 
         $this->assertSame(['mdanderson.org', 'mdacc.org'], $updated->email_domains);
+    }
+
+    public function test_create_rejects_unknown_owner(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->create(['name' => 'X', 'owner_type' => 'organization', 'owner_id' => 999999]);
+    }
+
+    public function test_default_department_must_belong_to_owning_org(): void
+    {
+        $org = Organization::factory()->create();
+        $otherOrgDept = Department::factory()->create(); // factory mints its own org
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->create([
+            'name' => 'X', 'owner_type' => 'organization', 'owner_id' => $org->ID,
+            'department_id' => $otherOrgDept->ID,
+        ]);
+    }
+
+    public function test_reparent_to_system_with_default_department_is_rejected(): void
+    {
+        $dept = Department::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $dept->OrganizationID, 'department_id' => $dept->ID]);
+        $system = System::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $system->ID]);
     }
 }

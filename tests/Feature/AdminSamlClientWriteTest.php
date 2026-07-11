@@ -28,6 +28,7 @@ class AdminSamlClientWriteTest extends TestCase
     {
         $this->postJson('/api/admin/saml-clients', [
             'name' => 'Acme Hospital',
+            'owner_type' => 'organization',
             'owner_id' => 1,
             'email_domains' => ['acme.com'],
         ], $this->headers())

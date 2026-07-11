@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\System;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,7 +14,9 @@ class SamlClientCommandTest extends TestCase
 
     public function test_create_prints_urls(): void
     {
-        $this->artisan('saml:client', ['action' => 'create', '--name' => 'Acme Health', '--org' => 1])
+        $org = Organization::factory()->create();
+
+        $this->artisan('saml:client', ['action' => 'create', '--name' => 'Acme Health', '--org' => $org->ID])
             ->expectsOutputToContain('/saml/acme-health/acs')
             ->expectsOutputToContain('/saml/acme-health/metadata')
             ->assertSuccessful();
@@ -76,8 +80,10 @@ class SamlClientCommandTest extends TestCase
 
     public function test_create_accepts_domains_option(): void
     {
+        $org = Organization::factory()->create();
+
         $this->artisan('saml:client', [
-            'action' => 'create', '--name' => 'Acme', '--org' => '1',
+            'action' => 'create', '--name' => 'Acme', '--org' => (string) $org->ID,
             '--domains' => 'Acme.com, portal.acme.com',
         ])->assertSuccessful();
 
@@ -117,8 +123,10 @@ class SamlClientCommandTest extends TestCase
 
     public function test_create_with_admin_portal_flag(): void
     {
+        $org = Organization::factory()->create();
+
         $this->artisan('saml:client', [
-            'action' => 'create', '--name' => 'Apex Admin', '--org' => 933, '--admin-portal' => true,
+            'action' => 'create', '--name' => 'Apex Admin', '--org' => $org->ID, '--admin-portal' => true,
         ])->assertSuccessful();
 
         $this->assertDatabaseHas('saml_clients', ['slug' => 'apex-admin', 'admin_portal' => 1]);
@@ -126,8 +134,10 @@ class SamlClientCommandTest extends TestCase
 
     public function test_admin_portal_client_cannot_claim_domains(): void
     {
+        $org = Organization::factory()->create();
+
         $this->artisan('saml:client', [
-            'action' => 'create', '--name' => 'Apex Admin', '--org' => 933,
+            'action' => 'create', '--name' => 'Apex Admin', '--org' => $org->ID,
             '--admin-portal' => true, '--domains' => 'apexinnovations.com',
         ])->assertFailed();
 
@@ -143,5 +153,34 @@ class SamlClientCommandTest extends TestCase
         ])->assertSuccessful();
 
         $this->assertDatabaseHas('saml_clients', ['slug' => 'apex-admin', 'admin_portal' => 0]);
+    }
+
+    public function test_create_with_system_owner(): void
+    {
+        $system = System::factory()->create();
+
+        $this->artisan('saml:client', [
+            'action' => 'create', '--name' => 'Sys Client', '--system' => $system->ID,
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('saml_clients', ['slug' => 'sys-client', 'owner_type' => 'system', 'owner_id' => $system->ID]);
+    }
+
+    public function test_create_requires_exactly_one_owner(): void
+    {
+        $this->artisan('saml:client', ['action' => 'create', '--name' => 'Nope'])->assertFailed();
+        $this->artisan('saml:client', ['action' => 'create', '--name' => 'Nope', '--org' => 1, '--system' => 1])->assertFailed();
+        $this->assertDatabaseMissing('saml_clients', ['slug' => 'nope']);
+    }
+
+    public function test_system_owned_client_rejects_default_department(): void
+    {
+        $system = System::factory()->create();
+
+        $this->artisan('saml:client', [
+            'action' => 'create', '--name' => 'Sys Client', '--system' => $system->ID, '--department' => 1,
+        ])->assertFailed();
+
+        $this->assertDatabaseMissing('saml_clients', ['slug' => 'sys-client']);
     }
 }

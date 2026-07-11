@@ -2,7 +2,10 @@
 
 namespace App\Saml;
 
+use App\Models\Department;
+use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\System;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -58,6 +61,7 @@ class SamlClientManager
         $validated = Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug'],
+            'owner_type' => ['required', 'in:organization,system'],
             'owner_id' => ['required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
@@ -69,6 +73,13 @@ class SamlClientManager
             'email_domains' => ['sometimes', 'array'],
             'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
         ])->validate();
+
+        $this->assertOwnerExists($validated['owner_type'], $validated['owner_id']);
+        $this->assertDefaultDepartmentValid(
+            $validated['owner_type'],
+            $validated['owner_id'],
+            $validated['department_id'] ?? null,
+        );
 
         $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], null);
 
@@ -85,9 +96,6 @@ class SamlClientManager
             'idp_certificate' => 'pending',
             'attribute_map' => self::DEFAULT_ATTRIBUTE_MAP,
             'email_domains' => [],
-            // Every client created through this manager is org-owned for now;
-            // system ownership is created another way (Task 2).
-            'owner_type' => 'organization',
         ]);
     }
 
@@ -100,7 +108,8 @@ class SamlClientManager
         $validated = Validator::make($input, [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => ['sometimes', 'required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug,'.$client->id],
-            'owner_id' => ['sometimes', 'required', 'integer', 'min:1'],
+            'owner_type' => ['sometimes', 'required', 'in:organization,system', 'required_with:owner_id'],
+            'owner_id' => ['sometimes', 'required', 'integer', 'min:1', 'required_with:owner_type'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
             'admin_portal' => ['sometimes', 'boolean'],
@@ -111,6 +120,16 @@ class SamlClientManager
             'email_domains' => ['sometimes', 'array'],
             'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
         ])->validate();
+
+        $this->assertOwnerExists(
+            $validated['owner_type'] ?? $client->owner_type,
+            $validated['owner_id'] ?? $client->owner_id,
+        );
+        $this->assertDefaultDepartmentValid(
+            $validated['owner_type'] ?? $client->owner_type,
+            $validated['owner_id'] ?? $client->owner_id,
+            array_key_exists('department_id', $validated) ? $validated['department_id'] : $client->department_id,
+        );
 
         $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], $client);
 
@@ -198,6 +217,47 @@ class SamlClientManager
         if ($adminPortal && $domains !== []) {
             throw ValidationException::withMessages([
                 'email_domains' => 'An admin-portal client cannot claim email domains.',
+            ]);
+        }
+    }
+
+    private function assertOwnerExists(string $ownerType, int $ownerId): void
+    {
+        $exists = $ownerType === 'organization'
+            ? Organization::where('ID', $ownerId)->exists()
+            : System::where('ID', $ownerId)->exists();
+
+        if (! $exists) {
+            throw ValidationException::withMessages([
+                'owner_id' => "No {$ownerType} with ID {$ownerId}.",
+            ]);
+        }
+    }
+
+    /**
+     * A default department only makes sense on an org-owned client and must
+     * belong to the owning organization (closes the milestone-4 gap where
+     * department_id was never validated).
+     */
+    private function assertDefaultDepartmentValid(string $ownerType, int $ownerId, ?int $departmentId): void
+    {
+        if ($departmentId === null) {
+            return;
+        }
+
+        if ($ownerType !== 'organization') {
+            throw ValidationException::withMessages([
+                'department_id' => 'A default department requires an organization-owned client.',
+            ]);
+        }
+
+        $belongs = Department::where('ID', $departmentId)
+            ->where('OrganizationID', $ownerId)
+            ->exists();
+
+        if (! $belongs) {
+            throw ValidationException::withMessages([
+                'department_id' => 'Department does not belong to the owning organization.',
             ]);
         }
     }

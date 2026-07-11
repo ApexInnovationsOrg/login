@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Organization;
 use App\Models\SamlClient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -22,7 +23,7 @@ class SamlClientFactory extends Factory
             'idp_sso_url' => 'https://idp.example.com/'.Str::slug($name).'/sso',
             'idp_certificate' => 'MIIC-placeholder-not-a-real-cert',
             'owner_type' => 'organization',
-            'owner_id' => 1,
+            'owner_id' => Organization::factory(),
             'department_id' => null,
             'jit_enabled' => true,
             'admin_portal' => false,
