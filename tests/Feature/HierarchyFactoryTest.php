@@ -152,4 +152,23 @@ class HierarchyFactoryTest extends TestCase
         $this->assertSame(1, SystemOrganization::where('OrganizationID', $org->ID)->count());
         $this->assertSame($second->ID, $org->fresh()->system->ID);
     }
+
+    public function test_with_departments_count_creates_distinct_names(): void
+    {
+        $org = Organization::factory()->withDepartments(4)->create();
+
+        $names = $org->departments->pluck('Name');
+        $this->assertCount(4, $names);
+        $this->assertCount(4, $names->unique());
+    }
+
+    public function test_with_departments_accepts_explicit_names(): void
+    {
+        $org = Organization::factory()->withDepartments(['Emergency', 'ICU'])->create();
+
+        $this->assertEqualsCanonicalizing(
+            ['Emergency', 'ICU'],
+            $org->departments->pluck('Name')->all(),
+        );
+    }
 }

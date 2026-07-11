@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
 use App\Models\Organization;
 use App\Models\System;
 use App\Models\SystemOrganization;
@@ -77,5 +78,28 @@ class OrganizationFactory extends Factory
                 ['SystemID' => $resolved->ID],
             );
         });
+    }
+
+    /**
+     * Create departments for the org. An int picks that many distinct names
+     * from DepartmentFactory::NAMES via a sequence — deliberately bypassing
+     * faker's global unique(), so seeding many orgs can't exhaust the pool
+     * (the legacy index is only UNIQUE(Name, OrganizationID), i.e. per-org).
+     * An array uses the exact names given. Asking for more than the pool
+     * holds cycles into duplicate names and surfaces as the natural DB error.
+     */
+    public function withDepartments(int|array $departments = 3): static
+    {
+        $names = is_array($departments)
+            ? array_values($departments)
+            : collect(DepartmentFactory::NAMES)->shuffle()->take($departments)->values()->all();
+        $count = is_array($departments) ? count($departments) : $departments;
+
+        return $this->has(
+            Department::factory()
+                ->count($count)
+                ->sequence(...array_map(fn (string $name) => ['Name' => $name], $names)),
+            'departments',
+        );
     }
 }
