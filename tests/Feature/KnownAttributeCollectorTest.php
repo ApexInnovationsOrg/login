@@ -41,7 +41,7 @@ class KnownAttributeCollectorTest extends TestCase
             'known_attributes' => [],
         ]);
 
-        $this->collector->capture($client, $this->assertion());
+        $this->collector->capture($client, array_keys($this->assertion()));
 
         $this->assertEqualsCanonicalizing(['department', 'eduPersonAffiliation'], $client->fresh()->known_attributes);
     }
@@ -50,7 +50,7 @@ class KnownAttributeCollectorTest extends TestCase
     {
         $client = SamlClient::factory()->create(['attribute_map' => ['email' => 'email', 'first_name' => 'firstName', 'last_name' => 'lastName']]);
 
-        $this->collector->capture($client, $this->assertion());
+        $this->collector->capture($client, array_keys($this->assertion()));
 
         // No stored string anywhere equals an asserted VALUE.
         foreach (['jane@acme.test', 'Jane', 'Doe', 'Cardiology', 'staff', 'member'] as $value) {
@@ -63,8 +63,8 @@ class KnownAttributeCollectorTest extends TestCase
     {
         $client = SamlClient::factory()->create(['attribute_map' => ['email' => 'email', 'first_name' => 'firstName', 'last_name' => 'lastName']]);
 
-        $this->collector->capture($client, $this->assertion());
-        $this->collector->capture($client, $this->assertion());
+        $this->collector->capture($client, array_keys($this->assertion()));
+        $this->collector->capture($client, array_keys($this->assertion()));
 
         $obs = SamlAttributeObservation::where('saml_client_id', $client->id)->where('name', 'department')->first();
         $this->assertSame(2, $obs->observation_count);
@@ -80,7 +80,7 @@ class KnownAttributeCollectorTest extends TestCase
         $before = $client->updated_at;
         $this->travel(1)->minutes();
 
-        $this->collector->capture($client, $this->assertion());
+        $this->collector->capture($client, array_keys($this->assertion()));
 
         $this->assertEquals($before, $client->fresh()->updated_at); // column untouched
     }
@@ -89,7 +89,7 @@ class KnownAttributeCollectorTest extends TestCase
     {
         $client = SamlClient::factory()->adminPortal()->create();
 
-        $this->collector->capture($client, $this->assertion());
+        $this->collector->capture($client, array_keys($this->assertion()));
 
         $this->assertSame([], $client->fresh()->known_attributes);
         $this->assertDatabaseCount('saml_attribute_observations', 0);
@@ -102,21 +102,20 @@ class KnownAttributeCollectorTest extends TestCase
             'attribute_map' => ['email' => 'email', 'first_name' => 'firstName', 'last_name' => 'lastName'],
         ]);
 
-        // Force a genuine throw from inside capture by making the observation
-        // save fail. Bind a model event that throws when save() is called on
-        // SamlAttributeObservation.
-        SamlAttributeObservation::saving(function () {
-            throw new \RuntimeException('Simulated DB failure during observation save');
-        });
+        // Force a genuine throw from inside capture. The implementation uses
+        // an atomic upsert() (no model events fire), so drop the schema
+        // underneath it to make the query itself fail — this exercises the
+        // real code path the collector executes, not a model event hook.
+        \Illuminate\Support\Facades\Schema::drop('saml_attribute_observations');
 
         // Must NOT throw out of capture (a capture failure can never break a login).
-        $this->collector->capture($client, $this->assertion());
+        $this->collector->capture($client, array_keys($this->assertion()));
 
         // Verify the warning was logged with the correct message and context.
         Log::shouldHaveReceived('warning')
             ->once()
             ->withArgs(fn ($message, $context = []) => $message === 'known-attribute capture failed'
                 && ($context['client'] ?? null) === $client->slug
-                && str_contains($context['error'] ?? '', 'Simulated DB failure'));
+                && str_contains($context['error'] ?? '', 'saml_attribute_observations'));
     }
 }

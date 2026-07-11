@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
  */
 class KnownAttributeCollector
 {
-    public function capture(SamlClient $client, array $attributes): void
+    public function capture(SamlClient $client, array $attributeNames): void
     {
         try {
             // Admin-portal clients assert Employee identities, not routing
@@ -28,7 +28,7 @@ class KnownAttributeCollector
             // Exclude the identity attributes (the attribute_map's VALUES);
             // they're already handled by the fixed map and would be dropdown noise.
             $identity = array_values($client->attribute_map ?? []);
-            $candidates = array_values(array_diff(array_keys($attributes), $identity));
+            $candidates = array_values(array_diff($attributeNames, $identity));
 
             if ($candidates === []) {
                 return;
@@ -36,15 +36,31 @@ class KnownAttributeCollector
 
             $now = now();
 
-            foreach ($candidates as $name) {
-                $observation = SamlAttributeObservation::firstOrNew([
+            $existingNames = SamlAttributeObservation::query()
+                ->where('saml_client_id', $client->id)
+                ->whereIn('name', $candidates)
+                ->pluck('name')
+                ->all();
+
+            SamlAttributeObservation::upsert(
+                array_map(fn (string $name) => [
                     'saml_client_id' => $client->id,
                     'name' => $name,
-                ]);
-                $observation->first_seen_at ??= $now;
-                $observation->last_seen_at = $now;
-                $observation->observation_count = ($observation->observation_count ?? 0) + 1;
-                $observation->save();
+                    'first_seen_at' => $now,
+                    'last_seen_at' => $now,
+                    'observation_count' => 1,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ], $candidates),
+                ['saml_client_id', 'name'],       // unique-by (matches the migration's unique index)
+                ['last_seen_at', 'updated_at'],   // on duplicate: bump last_seen only; first_seen_at & count untouched
+            );
+
+            if ($existingNames !== []) {
+                SamlAttributeObservation::query()
+                    ->where('saml_client_id', $client->id)
+                    ->whereIn('name', $existingNames)
+                    ->increment('observation_count', 1, ['updated_at' => $now]);
             }
 
             $known = $client->known_attributes;

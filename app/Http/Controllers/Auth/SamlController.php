@@ -74,7 +74,7 @@ class SamlController extends Controller
         // Record which attribute names this IdP asserts, for the routing rule
         // editor. Names only; the collector skips admin-portal clients and can
         // never break a login (spec: known attributes).
-        $this->attributeCollector->capture($client, $auth->getAttributes());
+        $this->attributeCollector->capture($client, array_keys($auth->getAttributes()));
 
         // Spec: warn while assertions still validate but the IdP cert nears expiry
         $certStatus = app(SamlClientManager::class)->certificateStatus($client);
