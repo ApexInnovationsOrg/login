@@ -309,6 +309,38 @@ custom claim's full URI) — for an Entra client, the rule's `attribute` field
 needs the full claim URI, not the short name, the same reminder as the
 attribute map in Step 4 above.
 
+### Known attributes
+
+Writing a rule's `attribute` field from memory or a customer's IdP-config
+screenshot is error-prone, so the app tracks, per client, every attribute
+**name** it has actually seen asserted in a real login (excluding the
+identity attributes already covered by the attribute map). These are the
+client's **known attributes**, and they back two things in the portal's edit
+dialog: a "Known attributes" strip showing each captured name (with when it
+was last seen), and the routing-rule `attribute` field itself, which is a
+strict dropdown populated from this list rather than free text — a rule can
+only reference a name the client is known to have asserted (or one added
+manually, below).
+
+Only the attribute **name** is ever captured — never the value. Values are
+PHI for some customers, so the collector reads assertion keys and discards
+everything else; this is enforced at the point of capture, not by a filter
+downstream. `saml:client routing`/the portal's routing panel are the only
+consumers of this data.
+
+Known attributes populate automatically the first time a client's users log
+in — nothing to configure. To build a rule set *before* the first login (or
+to reference an attribute the IdP asserts only intermittently, e.g. a group
+claim that's empty for some users), add the name manually via the strip's
+input; it behaves the same as a captured one for rule-building purposes.
+Removing a known attribute from the strip only removes it from the dropdown
+going forward — it does not touch any routing rule already saved against
+that name, and the name reappears automatically the next time it's asserted.
+
+Full assertion logging (recording more than names, for audit purposes) is a
+separate, not-yet-built capability — do not rely on known attributes for
+anything beyond populating the routing-rule dropdown.
+
 ## Admin portal SSO (apex-admin)
 
 The admin portal itself can sit behind SSO. A SAML client marked

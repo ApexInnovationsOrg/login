@@ -54,20 +54,35 @@ class RoutingRulesPanelTest extends DuskTestCase
             $row->click();
 
             $page->waitFor('.el-dialog', 10)
-                ->waitForText('Department rules', 10)
-                ->press('Add department rule');
+                ->waitForText('Department rules', 10);
 
-            // The routing section is below the grants panel; local-idp's
-            // rules are empty coming out of `make db`, so the freshly added
-            // department rule is the only row — identified by its
-            // "attribute" input placeholder rather than a brittle position
+            // The routing attribute field is a strict el-select fed by
+            // known_attributes (Task 5) — local-idp has none coming out of
+            // `make db` (no login has happened yet), so the dropdown would
+            // be empty. Add the attribute manually via the known-attributes
+            // strip first (the documented escape hatch for building rules
+            // ahead of a first login) so the select below has an option.
+            $knownAttributeInput = '.el-dialog input[placeholder="attribute name — press Enter"]';
+            $page->waitFor($knownAttributeInput, 10)
+                ->type($knownAttributeInput, 'eduPersonAffiliation')
+                ->keys($knownAttributeInput, '{enter}');
+
+            $page->press('Add department rule');
+
+            // local-idp's rules are empty coming out of `make db`, so the
+            // freshly added department rule is the only row — identified by
+            // its "value" input placeholder rather than a brittle position
             // (the section layout shifts with owner type / rule count).
-            $attributeInput = '.el-dialog input[placeholder="attribute"]';
             $valueInput = '.el-dialog input[placeholder="value"]';
             $deptNameInput = '.el-dialog input[placeholder="Department name"]';
 
-            $page->waitFor($attributeInput, 10)
-                ->type($attributeInput, 'eduPersonAffiliation');
+            $page->waitFor($valueInput, 10);
+
+            // The department-rule row's attribute select is the last
+            // (freshly added) one on the page — open it and pick the
+            // known attribute we just added above.
+            $page->script("var selects = document.querySelectorAll('.el-dialog input.el-input__inner[placeholder=\"attribute\"]'); selects[selects.length - 1].click();");
+            $this->clickVisibleDropdownOption($page, 'eduPersonAffiliation');
 
             // Operator select defaults to "equals" already (blankRule()) —
             // it's what we want, so no need to open the dropdown.

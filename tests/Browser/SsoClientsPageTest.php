@@ -39,47 +39,6 @@ class SsoClientsPageTest extends DuskTestCase
         SsoGrant::where('owner_type', 'organization')->where('owner_id', 933)->delete();
     }
 
-    /**
-     * Element UI appends a fresh `.el-select-dropdown` popper to <body> each
-     * time a select opens, but does not remove earlier ones from the DOM —
-     * they're just hidden. That makes plain-CSS selectors like
-     * `.el-select-dropdown__item` ambiguous (they can match a stale, hidden
-     * popper from an earlier interaction) and is why waitFor/waitForTextIn
-     * against that class flake here. Poll via JS for a *visible* dropdown
-     * item whose text contains $text — sidesteps both the multiple-popper
-     * ambiguity and the remote-search debounce race (an empty/loading
-     * popper rendering before the real result).
-     */
-    private function waitForVisibleDropdownOption(Browser $browser, string $text): Browser
-    {
-        $browser->waitUsing(10, 100, function () use ($browser, $text) {
-            return (bool) $browser->script(<<<JS
-                return Array.from(document.querySelectorAll('.el-select-dropdown__item')).some(function (el) {
-                    var visible = !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
-                    return visible && el.innerText.includes('{$text}');
-                });
-            JS)[0];
-        }, "waiting for a visible dropdown option containing \"{$text}\"");
-
-        return $browser;
-    }
-
-    private function clickVisibleDropdownOption(Browser $browser, string $text): Browser
-    {
-        $this->waitForVisibleDropdownOption($browser, $text);
-
-        $browser->script(<<<JS
-            var items = Array.from(document.querySelectorAll('.el-select-dropdown__item'));
-            var match = items.find(function (el) {
-                var visible = !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
-                return visible && el.innerText.includes('{$text}');
-            });
-            if (match) match.click();
-        JS);
-
-        return $browser;
-    }
-
     public function test_lists_the_seeded_client(): void
     {
         $this->browse(function (Browser $browser) {
