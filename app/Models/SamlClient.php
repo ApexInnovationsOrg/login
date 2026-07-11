@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class SamlClient extends Model
@@ -88,5 +89,15 @@ class SamlClient extends Model
             ->where('admin_portal', false)
             ->whereJsonContains('email_domains', strtolower($domain))
             ->first();
+    }
+
+    public function orgRules(): HasMany
+    {
+        return $this->hasMany(SamlOrgRule::class)->orderBy('position');
+    }
+
+    public function departmentRules(): HasMany
+    {
+        return $this->hasMany(SamlDepartmentRule::class)->orderBy('position');
     }
 }
