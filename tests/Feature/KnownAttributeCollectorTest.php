@@ -7,6 +7,7 @@ use App\Models\SamlClient;
 use App\Saml\KnownAttributeCollector;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class KnownAttributeCollectorTest extends TestCase
@@ -106,7 +107,7 @@ class KnownAttributeCollectorTest extends TestCase
         // an atomic upsert() (no model events fire), so drop the schema
         // underneath it to make the query itself fail — this exercises the
         // real code path the collector executes, not a model event hook.
-        \Illuminate\Support\Facades\Schema::drop('saml_attribute_observations');
+        Schema::drop('saml_attribute_observations');
 
         // Must NOT throw out of capture (a capture failure can never break a login).
         $this->collector->capture($client, array_keys($this->assertion()));
