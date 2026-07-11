@@ -26,6 +26,7 @@ class SamlClient extends Model
         'admin_portal',
         'attribute_map',
         'email_domains',
+        'known_attributes',
     ];
 
     protected $casts = [
@@ -100,6 +101,30 @@ class SamlClient extends Model
     public function departmentRules(): HasMany
     {
         return $this->hasMany(SamlDepartmentRule::class)->orderBy('position');
+    }
+
+    public function attributeObservations(): HasMany
+    {
+        return $this->hasMany(SamlAttributeObservation::class);
+    }
+
+    /**
+     * A null json column casts to null, not []; normalize so consumers can
+     * always iterate. (The array cast alone returns null for a null column
+     * in Laravel 12.)
+     */
+    public function getKnownAttributesAttribute($value): array
+    {
+        return $value === null ? [] : (array) json_decode($value, true);
+    }
+
+    /**
+     * Ensure arrays serialize to json on save, mirroring what the removed
+     * array cast did on write, so read+write conversion is explicit and paired.
+     */
+    public function setKnownAttributesAttribute($value): void
+    {
+        $this->attributes['known_attributes'] = json_encode(array_values((array) $value));
     }
 
     /**
