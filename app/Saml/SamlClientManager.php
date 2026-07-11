@@ -5,10 +5,14 @@ namespace App\Saml;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\SamlDepartmentRule;
+use App\Models\SamlOrgRule;
 use App\Models\System;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use OneLogin\Saml2\IdPMetadataParser;
@@ -161,6 +165,118 @@ class SamlClientManager
         $client->update(['enabled' => $enabled]);
 
         return $client->refresh();
+    }
+
+    /**
+     * Replace both ordered rule lists wholesale. Validates everything —
+     * shape, owner-kind, scope membership, catch-all placement — before any
+     * write; positions are derived from array order. Audit logging is the
+     * API layer's job (Task 6), not the manager's.
+     *
+     * @param  array<int, array<string, mixed>>  $orgRules
+     * @param  array<int, array<string, mixed>>  $departmentRules
+     */
+    public function replaceRoutingRules(SamlClient $client, array $orgRules, array $departmentRules): SamlClient
+    {
+        if ($orgRules !== [] && $client->ownedByOrganization()) {
+            throw ValidationException::withMessages([
+                'org_rules' => 'Organization rules require a system-owned client.',
+            ]);
+        }
+
+        Validator::make(
+            ['org_rules' => $orgRules, 'department_rules' => $departmentRules],
+            [
+                'org_rules' => ['array'],
+                'org_rules.*.attribute' => ['required', 'string'],
+                'org_rules.*.operator' => ['required', Rule::enum(RoutingOperator::class)],
+                'org_rules.*.value' => ['required', 'string'],
+                'org_rules.*.organization_id' => ['required', 'integer'],
+                'department_rules' => ['array'],
+                'department_rules.*.attribute' => ['required', 'string'],
+                'department_rules.*.operator' => ['required', Rule::enum(RoutingOperator::class)],
+                'department_rules.*.value' => ['required', 'string'],
+                'department_rules.*.department_name' => ['required', 'string'],
+            ]
+        )->validate();
+
+        $scope = $client->scopedOrganizationIds();
+
+        foreach ($orgRules as $index => $rule) {
+            if (! in_array((int) $rule['organization_id'], $scope, true)) {
+                throw ValidationException::withMessages([
+                    "org_rules.{$index}.organization_id" => "Organization is outside this client's scope.",
+                ]);
+            }
+        }
+
+        $this->assertCatchAllPlacement($orgRules, 'org_rules');
+        $this->assertCatchAllPlacement($departmentRules, 'department_rules');
+
+        DB::transaction(function () use ($client, $orgRules, $departmentRules) {
+            SamlOrgRule::where('saml_client_id', $client->id)->delete();
+            SamlDepartmentRule::where('saml_client_id', $client->id)->delete();
+
+            foreach ($orgRules as $index => $rule) {
+                SamlOrgRule::create([
+                    'saml_client_id' => $client->id,
+                    'position' => $index + 1,
+                    'attribute' => $rule['attribute'],
+                    'operator' => $rule['operator'],
+                    'value' => $rule['value'],
+                    'organization_id' => $rule['organization_id'],
+                ]);
+            }
+
+            foreach ($departmentRules as $index => $rule) {
+                SamlDepartmentRule::create([
+                    'saml_client_id' => $client->id,
+                    'position' => $index + 1,
+                    'attribute' => $rule['attribute'],
+                    'operator' => $rule['operator'],
+                    'value' => $rule['value'],
+                    'department_name' => $rule['department_name'],
+                ]);
+            }
+        });
+
+        return $client->refresh();
+    }
+
+    /**
+     * The `*` attribute is reserved for the catch-all triple
+     * (wildcard/*\/*): any other use of `*` is rejected, and a catch-all may
+     * only appear as the last rule in its list — anything after it can never
+     * be reached.
+     *
+     * @param  array<int, array<string, mixed>>  $rules
+     */
+    private function assertCatchAllPlacement(array $rules, string $field): void
+    {
+        $catchAllIndex = null;
+
+        foreach ($rules as $index => $rule) {
+            $isWildcardAttribute = $rule['attribute'] === '*';
+            $isCatchAllTriple = $isWildcardAttribute
+                && ($rule['operator'] ?? null) === RoutingOperator::Wildcard->value
+                && ($rule['value'] ?? null) === '*';
+
+            if ($isWildcardAttribute && ! $isCatchAllTriple) {
+                throw ValidationException::withMessages([
+                    "{$field}.{$index}.attribute" => 'The * attribute is reserved for the catch-all rule (wildcard, *).',
+                ]);
+            }
+
+            if ($catchAllIndex !== null) {
+                throw ValidationException::withMessages([
+                    "{$field}.{$index}" => 'Rules after a catch-all are unreachable.',
+                ]);
+            }
+
+            if ($isCatchAllTriple) {
+                $catchAllIndex = $index;
+            }
+        }
     }
 
     /**
