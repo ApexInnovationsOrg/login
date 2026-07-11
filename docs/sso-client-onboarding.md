@@ -192,7 +192,7 @@ certificate, re-run:
 php artisan saml:client update <slug> --metadata=<their-new-metadata.xml>
 ```
 
-## Admin portal
+## Managing clients from the admin portal (SSOClients.php)
 
 SSO clients can also be managed from the legacy admin portal at
 `/admin/SSOClients.php` instead of the CLI: list clients, create a new one
@@ -205,12 +205,11 @@ page is a thin UI over this app's admin API — it does not talk to the
 database directly. Grants belong to the organization, not the individual
 client, so SSO clients that share an organization also share one grant list.
 
-The API it consumes lives in this app at `/api/admin/saml-clients` (see
-below). Both this application and the admin portal's application need
-`ADMIN_API_TOKEN` set (the same value in both `.env` files) for the portal
-to authenticate its API calls. The CLI (`saml:client ...`) remains fully
-equivalent to the portal for every operation the portal supports — use
-whichever is more convenient.
+The API it consumes lives in this app at `/api/admin/saml-clients`. Both this
+application and the admin portal's application need `ADMIN_API_TOKEN` set
+(the same value in both `.env` files) for the portal to authenticate its API
+calls. The CLI (`saml:client ...`) remains fully equivalent to the portal for
+every operation the portal supports — use whichever is more convenient.
 
 **Rollout note:** migrations run automatically when a login container starts
 (the image entrypoint runs `php artisan migrate --force --isolated`). This is
@@ -344,9 +343,9 @@ table to translate a logged reason into a cause and fix.
 | `invalid_response`            | Signature, audience, timestamp, or destination validation failed — wrong certificate, clock skew between IdP and us, wrong ACS/entity ID configured at the IdP, or an unsigned assertion. | Re-check the IdP's SSO URL/Audience/ACS configuration against the values from `saml:client create`; re-apply current metadata with `saml:client update --metadata=`; confirm the IdP signs assertions. |
 | `replayed_assertion`          | The same assertion ID was submitted to the ACS more than once. Usually a double form submission (e.g. browser back/refresh) or a replay attempt. | Have the user retry login from the IdP tile. If this recurs for the same user/IdP, investigate for an actual replay attempt. |
 | `no_email_attribute`          | The assertion did not carry an email in the attribute named by the client's attribute map, and no usable NameID was present either. | Fix the customer's attribute mapping (Okta attribute statements or Entra claim names) so the app's mapped `email` field is actually sent; verify with `saml:client list`/`update` that the attribute map matches what the IdP sends. |
+| `no_employee_match`           | SAML login on an admin-portal client asserted an email with no active Employees row.             | Verify the employee's Email and Active='Y' in the Employees table; admin SSO never auto-creates accounts. |
 | `disabled_user`               | The matched Apex user has `Disabled='Y'`.                                                       | Reactivate the account in the admin site if the user should regain access.                              |
 | `unknown_user_jit_disabled`   | No existing Apex user matches the login, and JIT provisioning is off for this client.            | Either enable JIT (`saml:client update <slug> --jit`) or pre-create the user account manually before the customer's users start logging in. |
-| `no_employee_match`           | SAML login on an admin-portal client asserted an email with no active Employees row.             | Verify the employee's Email and Active='Y' in the Employees table; admin SSO never auto-creates accounts. |
 | `unrouted_user`               | New user on a system-owned client with no matching routing rule.                                 | Add routing rules (including a catch-all) or verify the IdP asserts the expected attributes. |
 
 ## Validation checklist (run once against the Okta integrator account)
