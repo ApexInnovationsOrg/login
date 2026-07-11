@@ -176,6 +176,12 @@ class SamlClientController extends Controller
             'idp_sso_url' => $client->idp_sso_url,
             'attribute_map' => $client->attribute_map,
             'grants_count' => $client->grants()->count(),
+            'known_attributes' => $client->known_attributes,
+            'attribute_observations' => $client->attributeObservations()
+                ->orderByDesc('last_seen_at')
+                ->get()
+                ->map(fn ($o) => ['name' => $o->name, 'last_seen_at' => $o->last_seen_at?->toDateTimeString()])
+                ->all(),
         ];
     }
 }

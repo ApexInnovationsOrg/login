@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SamlAttributeObservation;
 use App\Models\SamlClient;
 use App\Models\System;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,5 +75,18 @@ class AdminSamlClientReadTest extends TestCase
             ->assertJsonPath('data.owner.type', 'system')
             ->assertJsonPath('data.owner.id', $system->ID)
             ->assertJsonPath('data.owner.name', 'Mercy Health System');
+    }
+
+    public function test_detail_includes_known_attributes_and_observations(): void
+    {
+        $client = SamlClient::factory()->create(['slug' => 'acme', 'known_attributes' => ['department']]);
+        SamlAttributeObservation::factory()->create([
+            'saml_client_id' => $client->id, 'name' => 'department', 'last_seen_at' => now(),
+        ]);
+
+        $this->getJson('/api/admin/saml-clients/acme', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.known_attributes', ['department'])
+            ->assertJsonPath('data.attribute_observations.0.name', 'department');
     }
 }

@@ -258,4 +258,21 @@ class SamlClientManagerTest extends TestCase
 
         $this->assertSame('New Name', $updated->name);
     }
+
+    public function test_known_attributes_are_trimmed_and_deduped(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        app(SamlClientManager::class)->update($client, ['known_attributes' => [' department ', 'department', 'groups']]);
+
+        $this->assertSame(['department', 'groups'], $client->fresh()->known_attributes);
+    }
+
+    public function test_known_attributes_reject_non_string_entries(): void
+    {
+        $client = SamlClient::factory()->create();
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['known_attributes' => ['ok', 123]]);
+    }
 }

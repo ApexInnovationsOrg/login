@@ -21,7 +21,7 @@ use OneLogin\Saml2\Utils;
 class SamlClientManager
 {
     /** Field names this manager's validators accept — the audit layer reports exactly these. */
-    public const EDITABLE_FIELDS = ['name', 'slug', 'owner_type', 'owner_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map'];
+    public const EDITABLE_FIELDS = ['name', 'slug', 'owner_type', 'owner_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map', 'known_attributes'];
 
     /**
      * Extract entity ID, SSO URL, and signing certificate from IdP metadata XML.
@@ -67,6 +67,10 @@ class SamlClientManager
 
         $validated = Validator::make($input, $this->rules(forUpdate: false))->validate();
 
+        if (isset($validated['known_attributes'])) {
+            $validated['known_attributes'] = $this->normalizeAttributeNames($validated['known_attributes']);
+        }
+
         $this->assertOwnerAndDepartmentValid($validated, null);
         $this->assertDomainInvariants($validated, null);
 
@@ -94,6 +98,10 @@ class SamlClientManager
         }
 
         $validated = Validator::make($input, $this->rules(forUpdate: true, client: $client))->validate();
+
+        if (isset($validated['known_attributes'])) {
+            $validated['known_attributes'] = $this->normalizeAttributeNames($validated['known_attributes']);
+        }
 
         $this->assertOwnerAndDepartmentValid($validated, $client);
         $this->assertNoRoutingRulesWhenReparenting($client, $validated);
@@ -134,6 +142,8 @@ class SamlClientManager
             'attribute_map.last_name' => ['sometimes', 'string'],
             'email_domains' => ['sometimes', 'array'],
             'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
+            'known_attributes' => ['sometimes', 'array'],
+            'known_attributes.*' => ['string'],
         ];
     }
 
@@ -332,6 +342,18 @@ class SamlClientManager
         return array_values(array_unique(array_map(
             fn ($domain) => strtolower(ltrim(trim((string) $domain), '@')),
             $domains,
+        )));
+    }
+
+    /**
+     * @param  array<int, string>  $names  Already validated as strings by the `known_attributes.*` rule.
+     * @return array<int, string>
+     */
+    private function normalizeAttributeNames(array $names): array
+    {
+        return array_values(array_unique(array_filter(
+            array_map(fn ($n) => trim((string) $n), $names),
+            fn ($n) => $n !== '',
         )));
     }
 
