@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Http\Controllers\Api\Admin\Concerns\ResolvesSamlClientBySlug;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\SamlClient;
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
 
 class RoutingRuleController extends Controller
 {
+    use ResolvesSamlClientBySlug;
+
     public function __construct(private SamlClientManager $manager) {}
 
     public function show(string $slug): JsonResponse
@@ -81,14 +84,5 @@ class RoutingRuleController extends Controller
                 'catch_all' => $rule->isCatchAll(),
             ])->values(),
         ];
-    }
-
-    private function resolve(string $slug): SamlClient
-    {
-        $client = SamlClient::where('slug', $slug)->first();
-
-        abort_if($client === null, 404);
-
-        return $client;
     }
 }

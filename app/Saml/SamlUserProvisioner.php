@@ -12,10 +12,13 @@ class SamlUserProvisioner
 {
     /**
      * @param  array{organization_id: int, department_id: ?int}|null  $placement
+     * @param  ?User  $existing  Pre-fetched by the caller (e.g. SamlController::acs()
+     *                           already reads this for routing) — skips the internal
+     *                           re-query when provided.
      */
-    public function provision(SamlClient $client, string $email, ?string $firstName, ?string $lastName, ?array $placement = null): User
+    public function provision(SamlClient $client, string $email, ?string $firstName, ?string $lastName, ?array $placement = null, ?User $existing = null): User
     {
-        $user = User::where('Login', $email)->first();
+        $user = $existing ?? User::where('Login', $email)->first();
 
         if ($user && $user->Disabled === 'Y') {
             throw new SamlLoginRejected(

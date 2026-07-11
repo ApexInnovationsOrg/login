@@ -5,23 +5,25 @@ namespace Tests\Feature;
 use App\Models\SamlClient;
 use App\Models\System;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithAdminApi;
 use Tests\TestCase;
 
 class AdminSamlClientReadTest extends TestCase
 {
+    use InteractsWithAdminApi;
     use RefreshDatabase;
 
     protected $seed = true;
 
     private function headers(): array
     {
-        return ['Authorization' => 'Bearer test-token', 'X-Acting-Admin' => '1:Test Admin'];
+        return $this->adminApiHeaders();
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        config(['admin.api_token' => 'test-token']);
+        $this->configureAdminApi();
     }
 
     public function test_index_lists_clients_with_certificate_status(): void

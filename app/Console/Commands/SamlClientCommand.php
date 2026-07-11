@@ -140,13 +140,9 @@ class SamlClientCommand extends Command
                 'department_id' => $this->option('department'),
             ], fn ($v) => $v !== null);
 
-            $owner = $this->ownerOptionPair();
-
-            if ($owner === null) {
+            if (! $this->mergeOwnerOption($input)) {
                 return $this->failWith('Provide exactly one of --org or --system.');
             }
-
-            $input += $owner;
         }
 
         if (! $this->option('wizard') && ($domains = $this->domainsOption()) !== null) {
@@ -267,13 +263,9 @@ class SamlClientCommand extends Command
         ], fn ($v) => $v !== null);
 
         if ($this->option('org') !== null || $this->option('system') !== null) {
-            $owner = $this->ownerOptionPair();
-
-            if ($owner === null) {
+            if (! $this->mergeOwnerOption($fields)) {
                 return $this->failWith('Provide exactly one of --org or --system.');
             }
-
-            $fields += $owner;
         }
 
         if ($this->option('no-department') && $this->option('department') !== null) {
@@ -450,28 +442,31 @@ class SamlClientCommand extends Command
     }
 
     /**
-     * Resolve --org/--system into an owner_type/owner_id pair, shared by
-     * create (where exactly one is required) and update (where re-parenting
-     * is optional, but both is still an error). Both call sites emit the
-     * same "Provide exactly one of --org or --system." failure via
-     * failWith() when this returns null; neither call site distinguishes
-     * "neither given" from "both given" in the message.
+     * Resolve --org/--system into an owner_type/owner_id pair and merge it
+     * into $input, shared by create (where exactly one is required) and
+     * update (where re-parenting is optional, but both is still an error).
+     * Both call sites emit the same "Provide exactly one of --org or
+     * --system." failure via failWith() when this returns false; neither
+     * call site distinguishes "neither given" from "both given" in the
+     * message.
      *
-     * @return array{owner_type: string, owner_id: string}|null
+     * @param  array<string, mixed>  $input
      */
-    private function ownerOptionPair(): ?array
+    private function mergeOwnerOption(array &$input): bool
     {
         $org = $this->option('org');
         $system = $this->option('system');
 
         if (($org === null) === ($system === null)) {
-            return null;
+            return false;
         }
 
-        return [
+        $input += [
             'owner_type' => $org !== null ? 'organization' : 'system',
             'owner_id' => $org ?? $system,
         ];
+
+        return true;
     }
 
     /**

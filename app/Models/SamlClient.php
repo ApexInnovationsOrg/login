@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -99,5 +100,19 @@ class SamlClient extends Model
     public function departmentRules(): HasMany
     {
         return $this->hasMany(SamlDepartmentRule::class)->orderBy('position');
+    }
+
+    /**
+     * SsoGrant rows for this client's owner tuple. Not a real Eloquent
+     * relation: SsoGrant.owner_id references SamlClient.owner_id (the
+     * polymorphic-by-hand owner tuple), not SamlClient.id, so a plain
+     * hasMany('owner_id') would silently join on the wrong column. See
+     * SsoGrant::scopeForOwner().
+     *
+     * @return Builder<SsoGrant>
+     */
+    public function grants(): Builder
+    {
+        return SsoGrant::forOwner($this);
     }
 }

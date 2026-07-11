@@ -38,4 +38,26 @@ trait InteractsWithAdminPortal
 
         return $browser;
     }
+
+    /**
+     * The legacy portal intermittently serves a truncated response for this
+     * page under Selenium (observed: HEADER.php's admin-employee lookup
+     * throws "table doesn't exist" against the shared MySQL container,
+     * unrelated to anything the SSO client feature touches, then falls
+     * through to a short error/unauthorized page instead of the Vue-mounted
+     * one) — reload once if the table never shows up rather than let one
+     * infra blip fail an otherwise-passing test.
+     */
+    protected function visitSsoClientsPage(Browser $browser): Browser
+    {
+        $this->loginAsPortalAdmin($browser);
+
+        $url = env('DUSK_ADMIN_URL', 'http://localhost/admin').'/SSOClients.php';
+
+        try {
+            return $browser->visit($url)->waitFor('.el-table__body-wrapper tbody tr', 15);
+        } catch (\Throwable $e) {
+            return $browser->visit($url)->waitFor('.el-table__body-wrapper tbody tr', 15);
+        }
+    }
 }

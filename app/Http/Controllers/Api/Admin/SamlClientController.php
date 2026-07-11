@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Http\Controllers\Api\Admin\Concerns\ResolvesSamlClientBySlug;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\SamlClient;
-use App\Models\SsoGrant;
 use App\Models\System;
 use App\Saml\SamlClientManager;
 use App\Support\AdminAudit;
@@ -16,8 +16,7 @@ use InvalidArgumentException;
 
 class SamlClientController extends Controller
 {
-    /** Field names the manager's validators accept — the audit trail logs only these. */
-    private const EDITABLE_FIELDS = ['name', 'slug', 'owner_type', 'owner_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map'];
+    use ResolvesSamlClientBySlug;
 
     public function __construct(private SamlClientManager $manager) {}
 
@@ -26,7 +25,7 @@ class SamlClientController extends Controller
      */
     private function submittedEditableFields(Request $request): array
     {
-        return array_values(array_intersect(array_keys($request->all()), self::EDITABLE_FIELDS));
+        return array_values(array_intersect(array_keys($request->all()), SamlClientManager::EDITABLE_FIELDS));
     }
 
     public function index(): JsonResponse
@@ -62,16 +61,7 @@ class SamlClientController extends Controller
     {
         $client = $this->manager->create($request->all());
 
-        $context = [
-            'slug' => $client->slug,
-            'fields' => $this->submittedEditableFields($request),
-        ];
-
-        if (array_key_exists('email_domains', $request->all())) {
-            $context['email_domains'] = $client->email_domains ?? [];
-        }
-
-        AdminAudit::log($request, 'create client', $context);
+        AdminAudit::log($request, 'create client', $this->auditContext($request, $client));
 
         return response()->json(['data' => $this->detail($client)], 201);
     }
@@ -80,6 +70,16 @@ class SamlClientController extends Controller
     {
         $client = $this->manager->update($this->resolve($slug), $request->all());
 
+        AdminAudit::log($request, 'update client', $this->auditContext($request, $client));
+
+        return response()->json(['data' => $this->detail($client)]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function auditContext(Request $request, SamlClient $client): array
+    {
         $context = [
             'slug' => $client->slug,
             'fields' => $this->submittedEditableFields($request),
@@ -89,9 +89,7 @@ class SamlClientController extends Controller
             $context['email_domains'] = $client->email_domains ?? [];
         }
 
-        AdminAudit::log($request, 'update client', $context);
-
-        return response()->json(['data' => $this->detail($client)]);
+        return $context;
     }
 
     public function idpMetadata(Request $request, string $slug): JsonResponse
@@ -177,16 +175,7 @@ class SamlClientController extends Controller
             'idp_entity_id' => $client->idp_entity_id,
             'idp_sso_url' => $client->idp_sso_url,
             'attribute_map' => $client->attribute_map,
-            'grants_count' => SsoGrant::where('owner_type', $client->owner_type)->where('owner_id', $client->owner_id)->count(),
+            'grants_count' => $client->grants()->count(),
         ];
-    }
-
-    private function resolve(string $slug): SamlClient
-    {
-        $client = SamlClient::where('slug', $slug)->first();
-
-        abort_if($client === null, 404);
-
-        return $client;
     }
 }

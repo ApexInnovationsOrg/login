@@ -28,6 +28,9 @@ class AttributeRouter
      */
     public function route(SamlClient $client, array $attributes, ?int $fallbackOrganizationId = null): ?array
     {
+        // Single round trip per login instead of two lazy loads (orgRules, then departmentRules).
+        $client->loadMissing(['orgRules', 'departmentRules']);
+
         $organizationId = $this->resolveOrganization($client, $attributes) ?? $fallbackOrganizationId;
 
         if ($organizationId === null) {

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Http\Controllers\Api\Admin\Concerns\ResolvesSamlClientBySlug;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Organization;
-use App\Models\SamlClient;
 use App\Models\System;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +17,8 @@ use Illuminate\Http\Request;
  */
 class LookupController extends Controller
 {
+    use ResolvesSamlClientBySlug;
+
     public function organizations(Request $request): JsonResponse
     {
         $q = (string) $request->query('q', '');
@@ -49,9 +51,7 @@ class LookupController extends Controller
 
     public function users(Request $request, string $slug): JsonResponse
     {
-        $client = SamlClient::where('slug', $slug)->first();
-
-        abort_if($client === null, 404);
+        $client = $this->resolve($slug);
 
         $q = (string) $request->query('q', '');
 

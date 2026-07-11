@@ -10,10 +10,12 @@ use App\Models\System;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\InteractsWithAdminApi;
 use Tests\TestCase;
 
 class AdminSsoGrantTest extends TestCase
 {
+    use InteractsWithAdminApi;
     use RefreshDatabase;
 
     protected $seed = true;
@@ -24,13 +26,13 @@ class AdminSsoGrantTest extends TestCase
 
     private function headers(): array
     {
-        return ['Authorization' => 'Bearer test-token', 'X-Acting-Admin' => '7:Jane Admin'];
+        return $this->adminApiHeaders('7:Jane Admin');
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        config(['admin.api_token' => 'test-token']);
+        $this->configureAdminApi();
 
         $this->department = Department::factory()->create();
         $this->client = SamlClient::factory()->create([

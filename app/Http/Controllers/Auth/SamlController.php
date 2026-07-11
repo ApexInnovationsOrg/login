@@ -96,7 +96,7 @@ class SamlController extends Controller
         $placement = $this->router->route($client, $auth->getAttributes(), $existing?->department?->OrganizationID);
 
         try {
-            $user = $this->provisioner->provision($client, $email, $firstName, $lastName, $placement);
+            $user = $this->provisioner->provision($client, $email, $firstName, $lastName, $placement, $existing);
         } catch (SamlLoginRejected $e) {
             return $this->reject($client, $e->logContext, $e->publicMessage);
         }

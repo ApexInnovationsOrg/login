@@ -6,16 +6,16 @@ use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Models\SamlDepartmentRule;
 use App\Models\SamlOrgRule;
-use App\Models\System;
 use App\Saml\SamlClientManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Tests\Support\SeedsSystemHierarchy;
 use Tests\TestCase;
 
 class RoutingRuleManagerTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsSystemHierarchy;
 
     public function test_happy_replace_persists_both_lists_in_order_and_removes_old_rules(): void
     {
@@ -218,18 +218,5 @@ class RoutingRuleManagerTest extends TestCase
 
         $this->assertDatabaseCount('saml_org_rules', 1);
         $this->assertDatabaseCount('saml_department_rules', 1);
-    }
-
-    /** @return array{0: System, 1: Organization, 2: Organization} */
-    private function seedSystemWithTwoOrgs(): array
-    {
-        $system = System::factory()->create();
-        $orgA = Organization::factory()->create();
-        $orgB = Organization::factory()->create();
-
-        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgA->ID]);
-        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgB->ID]);
-
-        return [$system, $orgA, $orgB];
     }
 }

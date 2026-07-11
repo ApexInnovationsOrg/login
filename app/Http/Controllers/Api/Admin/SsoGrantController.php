@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Http\Controllers\Api\Admin\Concerns\ResolvesSamlClientBySlug;
 use App\Http\Controllers\Controller;
 use App\Models\SamlClient;
 use App\Models\SsoGrant;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class SsoGrantController extends Controller
 {
+    use ResolvesSamlClientBySlug;
+
     public function index(string $slug): JsonResponse
     {
         return response()->json(['data' => $this->grantsFor($this->resolve($slug))]);
@@ -52,7 +55,7 @@ class SsoGrantController extends Controller
         });
 
         DB::transaction(function () use ($users, $client, $request) {
-            SsoGrant::where('owner_type', $client->owner_type)->where('owner_id', $client->owner_id)->delete();
+            $client->grants()->delete();
 
             $users->each(fn (User $user) => SsoGrant::create([
                 'user_id' => $user->ID,
@@ -76,10 +79,7 @@ class SsoGrantController extends Controller
      */
     private function grantsFor(SamlClient $client): array
     {
-        return SsoGrant::with('user')
-            ->where('owner_type', $client->owner_type)
-            ->where('owner_id', $client->owner_id)
-            ->orderBy('created_at')
+        return $client->grants()->with('user')->orderBy('created_at')
             ->get()
             ->map(fn (SsoGrant $grant) => [
                 'login' => $grant->user?->Login,
@@ -88,14 +88,5 @@ class SsoGrantController extends Controller
                 'granted_by' => $grant->granted_by,
                 'created_at' => $grant->created_at?->toDateTimeString(),
             ])->values()->all();
-    }
-
-    private function resolve(string $slug): SamlClient
-    {
-        $client = SamlClient::where('slug', $slug)->first();
-
-        abort_if($client === null, 404);
-
-        return $client;
     }
 }

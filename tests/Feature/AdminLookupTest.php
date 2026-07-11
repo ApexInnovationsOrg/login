@@ -9,23 +9,25 @@ use App\Models\System;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\Support\InteractsWithAdminApi;
 use Tests\TestCase;
 
 class AdminLookupTest extends TestCase
 {
+    use InteractsWithAdminApi;
     use RefreshDatabase;
 
     protected $seed = true;
 
     private function headers(): array
     {
-        return ['Authorization' => 'Bearer test-token'];
+        return $this->adminApiHeaders(actingAdmin: null);
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        config(['admin.api_token' => 'test-token']);
+        $this->configureAdminApi();
     }
 
     public function test_organization_search_filters_by_name(): void

@@ -24,32 +24,9 @@ class RoutingRulesPanelTest extends DuskTestCase
 
     private const SSO_DEPARTMENT_ID = 3; // seeded by ReferenceDataSeeder, org 933
 
-    private function adminUrl(): string
-    {
-        return env('DUSK_ADMIN_URL', 'http://localhost/admin');
-    }
-
     private function idpUrl(): string
     {
         return rtrim(env('APP_URL', 'http://localhost:8090'), '/');
-    }
-
-    /**
-     * Mirrors SsoClientsPageTest's page-load helper: the legacy portal
-     * intermittently serves a truncated response under Selenium — reload
-     * once rather than let one infra blip fail an otherwise-passing test.
-     */
-    private function visitPage(Browser $browser): Browser
-    {
-        $this->loginAsPortalAdmin($browser);
-
-        $url = $this->adminUrl().'/SSOClients.php';
-
-        try {
-            return $browser->visit($url)->waitFor('.el-table__body-wrapper tbody tr', 15);
-        } catch (\Throwable $e) {
-            return $browser->visit($url)->waitFor('.el-table__body-wrapper tbody tr', 15);
-        }
     }
 
     protected function tearDown(): void
@@ -71,7 +48,7 @@ class RoutingRulesPanelTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             // --- Step 1: add the department rule through the portal panel ---
-            $page = $this->visitPage($browser);
+            $page = $this->visitSsoClientsPage($browser);
 
             $row = $page->driver->findElement(WebDriverBy::xpath("//tr[contains(., 'local-idp')]"));
             $row->click();

@@ -40,28 +40,6 @@ class SsoClientsPageTest extends DuskTestCase
     }
 
     /**
-     * The legacy portal intermittently serves a truncated response for this
-     * page under Selenium (observed: HEADER.php's admin-employee lookup
-     * throws "table doesn't exist" against the shared MySQL container,
-     * unrelated to anything the SSO client feature touches, then falls
-     * through to a short error/unauthorized page instead of the Vue-mounted
-     * one) — reload once if the table never shows up rather than let one
-     * infra blip fail an otherwise-passing test.
-     */
-    private function visitPage(Browser $browser): Browser
-    {
-        $this->loginAsPortalAdmin($browser);
-
-        $url = env('DUSK_ADMIN_URL', 'http://localhost/admin').'/SSOClients.php';
-
-        try {
-            return $browser->visit($url)->waitFor('.el-table__body-wrapper tbody tr', 15);
-        } catch (\Throwable $e) {
-            return $browser->visit($url)->waitFor('.el-table__body-wrapper tbody tr', 15);
-        }
-    }
-
-    /**
      * Element UI appends a fresh `.el-select-dropdown` popper to <body> each
      * time a select opens, but does not remove earlier ones from the DOM —
      * they're just hidden. That makes plain-CSS selectors like
@@ -105,7 +83,7 @@ class SsoClientsPageTest extends DuskTestCase
     public function test_lists_the_seeded_client(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->visitPage($browser)
+            $this->visitSsoClientsPage($browser)
                 ->assertSeeIn('.el-table', 'local-idp')
                 ->assertSeeIn('.el-table', 'example.com');
         });
@@ -114,7 +92,7 @@ class SsoClientsPageTest extends DuskTestCase
     public function test_create_with_org_picker_and_validation(): void
     {
         $this->browse(function (Browser $browser) {
-            $page = $this->visitPage($browser);
+            $page = $this->visitSsoClientsPage($browser);
 
             $page->press('New client')
                 ->waitFor('.el-dialog', 10)
@@ -150,7 +128,7 @@ class SsoClientsPageTest extends DuskTestCase
     public function test_create_system_owned_client(): void
     {
         $this->browse(function (Browser $browser) {
-            $page = $this->visitPage($browser);
+            $page = $this->visitSsoClientsPage($browser);
 
             $page->press('New client')
                 ->waitFor('.el-dialog', 10)
@@ -191,7 +169,7 @@ class SsoClientsPageTest extends DuskTestCase
     public function test_department_dropdown_follows_org(): void
     {
         $this->browse(function (Browser $browser) {
-            $page = $this->visitPage($browser);
+            $page = $this->visitSsoClientsPage($browser);
 
             // Edit local-idp (org 933) — department select must offer its
             // departments plus the "no department" option. In edit mode the
@@ -224,7 +202,7 @@ class SsoClientsPageTest extends DuskTestCase
     public function test_enable_disable_round_trip(): void
     {
         $this->browse(function (Browser $browser) {
-            $page = $this->visitPage($browser);
+            $page = $this->visitSsoClientsPage($browser);
 
             // New clients are created disabled (SamlClientManager::create
             // forces enabled=false until IdP metadata is applied), while
@@ -256,7 +234,7 @@ class SsoClientsPageTest extends DuskTestCase
     public function test_grants_panel_adds_and_removes(): void
     {
         $this->browse(function (Browser $browser) {
-            $page = $this->visitPage($browser);
+            $page = $this->visitSsoClientsPage($browser);
 
             // local-idp's org is 933; dev-sso@example.test belongs to it via
             // seeding, so it's a valid grantee for local-idp's client.

@@ -7,17 +7,18 @@ use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Models\SamlDepartmentRule;
 use App\Models\SamlOrgRule;
-use App\Models\System;
 use App\Saml\AttributeRouter;
 use App\Saml\RoutingOperator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Tests\Support\SeedsSystemHierarchy;
 use Tests\TestCase;
 
 class AttributeRouterTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsSystemHierarchy;
 
     public function test_org_owned_ignores_org_rules_and_routes_department_by_name(): void
     {
@@ -143,18 +144,5 @@ class AttributeRouterTest extends TestCase
                 && ($context['client'] ?? null) === $client->slug
                 && ($context['organization_id'] ?? null) === $outsideOrg->ID;
         })->once();
-    }
-
-    /** @return array{0: System, 1: Organization, 2: Organization} */
-    private function seedSystemWithTwoOrgs(): array
-    {
-        $system = System::factory()->create();
-        $orgA = Organization::factory()->create();
-        $orgB = Organization::factory()->create();
-
-        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgA->ID]);
-        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgB->ID]);
-
-        return [$system, $orgA, $orgB];
     }
 }

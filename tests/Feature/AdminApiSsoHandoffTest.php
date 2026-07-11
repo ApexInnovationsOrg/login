@@ -6,10 +6,12 @@ use App\Models\SamlClient;
 use App\Saml\AdminSsoHandoff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\InteractsWithAdminApi;
 use Tests\TestCase;
 
 class AdminApiSsoHandoffTest extends TestCase
 {
+    use InteractsWithAdminApi;
     use RefreshDatabase;
 
     // Alphabetically the first RefreshDatabase class in the suite, so it
@@ -21,13 +23,13 @@ class AdminApiSsoHandoffTest extends TestCase
     {
         parent::setUp();
 
-        config(['admin.api_token' => 'test-token', 'saml.replay_store' => 'array',
-            'saml.admin_portal_url' => 'http://localhost/admin']);
+        $this->configureAdminApi();
+        config(['saml.replay_store' => 'array', 'saml.admin_portal_url' => 'http://localhost/admin']);
     }
 
     private function authHeaders(): array
     {
-        return ['Authorization' => 'Bearer test-token', 'X-Acting-Admin' => '1:Test Admin'];
+        return $this->adminApiHeaders();
     }
 
     private function mintToken(): string

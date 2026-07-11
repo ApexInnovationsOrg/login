@@ -20,6 +20,9 @@ use OneLogin\Saml2\Utils;
 
 class SamlClientManager
 {
+    /** Field names this manager's validators accept — the audit layer reports exactly these. */
+    public const EDITABLE_FIELDS = ['name', 'slug', 'owner_type', 'owner_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map'];
+
     /**
      * Extract entity ID, SSO URL, and signing certificate from IdP metadata XML.
      *
@@ -62,35 +65,10 @@ class SamlClientManager
             $input['email_domains'] = $this->normalizeDomains($input['email_domains']);
         }
 
-        $validated = Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug'],
-            'owner_type' => ['required', 'in:organization,system'],
-            'owner_id' => ['required', 'integer', 'min:1'],
-            'department_id' => ['nullable', 'integer', 'min:1'],
-            'jit_enabled' => ['sometimes', 'boolean'],
-            'admin_portal' => ['sometimes', 'boolean'],
-            'attribute_map' => ['sometimes', 'array'],
-            'attribute_map.email' => ['required_with:attribute_map', 'string'],
-            'attribute_map.first_name' => ['sometimes', 'string'],
-            'attribute_map.last_name' => ['sometimes', 'string'],
-            'email_domains' => ['sometimes', 'array'],
-            'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
-        ])->validate();
+        $validated = Validator::make($input, $this->rules(forUpdate: false))->validate();
 
-        $this->assertOwnerExists($validated['owner_type'], $validated['owner_id']);
-        $this->assertDefaultDepartmentValid(
-            $validated['owner_type'],
-            $validated['owner_id'],
-            $validated['department_id'] ?? null,
-        );
-
-        $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], null);
-
-        $this->assertAdminPortalHoldsNoDomains(
-            (bool) ($validated['admin_portal'] ?? false),
-            $validated['email_domains'] ?? [],
-        );
+        $this->assertOwnerAndDepartmentValid($validated, null);
+        $this->assertDomainInvariants($validated, null);
 
         return SamlClient::create($validated + [
             'enabled' => false, // enabled explicitly once IdP metadata is in place
@@ -115,11 +93,38 @@ class SamlClientManager
             $input['email_domains'] = $this->normalizeDomains($input['email_domains']);
         }
 
-        $validated = Validator::make($input, [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'slug' => ['sometimes', 'required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug,'.$client->id],
-            'owner_type' => ['sometimes', 'required', 'in:organization,system'],
-            'owner_id' => ['sometimes', 'required', 'integer', 'min:1'],
+        $validated = Validator::make($input, $this->rules(forUpdate: true, client: $client))->validate();
+
+        $this->assertOwnerAndDepartmentValid($validated, $client);
+        $this->assertNoRoutingRulesWhenReparenting($client, $validated);
+        $this->assertDomainInvariants($validated, $client);
+
+        $client->update($validated);
+
+        return $client->refresh();
+    }
+
+    /**
+     * Validation rules for create() and update() — identical except that
+     * update() makes name/owner_type/owner_id optional (`sometimes`) and
+     * scopes the slug uniqueness check to exclude the client being updated.
+     *
+     * @return array<string, mixed>
+     */
+    private function rules(bool $forUpdate, ?SamlClient $client = null): array
+    {
+        $slugUnique = $forUpdate
+            ? 'unique:saml_clients,slug,'.$client->id
+            : 'unique:saml_clients,slug';
+
+        return [
+            'name' => $forUpdate ? ['sometimes', 'required', 'string', 'max:255'] : ['required', 'string', 'max:255'],
+            'slug' => array_merge(
+                $forUpdate ? ['sometimes', 'required'] : ['required'],
+                ['string', 'max:64', 'alpha_dash', $slugUnique],
+            ),
+            'owner_type' => $forUpdate ? ['sometimes', 'required', 'in:organization,system'] : ['required', 'in:organization,system'],
+            'owner_id' => $forUpdate ? ['sometimes', 'required', 'integer', 'min:1'] : ['required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
             'admin_portal' => ['sometimes', 'boolean'],
@@ -129,29 +134,47 @@ class SamlClientManager
             'attribute_map.last_name' => ['sometimes', 'string'],
             'email_domains' => ['sometimes', 'array'],
             'email_domains.*' => ['string', 'regex:/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/'],
-        ])->validate();
+        ];
+    }
 
-        $this->assertOwnerExists(
-            $validated['owner_type'] ?? $client->owner_type,
-            $validated['owner_id'] ?? $client->owner_id,
-        );
-        $this->assertDefaultDepartmentValid(
-            $validated['owner_type'] ?? $client->owner_type,
-            $validated['owner_id'] ?? $client->owner_id,
-            array_key_exists('department_id', $validated) ? $validated['department_id'] : $client->department_id,
-        );
-        $this->assertNoRoutingRulesWhenReparenting($client, $validated);
+    /**
+     * First two of the four post-validation asserts shared by create() and
+     * update(): owner exists, and the default department (if any) is valid
+     * for that owner. On create $existing is null, so every fallback
+     * resolves to the request's own defaults; on update, an omitted field
+     * falls back to the existing client's current value.
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function assertOwnerAndDepartmentValid(array $validated, ?SamlClient $existing): void
+    {
+        $ownerType = $validated['owner_type'] ?? $existing?->owner_type;
+        $ownerId = $validated['owner_id'] ?? $existing?->owner_id;
 
-        $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], $client);
+        $this->assertOwnerExists($ownerType, $ownerId);
+
+        $departmentId = $existing !== null && ! array_key_exists('department_id', $validated)
+            ? $existing->department_id
+            : ($validated['department_id'] ?? null);
+
+        $this->assertDefaultDepartmentValid($ownerType, $ownerId, $departmentId);
+    }
+
+    /**
+     * Last two of the four shared asserts: the requested domains aren't
+     * claimed elsewhere, and admin-portal clients hold no domains. Same
+     * $existing/fallback contract as assertOwnerAndDepartmentValid().
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function assertDomainInvariants(array $validated, ?SamlClient $existing): void
+    {
+        $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], $existing);
 
         $this->assertAdminPortalHoldsNoDomains(
-            (bool) ($validated['admin_portal'] ?? $client->admin_portal),
-            $validated['email_domains'] ?? ($client->email_domains ?? []),
+            (bool) ($validated['admin_portal'] ?? $existing?->admin_portal ?? false),
+            $validated['email_domains'] ?? ($existing?->email_domains ?? []),
         );
-
-        $client->update($validated);
-
-        return $client->refresh();
     }
 
     public function updateFromIdpMetadata(SamlClient $client, string $xml): SamlClient
