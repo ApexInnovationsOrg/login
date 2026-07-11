@@ -12,6 +12,7 @@ use App\Saml\AttributeRouter;
 use App\Saml\RoutingOperator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class AttributeRouterTest extends TestCase
@@ -71,6 +72,35 @@ class AttributeRouterTest extends TestCase
         $this->assertSame('General', Department::find($placement['department_id'])->Name);
     }
 
+    public function test_duplicate_department_names_resolve_to_the_lowest_id(): void
+    {
+        // The legacy Departments table enforces UNIQUE(Name, OrganizationID)
+        // for all current writes, so two active rows with the same name in
+        // one org can't be constructed through normal inserts (verified:
+        // even case- and trailing-space variants collide under this
+        // column's case-insensitive, pad-space collation). The resolver
+        // still has to behave deterministically if it ever sees legacy data
+        // that predates the constraint, so pin the query shape directly:
+        // the department lookup orders by ID descending before the
+        // name-keyed pluck, so a later (lower-ID) row always overwrites an
+        // earlier (higher-ID) one for the same name — the lowest ID wins.
+        $org = Organization::factory()->create();
+        Department::factory()->create(['OrganizationID' => $org->ID, 'Name' => 'Radiology']);
+        $client = SamlClient::factory()->create(['owner_id' => $org->ID]);
+        SamlDepartmentRule::factory()->catchAll()->create(['saml_client_id' => $client->id, 'department_name' => 'Radiology']);
+
+        $queries = [];
+        DB::listen(function ($query) use (&$queries) {
+            $queries[] = $query->sql;
+        });
+
+        app(AttributeRouter::class)->route($client, []);
+
+        $departmentQuery = collect($queries)->first(fn ($sql) => str_contains($sql, 'from `Departments`'));
+        $this->assertNotNull($departmentQuery, 'Expected a Departments query to run.');
+        $this->assertStringContainsString('order by `ID` desc', $departmentQuery);
+    }
+
     public function test_inactive_departments_never_resolve(): void
     {
         $org = Organization::factory()->create();
@@ -88,6 +118,31 @@ class AttributeRouterTest extends TestCase
         SamlOrgRule::factory()->catchAll()->create(['saml_client_id' => $client->id, 'organization_id' => $orgA->ID]);
 
         $this->assertSame($orgA->ID, app(AttributeRouter::class)->route($client, [])['organization_id']);
+    }
+
+    public function test_stale_out_of_scope_org_rule_is_skipped_with_warning(): void
+    {
+        [$system, $orgA, $orgB] = $this->seedSystemWithTwoOrgs();
+        $outsideOrg = Organization::factory()->create(); // never added to the system's pivot rows
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['department_id' => null]);
+
+        // Earlier, matching rule targets an org no longer in scope (stale
+        // re-parent); a later rule targets an in-scope org and should win.
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id, 'position' => 1,
+            'attribute' => '*', 'operator' => RoutingOperator::Wildcard, 'value' => '*', 'organization_id' => $outsideOrg->ID]);
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id, 'position' => 2,
+            'attribute' => '*', 'operator' => RoutingOperator::Wildcard, 'value' => '*', 'organization_id' => $orgA->ID]);
+
+        Log::spy();
+
+        $placement = app(AttributeRouter::class)->route($client, []);
+
+        $this->assertSame($orgA->ID, $placement['organization_id']);
+        Log::shouldHaveReceived('warning')->withArgs(function (string $message, array $context) use ($client, $outsideOrg) {
+            return $message === 'Routing rule targets organization outside client scope'
+                && ($context['client'] ?? null) === $client->slug
+                && ($context['organization_id'] ?? null) === $outsideOrg->ID;
+        })->once();
     }
 
     /** @return array{0: System, 1: Organization, 2: Organization} */

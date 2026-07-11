@@ -265,6 +265,48 @@ class AttributeRoutingLoginTest extends TestCase
         $this->assertDatabaseHas('Users', ['Login' => 'defaulted@acme.test', 'DepartmentID' => $dept->ID]);
     }
 
+    public function test_system_owned_existing_user_unmoved_keeps_own_org_in_session_despite_org_rule_match(): void
+    {
+        $system = System::factory()->create();
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgA->ID]);
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $orgB->ID]);
+
+        $sysClient = SamlClient::factory()->forSystem($system->ID)->create([
+            'slug' => 'sys',
+            'idp_entity_id' => 'https://idp.acme.test/metadata',
+            'idp_sso_url' => 'https://idp.acme.test/sso',
+            'idp_certificate' => file_get_contents(base_path('tests/Fixtures/saml/idp.crt')),
+            'jit_enabled' => true,
+            'department_id' => null,
+        ]);
+
+        // Org rule routes everyone to org B, but no department rule resolves
+        // for this login — the provisioner leaves the existing user's
+        // department untouched (never demoted), so the session org must
+        // reflect their real (org A) department, not the routed org B.
+        SamlOrgRule::factory()->catchAll()->create(['saml_client_id' => $sysClient->id, 'organization_id' => $orgB->ID]);
+
+        $deptA = Department::factory()->create(['OrganizationID' => $orgA->ID, 'Name' => 'Old Wing']);
+        User::factory()->create([
+            'Login' => 'stays@acme.test',
+            'DepartmentID' => $deptA->ID,
+            'CredentialID' => 1,
+        ]);
+
+        $response = $this->post('/saml/sys/acs', [
+            'SAMLResponse' => SamlResponseFactory::make([
+                'destination' => url('/saml/sys/acs'),
+                'attributes' => ['email' => 'stays@acme.test', 'firstName' => 'S', 'lastName' => 'U'],
+                'nameId' => 'stays@acme.test',
+            ]),
+        ]);
+
+        $this->assertDatabaseHas('Users', ['Login' => 'stays@acme.test', 'DepartmentID' => $deptA->ID]);
+        $response->assertSessionHas('Organization', $orgA->ID);
+    }
+
     public function test_resolving_department_rule_beats_the_static_default(): void
     {
         $default = Department::factory()->create(['OrganizationID' => $this->client->owner_id, 'Name' => 'Default Dept']);

@@ -103,7 +103,7 @@ relations; `SamlOrgRule` / `SamlDepartmentRule` models (each with an
 
 ## The router
 
-`App\Saml\AttributeRouter::route(SamlClient $client, array $attributes): ?array`
+`App\Saml\AttributeRouter::route(SamlClient $client, array $attributes, ?int $fallbackOrganizationId = null): ?array`
 
 Returns `['organization_id' => int, 'department_id' => ?int]`, or `null`
 when no organization can be determined (system-owned, no org rule matched).
@@ -152,7 +152,9 @@ session (admin-portal clients branch away earlier and are untouched):
     org). Name sync unchanged.
 - `establishSession` puts `Organization` = placed org, falling back to the
   ownership spec's behavior (org-owned → owner org; system-owned → the
-  user's department's org).
+  user's department's org). The session `Organization` reflects a placement
+  only when it was applied (a resolved department or a JIT creation); an
+  unmoved existing user keeps their department's org.
 
 **Precedence note (org-owned):** when department rules exist and one
 resolves, it beats the client's static default department; the default is
@@ -175,6 +177,7 @@ the no-rule/no-match fallback only.
 - `department_name` is deliberately NOT validated against any org's
   departments (it is a cross-org template; the portal offers suggestions,
   the resolver handles absence by design).
+- Re-parenting a client requires clearing its routing rules first.
 
 ## Admin surfaces
 
@@ -234,8 +237,9 @@ the no-rule/no-match fallback only.
   malformed JSON.
 - **E2E (Dusk + mock IdP):** a department rule on `local-idp` keyed on the
   mock IdP's static `eduPersonAffiliation` (`group1` for user1) targeting
-  the seeded "SSO Department" by name → fresh JIT login lands there, not in
-  the finish flow. Portal Dusk test drives both sections of the rules panel
+  the seeded "SSO Department" by name → fresh JIT login lands on the finish
+  screen (credential still unset) with `DepartmentID` already routed, not 0.
+  Portal Dusk test drives both sections of the rules panel
   (add an org rule + a department rule via the pickers, save, reload,
   assert persisted).
 - **Docs:** onboarding runbook section — the two rule kinds and why

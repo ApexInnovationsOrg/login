@@ -229,8 +229,9 @@ other attribute — instead of a fixed default. Rules read like Cloudflare page
 rules: "if the assertion matches `[attribute] [operator] [value]`, then
 place here." Manage them via `saml:client routing <slug>` (CLI —
 list/`--set`/`--set-file`/`--clear`) or the "Routing rules" panel on a
-client's edit dialog in the admin portal; both talk to the same
-`/api/admin/saml-clients/{slug}/routing-rules` API endpoint (GET/PUT).
+client's edit dialog in the admin portal; both are backed by the same
+validated write path (`SamlClientManager`); the portal reaches it through the
+admin API.
 
 There are two rule kinds, because they answer two different questions:
 

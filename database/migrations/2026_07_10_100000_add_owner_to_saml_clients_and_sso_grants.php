@@ -55,6 +55,7 @@ return new class extends Migration
             $table->integer('organization_id')->nullable()->after('user_id');
         });
         DB::table('sso_grants')->where('owner_type', 'organization')->update(['organization_id' => DB::raw('owner_id')]);
+        // Rollback drops system-owned rows by design — they have no organization_id to restore.
         DB::table('sso_grants')->where('owner_type', '!=', 'organization')->delete();
         Schema::table('sso_grants', function (Blueprint $table) {
             $table->integer('organization_id')->nullable(false)->change();
@@ -67,6 +68,7 @@ return new class extends Migration
             $table->integer('organization_id')->nullable()->after('enabled');
         });
         DB::table('saml_clients')->where('owner_type', 'organization')->update(['organization_id' => DB::raw('owner_id')]);
+        // Rollback drops system-owned rows by design — they have no organization_id to restore.
         DB::table('saml_clients')->where('owner_type', '!=', 'organization')->delete();
         Schema::table('saml_clients', function (Blueprint $table) {
             $table->integer('organization_id')->nullable(false)->change();

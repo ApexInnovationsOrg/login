@@ -145,6 +145,25 @@ class RoutingRuleManagerTest extends TestCase
         }
     }
 
+    public function test_department_rule_after_catch_all_rejected(): void
+    {
+        [$system, $orgA] = $this->seedSystemWithTwoOrgs();
+        $client = SamlClient::factory()->forSystem($system->ID)->create();
+
+        $departmentRules = [
+            ['attribute' => '*', 'operator' => 'wildcard', 'value' => '*', 'department_name' => 'General'],
+            ['attribute' => 'group', 'operator' => 'contains', 'value' => 'nurse', 'department_name' => 'ICU'],
+        ];
+
+        try {
+            app(SamlClientManager::class)->replaceRoutingRules($client, [], $departmentRules);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('department_rules.1', $e->errors());
+            $this->assertSame('Rules after a catch-all are unreachable.', $e->errors()['department_rules.1'][0]);
+        }
+    }
+
     public function test_department_rule_missing_name_rejected(): void
     {
         $org = Organization::factory()->create();

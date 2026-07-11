@@ -140,6 +140,7 @@ class SamlClientManager
             $validated['owner_id'] ?? $client->owner_id,
             array_key_exists('department_id', $validated) ? $validated['department_id'] : $client->department_id,
         );
+        $this->assertNoRoutingRulesWhenReparenting($client, $validated);
 
         $this->assertDomainsUnclaimed($validated['email_domains'] ?? [], $client);
 
@@ -380,6 +381,36 @@ class SamlClientManager
         if (! $belongs) {
             throw ValidationException::withMessages([
                 'department_id' => 'Department does not belong to the owning organization.',
+            ]);
+        }
+    }
+
+    /**
+     * Routing rules are keyed to the client's current owner (org rules
+     * target orgs in its scope, department rules assume its owner's org
+     * tree) — re-parenting out from under them would silently leave rules
+     * pointing at the wrong hierarchy. Require clearing them first.
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function assertNoRoutingRulesWhenReparenting(SamlClient $client, array $validated): void
+    {
+        $reparenting = array_key_exists('owner_type', $validated) || array_key_exists('owner_id', $validated);
+
+        if (! $reparenting) {
+            return;
+        }
+
+        $ownerChanging = ($validated['owner_type'] ?? $client->owner_type) !== $client->owner_type
+            || ($validated['owner_id'] ?? $client->owner_id) !== $client->owner_id;
+
+        if (! $ownerChanging) {
+            return;
+        }
+
+        if ($client->orgRules()->exists() || $client->departmentRules()->exists()) {
+            throw ValidationException::withMessages([
+                'owner_id' => 'Clear routing rules before re-parenting this client.',
             ]);
         }
     }

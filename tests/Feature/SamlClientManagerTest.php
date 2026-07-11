@@ -5,9 +5,12 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\SamlDepartmentRule;
+use App\Models\SamlOrgRule;
 use App\Models\System;
 use App\Saml\SamlClientManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -187,5 +190,62 @@ class SamlClientManagerTest extends TestCase
         $this->expectException(ValidationException::class);
 
         app(SamlClientManager::class)->update($client, ['owner_id' => 42]);
+    }
+
+    public function test_reparent_with_org_rules_present_is_rejected(): void
+    {
+        $system = System::factory()->create();
+        $client = SamlClient::factory()->forSystem($system->ID)->create();
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id]);
+        $otherSystem = System::factory()->create();
+
+        try {
+            app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $otherSystem->ID]);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('owner_id', $e->errors());
+            $this->assertSame('Clear routing rules before re-parenting this client.', $e->errors()['owner_id'][0]);
+        }
+    }
+
+    public function test_reparent_with_department_rules_present_is_rejected(): void
+    {
+        $org = Organization::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $org->ID]);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id]);
+        $otherOrg = Organization::factory()->create();
+
+        try {
+            app(SamlClientManager::class)->update($client, ['owner_type' => 'organization', 'owner_id' => $otherOrg->ID]);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('owner_id', $e->errors());
+            $this->assertSame('Clear routing rules before re-parenting this client.', $e->errors()['owner_id'][0]);
+        }
+    }
+
+    public function test_reparent_after_clearing_rules_succeeds(): void
+    {
+        $system = System::factory()->create();
+        $client = SamlClient::factory()->forSystem($system->ID)->create();
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id]);
+        $otherSystem = System::factory()->create();
+
+        DB::table('saml_org_rules')->where('saml_client_id', $client->id)->delete();
+
+        $updated = app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $otherSystem->ID]);
+
+        $this->assertSame($otherSystem->ID, $updated->owner_id);
+    }
+
+    public function test_non_owner_update_with_rules_present_is_unaffected(): void
+    {
+        $org = Organization::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $org->ID, 'name' => 'Old Name']);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id]);
+
+        $updated = app(SamlClientManager::class)->update($client, ['name' => 'New Name']);
+
+        $this->assertSame('New Name', $updated->name);
     }
 }
