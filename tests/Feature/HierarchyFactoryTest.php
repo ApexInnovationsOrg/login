@@ -171,4 +171,40 @@ class HierarchyFactoryTest extends TestCase
             $org->departments->pluck('Name')->all(),
         );
     }
+
+    public function test_with_organizations_builds_the_full_tree(): void
+    {
+        $system = System::factory()->withOrganizations(3, departmentsEach: 2)->create();
+
+        $this->assertCount(3, $system->organizations);
+        foreach ($system->organizations as $org) {
+            $this->assertSame($system->ID, $org->system->ID);
+            $this->assertCount(2, $org->departments);
+        }
+    }
+
+    public function test_with_organizations_applies_explicit_department_names_per_org(): void
+    {
+        $system = System::factory()
+            ->withOrganizations(2, departmentsEach: ['Emergency', 'ICU'])
+            ->create();
+
+        foreach ($system->organizations as $org) {
+            $this->assertEqualsCanonicalizing(
+                ['Emergency', 'ICU'],
+                $org->departments->pluck('Name')->all(),
+            );
+        }
+    }
+
+    public function test_many_org_seed_does_not_exhaust_the_name_pool(): void
+    {
+        $system = System::factory()->withOrganizations(10, departmentsEach: 3)->create();
+
+        $this->assertCount(10, $system->organizations);
+        $this->assertSame(30, Department::whereIn(
+            'OrganizationID',
+            $system->organizations->pluck('ID'),
+        )->count());
+    }
 }
