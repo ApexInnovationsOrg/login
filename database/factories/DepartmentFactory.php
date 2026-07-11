@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class DepartmentFactory extends Factory
 {
     /**
-     * Realistic hospital departments. unique() guards the legacy
-     * UNIQUE(Name, OrganizationID) index when one test creates several
-     * departments; the pool must stay comfortably larger than any single
-     * test's appetite.
+     * Realistic hospital department names. definition() picks a random
+     * (non-unique) name; per-org uniqueness of department names is
+     * guaranteed only by OrganizationFactory::withDepartments(), which
+     * sequences distinct names. Bare multi-department creates against
+     * one org must pass explicit Name values.
      */
     public const NAMES = [
         'Emergency', 'Cardiology', 'ICU', 'Radiology', 'Oncology',
