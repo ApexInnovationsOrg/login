@@ -188,8 +188,12 @@ class SamlController extends Controller
         $request->session()->put('userID', $user->ID);
         $request->session()->put('userName', $user->FirstName.' '.$user->LastName);
         $request->session()->put('Username', $user->FirstName.' '.$user->LastName);
-        // finishAccountCreation lists departments from this key
-        $request->session()->put('Organization', $client->owner_id);
+        // finishAccountCreation lists departments from this key. Org-owned
+        // clients offer their org; system-owned users carry their own org
+        // (new system-client users were rejected upstream until routing).
+        $request->session()->put('Organization', $client->ownedByOrganization()
+            ? $client->owner_id
+            : $user->department?->OrganizationID);
         // dashboard route uses a plain 302 for SAML sessions (IdPs can't follow Inertia 409s)
         $request->session()->put('SAML', true);
 

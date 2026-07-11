@@ -31,6 +31,16 @@ class SamlUserProvisioner
             );
         }
 
+        if (! $client->ownedByOrganization()) {
+            // A system-owned client has no home org to aim the finish-account
+            // flow at; placement comes from routing rules (milestone 5). Until
+            // a rule matches, new users are rejected fail-closed.
+            throw new SamlLoginRejected(
+                'Your account could not be placed automatically. Please contact your administrator.',
+                ['reason' => 'unrouted_user', 'login' => $email],
+            );
+        }
+
         $user = User::factory()->newModel()->forceFill([
             'Login' => $email,
             // Placeholder when the IdP omitted a name; SamlController logs that misconfiguration.
