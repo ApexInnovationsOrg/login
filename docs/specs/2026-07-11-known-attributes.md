@@ -115,6 +115,26 @@ feature is meant to provide.
 
 ## Testing
 
+**Fixtures — use the fluent hierarchy factories, not the old helper.** Since
+this spec was written the factories gained a hierarchy builder; tests here build
+System → Organization → Department trees with it rather than hand-assembling
+`SystemOrganizations` rows or the `SeedsSystemHierarchy` trait:
+
+- `System::factory()->withOrganizations($orgCount, $deptsEach)` — whole tree in
+  one call (orgs attached via `SystemOrganizations`, each with departments).
+- `Organization::factory()->forSystem($system|$name|null)->withDepartments(int|array)`
+  — one org into a system (string looks up/creates a shared system; the join
+  row is keyed on the org, enforcing one-system-per-org), with a department
+  count or exact names.
+- `DepartmentFactory::NAMES` is the healthcare name pool; `withDepartments(int)`
+  sequences distinct names so per-org uniqueness holds without exhausting a
+  global `unique()`.
+
+Prefer these in new tests. The two existing routing tests that still use the
+`SeedsSystemHierarchy` trait (`AttributeRouterTest`, `RoutingRuleManagerTest`)
+may be migrated onto `withOrganizations()` opportunistically when this work
+touches them, but that migration is not required by this spec.
+
 - **Unit/feature (collector):** unions asserted names into `known_attributes`;
   excludes `attribute_map` values; writes `saml_clients` only when a name is
   new (assert no update when nothing new); upserts an observation row per
@@ -128,6 +148,9 @@ feature is meant to provide.
   mock assertion (`uid`, `eduPersonAffiliation`); the rule editor's attribute
   dropdown then offers a captured name; a manual add on a fresh client unblocks
   the dropdown before any login.
+
+  Cross-org capture/routing fixtures that need a system with several orgs use
+  `System::factory()->withOrganizations(...)` per the fixture note above.
 
 ## Rollout
 
