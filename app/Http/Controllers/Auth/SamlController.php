@@ -7,6 +7,7 @@ use App\Models\SamlClient;
 use App\Models\User;
 use App\Saml\AdminSsoHandoff;
 use App\Saml\AttributeRouter;
+use App\Saml\KnownAttributeCollector;
 use App\Saml\SamlClientManager;
 use App\Saml\SamlLoginRejected;
 use App\Saml\SamlSettingsFactory;
@@ -25,6 +26,7 @@ class SamlController extends Controller
         private SamlUserProvisioner $provisioner,
         private AdminSsoHandoff $adminHandoff,
         private AttributeRouter $router,
+        private KnownAttributeCollector $attributeCollector,
     ) {}
 
     public function acs(Request $request, string $slug)
@@ -68,6 +70,11 @@ class SamlController extends Controller
         if ($email === null) {
             return $this->reject($client, ['reason' => 'no_email_attribute']);
         }
+
+        // Record which attribute names this IdP asserts, for the routing rule
+        // editor. Names only; the collector skips admin-portal clients and can
+        // never break a login (spec: known attributes).
+        $this->attributeCollector->capture($client, $auth->getAttributes());
 
         // Spec: warn while assertions still validate but the IdP cert nears expiry
         $certStatus = app(SamlClientManager::class)->certificateStatus($client);
