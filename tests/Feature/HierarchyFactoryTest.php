@@ -112,4 +112,44 @@ class HierarchyFactoryTest extends TestCase
         $this->assertTrue($user->adminOrganizations->contains('ID', $org->ID));
         $this->assertTrue($user->adminSystems->contains('ID', $system->ID));
     }
+
+    public function test_for_system_with_string_shares_one_system_across_orgs(): void
+    {
+        $orgA = Organization::factory()->forSystem('Memorial Health System')->create();
+        $orgB = Organization::factory()->forSystem('Memorial Health System')->create();
+
+        $this->assertSame(1, System::where('Name', 'Memorial Health System')->count());
+        $this->assertSame($orgA->system->ID, $orgB->system->ID);
+        $this->assertDatabaseCount('SystemOrganizations', 2);
+    }
+
+    public function test_for_system_with_model_attaches_to_it(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->forSystem($system)->create();
+
+        $this->assertSame($system->ID, $org->system->ID);
+    }
+
+    public function test_for_system_without_argument_creates_a_fresh_system(): void
+    {
+        $org = Organization::factory()->forSystem()->create();
+
+        $this->assertNotNull($org->system);
+    }
+
+    public function test_reattaching_an_org_replaces_its_system(): void
+    {
+        $first = System::factory()->create();
+        $second = System::factory()->create();
+        $org = Organization::factory()->forSystem($first)->create();
+
+        SystemOrganization::updateOrCreate(
+            ['OrganizationID' => $org->ID],
+            ['SystemID' => $second->ID],
+        );
+
+        $this->assertSame(1, SystemOrganization::where('OrganizationID', $org->ID)->count());
+        $this->assertSame($second->ID, $org->fresh()->system->ID);
+    }
 }
