@@ -28,7 +28,7 @@ class HierarchyFactoryTest extends TestCase
             ->create();
 
         $this->assertCount(2, $system->organizations);
-        $this->assertDatabaseCount('SystemOrganizations', 2);
+        $this->assertDatabaseHas('SystemOrganizations', ['SystemID' => $system->ID]);
     }
 
     public function test_organization_factory_satisfies_constraints_without_seeding(): void

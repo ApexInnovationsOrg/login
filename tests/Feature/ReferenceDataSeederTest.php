@@ -51,4 +51,11 @@ class ReferenceDataSeederTest extends TestCase
         $this->assertDatabaseHas('saml_clients', ['slug' => 'local-admin-idp', 'admin_portal' => 1, 'enabled' => 0]);
         $this->assertDatabaseHas('Employees', ['Email' => 'user1@example.com', 'Active' => 'Y']);
     }
+
+    public function test_seeder_creates_local_system_with_orgs_one_and_two(): void
+    {
+        $this->assertDatabaseHas('Systems', ['ID' => 1, 'Name' => 'Local Health System']);
+        $this->assertDatabaseHas('SystemOrganizations', ['SystemID' => 1, 'OrganizationID' => 1]);
+        $this->assertDatabaseHas('SystemOrganizations', ['SystemID' => 1, 'OrganizationID' => 2]);
+    }
 }

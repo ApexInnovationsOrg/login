@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SamlClient;
+use App\Models\System;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -31,7 +32,7 @@ class AdminSamlClientReadTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.0.slug', fn ($v) => is_string($v))
             ->assertJsonStructure(['data' => [['name', 'slug', 'enabled', 'jit_enabled',
-                'organization_id', 'department_id', 'email_domains',
+                'owner' => ['type', 'id', 'name'], 'department_id', 'email_domains',
                 'certificate' => ['expires_at', 'expiring']]]]);
     }
 
@@ -44,7 +45,7 @@ class AdminSamlClientReadTest extends TestCase
             ->assertJsonPath('data.slug', 'acme')
             ->assertJsonPath('data.acs_url', $client->acsUrl())
             ->assertJsonStructure(['data' => ['acs_url', 'metadata_url', 'idp_entity_id',
-                'idp_sso_url', 'attribute_map', 'organization_name', 'grants_count']]);
+                'idp_sso_url', 'attribute_map', 'owner' => ['type', 'id', 'name'], 'grants_count']]);
     }
 
     public function test_unknown_slug_404s(): void
@@ -59,5 +60,17 @@ class AdminSamlClientReadTest extends TestCase
         $this->getJson('/api/admin/saml-clients/apex-admin', $this->headers())
             ->assertOk()
             ->assertJsonPath('data.admin_portal', true);
+    }
+
+    public function test_detail_shows_system_owner(): void
+    {
+        $system = System::factory()->create(['Name' => 'Mercy Health System']);
+        SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'sys', 'department_id' => null]);
+
+        $this->getJson('/api/admin/saml-clients/sys', $this->headers())
+            ->assertOk()
+            ->assertJsonPath('data.owner.type', 'system')
+            ->assertJsonPath('data.owner.id', $system->ID)
+            ->assertJsonPath('data.owner.name', 'Mercy Health System');
     }
 }

@@ -15,7 +15,7 @@ use InvalidArgumentException;
 class SamlClientController extends Controller
 {
     /** Field names the manager's validators accept — the audit trail logs only these. */
-    private const EDITABLE_FIELDS = ['name', 'slug', 'owner_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map'];
+    private const EDITABLE_FIELDS = ['name', 'slug', 'owner_type', 'owner_id', 'department_id', 'jit_enabled', 'admin_portal', 'email_domains', 'attribute_map'];
 
     public function __construct(private SamlClientManager $manager) {}
 
@@ -128,7 +128,11 @@ class SamlClientController extends Controller
             'enabled' => $client->enabled,
             'jit_enabled' => $client->jit_enabled,
             'admin_portal' => $client->admin_portal,
-            'organization_id' => $client->owner_id,
+            'owner' => [
+                'type' => $client->owner_type,
+                'id' => $client->owner_id,
+                'name' => $client->ownerName(),
+            ],
             'department_id' => $client->department_id,
             'email_domains' => $client->email_domains ?? [],
             'certificate' => [
@@ -149,7 +153,6 @@ class SamlClientController extends Controller
             'idp_entity_id' => $client->idp_entity_id,
             'idp_sso_url' => $client->idp_sso_url,
             'attribute_map' => $client->attribute_map,
-            'organization_name' => $client->ownerName(),
             'grants_count' => SsoGrant::where('owner_type', $client->owner_type)->where('owner_id', $client->owner_id)->count(),
         ];
     }

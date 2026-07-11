@@ -38,6 +38,25 @@ class AdminSamlClientWriteTest extends TestCase
             ->assertJsonPath('data.email_domains', ['acme.com']);
     }
 
+    public function test_create_with_owner_type_id_appears_in_audit(): void
+    {
+        Log::spy();
+
+        $this->postJson('/api/admin/saml-clients', [
+            'name' => 'Acme Hospital',
+            'owner_type' => 'organization',
+            'owner_id' => 1,
+            'email_domains' => ['acme.com'],
+        ], $this->headers())
+            ->assertCreated();
+
+        Log::shouldHaveReceived('info')->withArgs(function ($message, $context) {
+            return isset($context['fields']) &&
+                   in_array('owner_type', $context['fields']) &&
+                   in_array('owner_id', $context['fields']);
+        })->once();
+    }
+
     public function test_validation_errors_surface_as_422_bag(): void
     {
         SamlClient::factory()->create(['slug' => 'taken']);
