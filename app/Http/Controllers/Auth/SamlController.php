@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SamlClient;
 use App\Models\User;
 use App\Saml\AdminSsoHandoff;
+use App\Saml\AttributeRouter;
 use App\Saml\SamlClientManager;
 use App\Saml\SamlLoginRejected;
 use App\Saml\SamlSettingsFactory;
@@ -23,6 +24,7 @@ class SamlController extends Controller
         private SamlSettingsFactory $settings,
         private SamlUserProvisioner $provisioner,
         private AdminSsoHandoff $adminHandoff,
+        private AttributeRouter $router,
     ) {}
 
     public function acs(Request $request, string $slug)
@@ -69,6 +71,9 @@ class SamlController extends Controller
 
         // Spec: warn while assertions still validate but the IdP cert nears expiry
         $certStatus = app(SamlClientManager::class)->certificateStatus($client);
+        // Deliberately a separate read from the provisioner's own lookup: routing needs the fallback org before the disabled/JIT guards run.
+        $existing = User::where('Login', $email)->first();
+        $placement = $this->router->route($client, $auth->getAttributes(), $existing?->department?->OrganizationID);
         if ($certStatus['expiring']) {
             Log::warning('SAML client IdP certificate expires soon', [
                 'client' => $client->slug,
@@ -90,12 +95,12 @@ class SamlController extends Controller
         }
 
         try {
-            $user = $this->provisioner->provision($client, $email, $firstName, $lastName);
+            $user = $this->provisioner->provision($client, $email, $firstName, $lastName, $placement);
         } catch (SamlLoginRejected $e) {
             return $this->reject($client, $e->logContext, $e->publicMessage);
         }
 
-        $this->establishSession($request, $user, $client);
+        $this->establishSession($request, $user, $client, $placement);
 
         if ($user->DepartmentID == null || $user->CredentialID == null) { // loose: matches 0
             return redirect('/finishAccountCreation');
@@ -175,7 +180,10 @@ class SamlController extends Controller
         ];
     }
 
-    private function establishSession(Request $request, User $user, SamlClient $client): void
+    /**
+     * @param  array{organization_id: int, department_id: ?int}|null  $placement
+     */
+    private function establishSession(Request $request, User $user, SamlClient $client, ?array $placement = null): void
     {
         Auth::login($user);
         $request->session()->regenerate();
@@ -193,9 +201,12 @@ class SamlController extends Controller
         // org. Edge: an existing dept-less user (DepartmentID 0) on a
         // system-owned client gets null here — FinishUserCreation renders an
         // empty department list until routing (milestone 5) places them.
-        $request->session()->put('Organization', $client->ownedByOrganization()
+        // A routed placement always wins: it's the freshest read of "which org
+        // this login belongs to," overriding both the static owner and the
+        // user's previously stored department.
+        $request->session()->put('Organization', $placement['organization_id'] ?? ($client->ownedByOrganization()
             ? $client->owner_id
-            : $user->department?->OrganizationID);
+            : $user->department?->OrganizationID));
         // dashboard route uses a plain 302 for SAML sessions (IdPs can't follow Inertia 409s)
         $request->session()->put('SAML', true);
 
