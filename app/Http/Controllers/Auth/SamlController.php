@@ -189,8 +189,10 @@ class SamlController extends Controller
         $request->session()->put('userName', $user->FirstName.' '.$user->LastName);
         $request->session()->put('Username', $user->FirstName.' '.$user->LastName);
         // finishAccountCreation lists departments from this key. Org-owned
-        // clients offer their org; system-owned users carry their own org
-        // (new system-client users were rejected upstream until routing).
+        // clients offer their org; system-owned users carry their department's
+        // org. Edge: an existing dept-less user (DepartmentID 0) on a
+        // system-owned client gets null here — FinishUserCreation renders an
+        // empty department list until routing (milestone 5) places them.
         $request->session()->put('Organization', $client->ownedByOrganization()
             ? $client->owner_id
             : $user->department?->OrganizationID);

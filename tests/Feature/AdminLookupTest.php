@@ -107,6 +107,7 @@ class AdminLookupTest extends TestCase
             '/api/admin/organizations',
             "/api/admin/organizations/{$org->ID}/departments",
             "/api/admin/saml-clients/{$client->slug}/users",
+            '/api/admin/systems',
         ];
 
         foreach ($routes as $route) {

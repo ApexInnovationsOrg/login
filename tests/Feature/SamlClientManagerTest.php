@@ -170,4 +170,22 @@ class SamlClientManagerTest extends TestCase
 
         app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $system->ID]);
     }
+
+    public function test_update_rejects_owner_type_without_owner_id(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['owner_type' => 'system']);
+    }
+
+    public function test_update_rejects_owner_id_without_owner_type(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['owner_id' => 42]);
+    }
 }

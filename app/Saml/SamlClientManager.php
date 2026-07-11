@@ -101,6 +101,12 @@ class SamlClientManager
 
     public function update(SamlClient $client, array $input): SamlClient
     {
+        if (array_key_exists('owner_type', $input) !== array_key_exists('owner_id', $input)) {
+            throw ValidationException::withMessages([
+                'owner_id' => 'Re-parenting requires owner_type and owner_id together.',
+            ]);
+        }
+
         if (isset($input['email_domains'])) {
             $input['email_domains'] = $this->normalizeDomains($input['email_domains']);
         }
@@ -108,8 +114,8 @@ class SamlClientManager
         $validated = Validator::make($input, [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => ['sometimes', 'required', 'string', 'max:64', 'alpha_dash', 'unique:saml_clients,slug,'.$client->id],
-            'owner_type' => ['sometimes', 'required', 'in:organization,system', 'required_with:owner_id'],
-            'owner_id' => ['sometimes', 'required', 'integer', 'min:1', 'required_with:owner_type'],
+            'owner_type' => ['sometimes', 'required', 'in:organization,system'],
+            'owner_id' => ['sometimes', 'required', 'integer', 'min:1'],
             'department_id' => ['nullable', 'integer', 'min:1'],
             'jit_enabled' => ['sometimes', 'boolean'],
             'admin_portal' => ['sometimes', 'boolean'],
