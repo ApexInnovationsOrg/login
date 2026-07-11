@@ -49,16 +49,13 @@ enum RoutingOperator: string
 
     private function satisfies(string $asserted, string $ruleValue): bool
     {
-        $a = mb_strtolower($asserted);
-        $v = mb_strtolower($ruleValue);
-
         return match ($this) {
             self::Wildcard => self::wildcardMatch($asserted, $ruleValue, caseSensitive: false),
             self::StrictWildcard => self::wildcardMatch($asserted, $ruleValue, caseSensitive: true),
-            self::Equals, self::NotEquals => $a === $v,
-            self::StartsWith, self::NotStartsWith => str_starts_with($a, $v),
-            self::Contains, self::NotContains => str_contains($a, $v),
-            self::EndsWith, self::NotEndsWith => str_ends_with($a, $v),
+            self::Equals, self::NotEquals => mb_strtolower($asserted) === mb_strtolower($ruleValue),
+            self::StartsWith, self::NotStartsWith => str_starts_with(mb_strtolower($asserted), mb_strtolower($ruleValue)),
+            self::Contains, self::NotContains => str_contains(mb_strtolower($asserted), mb_strtolower($ruleValue)),
+            self::EndsWith, self::NotEndsWith => str_ends_with(mb_strtolower($asserted), mb_strtolower($ruleValue)),
         };
     }
 
@@ -71,6 +68,8 @@ enum RoutingOperator: string
         $regex = '/^'.str_replace('\*', '.*', preg_quote($pattern, '/')).'$/u'
             .($caseSensitive ? '' : 'i');
 
+        // Malformed UTF-8 in $asserted makes preg_match return false (not 0/1);
+        // the (bool) cast folds that into "no match" rather than throwing, by design.
         return (bool) preg_match($regex, $asserted);
     }
 }

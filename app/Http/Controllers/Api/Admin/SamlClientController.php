@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
 use App\Models\SamlClient;
 use App\Models\SsoGrant;
+use App\Models\System;
 use App\Saml\SamlClientManager;
 use App\Support\AdminAudit;
 use Illuminate\Http\JsonResponse;
@@ -29,9 +31,24 @@ class SamlClientController extends Controller
 
     public function index(): JsonResponse
     {
+        $clients = SamlClient::orderBy('name')->get();
+
+        $orgIds = $clients->where('owner_type', 'organization')->pluck('owner_id')->unique();
+        $systemIds = $clients->where('owner_type', 'system')->pluck('owner_id')->unique();
+
+        // Keyed "type:id" — organization and system IDs are independent spaces,
+        // so a plain ID-keyed map could collide the two.
+        $ownerNames = Organization::whereIn('ID', $orgIds)->pluck('Name', 'ID')
+            ->mapWithKeys(fn ($name, $id) => ["organization:{$id}" => $name])
+            ->union(
+                System::whereIn('ID', $systemIds)->pluck('Name', 'ID')
+                    ->mapWithKeys(fn ($name, $id) => ["system:{$id}" => $name])
+            )
+            ->all();
+
         return response()->json([
-            'data' => SamlClient::orderBy('name')->get()
-                ->map(fn (SamlClient $client) => $this->item($client))
+            'data' => $clients
+                ->map(fn (SamlClient $client) => $this->item($client, $ownerNames))
                 ->values(),
         ]);
     }
@@ -116,11 +133,17 @@ class SamlClientController extends Controller
     }
 
     /**
+     * @param  array<string, string>|null  $ownerNames  Preloaded "type:id" => name map (index());
+     *                                                  null falls back to a per-client lookup (detail()).
      * @return array<string, mixed>
      */
-    private function item(SamlClient $client): array
+    private function item(SamlClient $client, ?array $ownerNames = null): array
     {
         $cert = $this->manager->certificateStatus($client);
+
+        $ownerName = $ownerNames !== null
+            ? ($ownerNames["{$client->owner_type}:{$client->owner_id}"] ?? null)
+            : $client->ownerName();
 
         return [
             'name' => $client->name,
@@ -131,7 +154,7 @@ class SamlClientController extends Controller
             'owner' => [
                 'type' => $client->owner_type,
                 'id' => $client->owner_id,
-                'name' => $client->ownerName(),
+                'name' => $ownerName,
             ],
             'department_id' => $client->department_id,
             'email_domains' => $client->email_domains ?? [],
@@ -143,11 +166,12 @@ class SamlClientController extends Controller
     }
 
     /**
+     * @param  array<string, string>|null  $ownerNames  See item().
      * @return array<string, mixed>
      */
-    private function detail(SamlClient $client): array
+    private function detail(SamlClient $client, ?array $ownerNames = null): array
     {
-        return $this->item($client) + [
+        return $this->item($client, $ownerNames) + [
             'acs_url' => $client->acsUrl(),
             'metadata_url' => $client->metadataUrl(),
             'idp_entity_id' => $client->idp_entity_id,

@@ -123,6 +123,7 @@ class AdminSsoGrantTest extends TestCase
 
         $this->assertDatabaseHas('sso_grants', ['user_id' => $userA->ID, 'owner_type' => 'system', 'owner_id' => $system->ID]);
         $this->assertDatabaseHas('sso_grants', ['user_id' => $userB->ID, 'owner_type' => 'system', 'owner_id' => $system->ID]);
+        $this->assertDatabaseCount('sso_grants', 2);
     }
 
     public function test_grant_outside_owner_scope_is_rejected(): void

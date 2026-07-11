@@ -143,6 +143,16 @@ class SamlClientManagerTest extends TestCase
         $this->assertSame(['mdanderson.org', 'mdacc.org'], $updated->email_domains);
     }
 
+    public function test_update_with_explicit_null_department_id_clears_it(): void
+    {
+        $dept = Department::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $dept->OrganizationID, 'department_id' => $dept->ID]);
+
+        $updated = $this->manager()->update($client, ['department_id' => null]);
+
+        $this->assertNull($updated->department_id);
+    }
+
     public function test_create_rejects_unknown_owner(): void
     {
         $this->expectException(ValidationException::class);

@@ -30,6 +30,8 @@ class RoutingRuleController extends Controller
 
         $client = $this->manager->replaceRoutingRules($client, $orgRules, $departmentRules);
 
+        // Counts are trustworthy here: replaceRoutingRules is all-or-nothing —
+        // it throws on any validation failure before this line ever runs.
         AdminAudit::log($request, 'replace routing rules', [
             'slug' => $client->slug,
             'org_rule_count' => count($orgRules),

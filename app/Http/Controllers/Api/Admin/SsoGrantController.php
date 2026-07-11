@@ -31,8 +31,10 @@ class SsoGrantController extends Controller
 
         $scope = $client->scopedOrganizationIds();
 
-        $users = collect($logins)->map(function (string $login) use ($scope) {
-            $user = User::with('department')->where('Login', $login)->first();
+        $usersByLogin = User::with('department')->whereIn('Login', $logins)->get()->keyBy('Login');
+
+        $users = collect($logins)->map(function (string $login) use ($scope, $usersByLogin) {
+            $user = $usersByLogin->get($login);
 
             if (! $user) {
                 throw ValidationException::withMessages([

@@ -241,6 +241,27 @@ class SamlClientCommandTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_routing_action_renders_negated_operator_sentence(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create(['Name' => 'Mercy West']);
+        DB::table('SystemOrganizations')->insert(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+        $client = SamlClient::factory()->forSystem($system->ID)->create(['slug' => 'acme']);
+
+        SamlOrgRule::factory()->create([
+            'saml_client_id' => $client->id,
+            'position' => 1,
+            'attribute' => 'hospital',
+            'operator' => 'not_equals',
+            'value' => 'Mercy West',
+            'organization_id' => $org->ID,
+        ]);
+
+        $this->artisan('saml:client', ['action' => 'routing', 'slug' => 'acme'])
+            ->expectsOutputToContain("org 1. hospital not equals \"Mercy West\" → Mercy West ({$org->ID})")
+            ->assertSuccessful();
+    }
+
     public function test_routing_action_set_inline_json_replaces_rules(): void
     {
         $system = System::factory()->create();

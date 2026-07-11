@@ -14,39 +14,43 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('saml_clients', function (Blueprint $table) {
-            $table->string('owner_type', 20)->nullable()->after('enabled');
-            $table->unsignedInteger('owner_id')->nullable()->after('owner_type');
-        });
+        if (! Schema::hasColumn('saml_clients', 'owner_type')) {
+            Schema::table('saml_clients', function (Blueprint $table) {
+                $table->string('owner_type', 20)->nullable()->after('enabled');
+                $table->unsignedInteger('owner_id')->nullable()->after('owner_type');
+            });
 
-        DB::table('saml_clients')->update([
-            'owner_type' => 'organization',
-            'owner_id' => DB::raw('organization_id'),
-        ]);
+            DB::table('saml_clients')->update([
+                'owner_type' => 'organization',
+                'owner_id' => DB::raw('organization_id'),
+            ]);
 
-        Schema::table('saml_clients', function (Blueprint $table) {
-            $table->string('owner_type', 20)->nullable(false)->change();
-            $table->unsignedInteger('owner_id')->nullable(false)->change();
-            $table->dropColumn('organization_id');
-        });
+            Schema::table('saml_clients', function (Blueprint $table) {
+                $table->string('owner_type', 20)->nullable(false)->change();
+                $table->unsignedInteger('owner_id')->nullable(false)->change();
+                $table->dropColumn('organization_id');
+            });
+        }
 
-        Schema::table('sso_grants', function (Blueprint $table) {
-            $table->string('owner_type', 20)->nullable()->after('user_id');
-            $table->unsignedInteger('owner_id')->nullable()->after('owner_type');
-        });
+        if (! Schema::hasColumn('sso_grants', 'owner_type')) {
+            Schema::table('sso_grants', function (Blueprint $table) {
+                $table->string('owner_type', 20)->nullable()->after('user_id');
+                $table->unsignedInteger('owner_id')->nullable()->after('owner_type');
+            });
 
-        DB::table('sso_grants')->update([
-            'owner_type' => 'organization',
-            'owner_id' => DB::raw('organization_id'),
-        ]);
+            DB::table('sso_grants')->update([
+                'owner_type' => 'organization',
+                'owner_id' => DB::raw('organization_id'),
+            ]);
 
-        Schema::table('sso_grants', function (Blueprint $table) {
-            $table->string('owner_type', 20)->nullable(false)->change();
-            $table->unsignedInteger('owner_id')->nullable(false)->change();
-            $table->dropUnique(['user_id', 'organization_id']);
-            $table->unique(['user_id', 'owner_type', 'owner_id']);
-            $table->dropColumn('organization_id');
-        });
+            Schema::table('sso_grants', function (Blueprint $table) {
+                $table->string('owner_type', 20)->nullable(false)->change();
+                $table->unsignedInteger('owner_id')->nullable(false)->change();
+                $table->dropUnique(['user_id', 'organization_id']);
+                $table->unique(['user_id', 'owner_type', 'owner_id']);
+                $table->dropColumn('organization_id');
+            });
+        }
     }
 
     public function down(): void

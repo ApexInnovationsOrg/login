@@ -82,6 +82,28 @@ class SystemOwnedLoginTest extends TestCase
         $response->assertSessionHas('Organization', $this->orgInSystem->ID);
     }
 
+    public function test_existing_dept_less_user_with_no_routing_rules_gets_null_organization(): void
+    {
+        // Baseline for the documented edge in SamlController::establishSession:
+        // an existing dept-less user (DepartmentID 0) on a system-owned client
+        // with no routing rules at all logs in successfully, but nothing ever
+        // resolved a placement, so the session Organization stays null until
+        // routing rules are configured.
+        User::factory()->create(['Login' => 'done@acme.test', 'DepartmentID' => 0]);
+
+        $response = $this->acs(['nameId' => 'done@acme.test', 'attributes' => [
+            'email' => 'done@acme.test', 'firstName' => 'Done', 'lastName' => 'User',
+        ]]);
+
+        $response->assertRedirect('/finishAccountCreation');
+        // assertSessionHas('Organization', null) can't pin this: Laravel's
+        // session has() treats a null-valued key as absent by design, so it
+        // would pass whether the key holds null or was never set. Assert the
+        // key was actually written (exists()) and its value is null.
+        $this->assertTrue(session()->exists('Organization'));
+        $this->assertNull(session()->get('Organization'));
+    }
+
     public function test_org_owned_jit_fallback_is_unchanged(): void
     {
         // Sibling org-owned client on the same fixtures: JIT proceeds to finish flow.
