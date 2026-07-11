@@ -71,6 +71,16 @@ IT admin can either configure their IdP directly from these three values, or
 fetch `GET <Metadata URL>` from their own tooling if it can consume SP
 metadata XML directly.
 
+### Organization vs system ownership
+
+A client is owned by a single organization (the default; users are placed via
+the client's default department or the finish-account flow) or by a hospital
+system (`saml:client create --system=<id>`), which spans every organization in
+that system. System-owned clients cannot hold a default department; new users
+on them are rejected (`unrouted_user` in the logs) until attribute routing
+rules (milestone 5) place them — configure rules before enabling such a
+client. The SSO-manager grant list of a system-owned client is system-wide.
+
 #### Interactive alternative: `--wizard`
 
 Instead of remembering the numeric organization and department IDs, run:
@@ -239,6 +249,7 @@ table to translate a logged reason into a cause and fix.
 | `disabled_user`               | The matched Apex user has `Disabled='Y'`.                                                       | Reactivate the account in the admin site if the user should regain access.                              |
 | `unknown_user_jit_disabled`   | No existing Apex user matches the login, and JIT provisioning is off for this client.            | Either enable JIT (`saml:client update <slug> --jit`) or pre-create the user account manually before the customer's users start logging in. |
 | `no_employee_match`           | SAML login on an admin-portal client asserted an email with no active Employees row.             | Verify the employee's Email and Active='Y' in the Employees table; admin SSO never auto-creates accounts. |
+| `unrouted_user`               | New user on a system-owned client with no matching routing rule.                                 | Add routing rules (including a catch-all) or verify the IdP asserts the expected attributes. |
 
 ## Validation checklist (run once against the Okta integrator account)
 

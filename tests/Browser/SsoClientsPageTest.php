@@ -35,6 +35,7 @@ class SsoClientsPageTest extends DuskTestCase
         // second `make dusk` run (without an intervening `make db`) hits
         // "slug already taken" and stale grant state from the previous run.
         SamlClient::where('slug', 'dusk-acme')->delete();
+        SamlClient::where('slug', 'dusk-system-acme')->delete();
         SsoGrant::where('owner_type', 'organization')->where('owner_id', 933)->delete();
     }
 
@@ -123,8 +124,11 @@ class SsoClientsPageTest extends DuskTestCase
             // Seeded org names contain "SSO"/"Dev" (e.g. "SSO Organization",
             // "Local Dev Organization") — there is no "Apex"-named org in the
             // local dev seed data, so search on a term that actually matches.
-            $page->click('.el-dialog .el-form-item:nth-of-type(3) .el-select input.el-input__inner')
-                ->type('.el-dialog .el-form-item:nth-of-type(3) .el-select input.el-input__inner', 'sso');
+            //
+            // Item order in create mode: 1=Name, 2=Slug, 3=Owned by (radio,
+            // added by the system-ownership feature), 4=Organization/System.
+            $page->click('.el-dialog .el-form-item:nth-of-type(4) .el-select input.el-input__inner')
+                ->type('.el-dialog .el-form-item:nth-of-type(4) .el-select input.el-input__inner', 'sso');
             $this->clickVisibleDropdownOption($page, 'SSO Organization');
 
             // Duplicate slug -> inline error from the field-errors bag.
@@ -143,6 +147,48 @@ class SsoClientsPageTest extends DuskTestCase
         });
     }
 
+    public function test_create_system_owned_client(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $page = $this->visitPage($browser);
+
+            $page->press('New client')
+                ->waitFor('.el-dialog', 10)
+                ->type('.el-dialog .el-form-item:nth-of-type(1) input', 'Dusk System Acme')
+                ->type('.el-dialog .el-form-item:nth-of-type(2) input', 'dusk-system-acme');
+
+            // Owned by: switch to System. Item order in create mode:
+            // 1=Name, 2=Slug, 3=Owned by, 4=System (once selected).
+            $page->click('.el-dialog .el-form-item:nth-of-type(3) label:nth-of-type(2)');
+
+            // System picker: remote-search select, same idiom as the org
+            // picker in the org-owned create test above.
+            $page->click('.el-dialog .el-form-item:nth-of-type(4) .el-select input.el-input__inner')
+                ->type('.el-dialog .el-form-item:nth-of-type(4) .el-select input.el-input__inner', 'Local');
+            $this->clickVisibleDropdownOption($page, 'Local Health System');
+
+            // System-owned clients cannot hold a default department — the
+            // form must not render that field at all once System is chosen.
+            $page->assertMissing('.el-dialog .el-form-item:nth-of-type(5) .el-select[placeholder="Select a department"]');
+            $page->assertDontSeeIn('.el-dialog', 'Default department');
+
+            $page->press('Save')
+                ->waitForTextIn('.el-message', 'Created', 20)
+                ->waitForTextIn('.el-table', 'dusk-system-acme', 20);
+
+            $row = $page->driver->findElement(WebDriverBy::xpath("//tr[contains(., 'dusk-system-acme')]"));
+
+            $this->assertStringContainsString('Local Health System', $row->getText());
+            $this->assertStringContainsString('system', $row->getText());
+
+            $this->assertDatabaseHas('saml_clients', [
+                'slug' => 'dusk-system-acme',
+                'owner_type' => 'system',
+                'owner_id' => 1,
+            ]);
+        });
+    }
+
     public function test_department_dropdown_follows_org(): void
     {
         $this->browse(function (Browser $browser) {
@@ -150,8 +196,10 @@ class SsoClientsPageTest extends DuskTestCase
 
             // Edit local-idp (org 933) — department select must offer its
             // departments plus the "no department" option. In edit mode the
-            // Slug form-item is hidden (v-if="!editSlug"), so the item order
-            // shifts: 1=Name, 2=Organization, 3=Department.
+            // Slug form-item is hidden (v-if="!editSlug"), and the "Owned by"
+            // radio (added by the system-ownership feature) is shown but
+            // disabled, so the item order is: 1=Name, 2=Owned by,
+            // 3=Organization, 4=Department.
             //
             // The table sorts by name and dusk-acme sorts before local-idp,
             // so ":first-child" is NOT local-idp's row — scope to it by
@@ -162,7 +210,7 @@ class SsoClientsPageTest extends DuskTestCase
             $row->click();
 
             $page->waitFor('.el-dialog', 10)
-                ->click('.el-dialog .el-form-item:nth-of-type(3) .el-select');
+                ->click('.el-dialog .el-form-item:nth-of-type(4) .el-select');
 
             $this->waitForVisibleDropdownOption($page, 'None — users choose at finish-account');
 
