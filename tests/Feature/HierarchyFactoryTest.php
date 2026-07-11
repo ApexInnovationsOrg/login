@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\System;
+use App\Models\SystemOrganization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -29,6 +30,23 @@ class HierarchyFactoryTest extends TestCase
 
         $this->assertCount(2, $system->organizations);
         $this->assertDatabaseHas('SystemOrganizations', ['SystemID' => $system->ID]);
+    }
+
+    public function test_organization_system_relation_returns_owning_system(): void
+    {
+        $system = System::factory()->create();
+        $org = Organization::factory()->create();
+        SystemOrganization::create(['SystemID' => $system->ID, 'OrganizationID' => $org->ID]);
+
+        $this->assertNotNull($org->system);
+        $this->assertSame($system->ID, $org->system->ID);
+    }
+
+    public function test_organization_without_system_returns_null(): void
+    {
+        $org = Organization::factory()->create();
+
+        $this->assertNull($org->system);
     }
 
     public function test_organization_factory_satisfies_constraints_without_seeding(): void
