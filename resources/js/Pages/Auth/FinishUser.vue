@@ -81,6 +81,7 @@
 </template>
 
 <script>
+    import { useForm } from '@inertiajs/vue3'
     import Calendar from 'primevue/calendar'
     import BreezeButton from '@/Components/Button'
     import BreezeAuthenticatedLayout from '@/Layouts/Authenticated'
@@ -109,7 +110,7 @@
 
         data() {
             return {
-                form: this.$inertia.form({
+                form: useForm({
                     professionalRoleID:0,
                     departmentID:0,
                     credentialID:0,

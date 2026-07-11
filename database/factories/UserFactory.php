@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -33,7 +34,7 @@ class UserFactory extends Factory
             'CountryID' => 1,
             'Phone' => $this->faker->phoneNumber(),
             'CreationDate' => now()->format('Y-m-d H:i:s'),
-            'DepartmentID' => 1,
+            'DepartmentID' => Department::factory(),
             'CredentialID' => 1,
             'SecurityAnswer' => '',
             'Locale' => 'en-us',

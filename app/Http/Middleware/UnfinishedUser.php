@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +19,7 @@ class UnfinishedUser
             if (auth()->user()->DepartmentID == null || auth()->user()->CredentialID == null) {
                 return $next($request);
             } else {
-                return redirect(RouteServiceProvider::HOME);
+                return redirect()->away(config('app.mycurriculum_url'));
             }
         } else {
             return redirect('/login');

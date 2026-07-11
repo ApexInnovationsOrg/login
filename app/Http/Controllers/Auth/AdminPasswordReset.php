@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -46,7 +45,6 @@ class AdminPasswordReset extends Controller
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
 
-        // return redirect(RouteServiceProvider::HOME);
         return Inertia::location(config('app.mycurriculum_url')); // Reset success, lets forward them to MyCurriculum
 
         throw ValidationException::withMessages([

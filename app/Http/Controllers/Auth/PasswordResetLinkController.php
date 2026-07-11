@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\SamlClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Inertia\Inertia;
@@ -36,6 +38,14 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'Login' => 'required|email',
         ]);
+
+        $domain = Str::afterLast((string) $request->input('Login'), '@');
+
+        if ($domain !== '' && SamlClient::forEmailDomain($domain)) {
+            return back()->withErrors([
+                'email' => 'Your organization signs in with single sign-on, so passwords are not used. Sign in with your work email from the login page.',
+            ]);
+        }
 
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we

@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +23,7 @@ class RedirectIfAuthenticated
                     return redirect('/finishAccountCreation');
                 }
 
-                return redirect(RouteServiceProvider::HOME);
+                return redirect()->away(config('app.mycurriculum_url'));
             }
         }
 
