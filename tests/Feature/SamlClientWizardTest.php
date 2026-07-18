@@ -27,6 +27,7 @@ class SamlClientWizardTest extends TestCase
         $this->artisan('saml:client', ['action' => 'create', '--wizard' => true])
             ->expectsQuestion('Client display name', 'Wizard Acme Health')
             ->expectsQuestion('URL slug', 'wizard-acme-health')
+            ->expectsChoice('Owned by', 'organization', ['organization' => 'Organization', 'system' => 'System (spans its organizations)'])
             ->expectsSearch('Organization', '4242', 'Wizard Acme', ['4242' => 'Wizard Acme Health'])
             ->expectsSearch('Default department', '5000', '', [
                 'none' => 'None — users choose at finish-account',
@@ -40,7 +41,7 @@ class SamlClientWizardTest extends TestCase
 
         $this->assertDatabaseHas('saml_clients', [
             'slug' => 'wizard-acme-health',
-            'organization_id' => 4242,
+            'owner_id' => 4242,
             'department_id' => 5000,
             'jit_enabled' => true,
             'enabled' => false,
@@ -56,6 +57,7 @@ class SamlClientWizardTest extends TestCase
         $this->artisan('saml:client', ['action' => 'create', '--wizard' => true])
             ->expectsQuestion('Client display name', 'Wizard Acme Health')
             ->expectsQuestion('URL slug', 'wizard-acme-health')
+            ->expectsChoice('Owned by', 'organization', ['organization' => 'Organization', 'system' => 'System (spans its organizations)'])
             ->expectsSearch('Organization', '4242', 'Wizard Acme', ['4242' => 'Wizard Acme Health'])
             ->expectsSearch('Default department', 'none', '', [
                 'none' => 'None — users choose at finish-account',
@@ -76,6 +78,7 @@ class SamlClientWizardTest extends TestCase
         $this->artisan('saml:client', ['action' => 'create', '--wizard' => true])
             ->expectsQuestion('Client display name', 'Entra Corp')
             ->expectsQuestion('URL slug', 'entra-corp')
+            ->expectsChoice('Owned by', 'organization', ['organization' => 'Organization', 'system' => 'System (spans its organizations)'])
             ->expectsSearch('Organization', '4242', 'Wizard Acme', ['4242' => 'Wizard Acme Health'])
             ->expectsSearch('Default department', 'none', '', [
                 'none' => 'None — users choose at finish-account',
@@ -100,10 +103,12 @@ class SamlClientWizardTest extends TestCase
 
     public function test_flag_based_create_still_works(): void
     {
-        $this->artisan('saml:client', ['action' => 'create', '--name' => 'Plain Co', '--org' => 7])
+        $org = Organization::factory()->create();
+
+        $this->artisan('saml:client', ['action' => 'create', '--name' => 'Plain Co', '--org' => $org->ID])
             ->expectsOutputToContain('/saml/plain-co/acs')
             ->assertSuccessful();
 
-        $this->assertDatabaseHas('saml_clients', ['slug' => 'plain-co', 'organization_id' => 7]);
+        $this->assertDatabaseHas('saml_clients', ['slug' => 'plain-co', 'owner_id' => $org->ID]);
     }
 }

@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(ReferenceDataSeeder::class);
         $this->call(LocalSamlClientSeeder::class);
+        $this->call(EventTypesSeeder::class);
+        $this->call(LocalEmployeeSeeder::class);
 
         // Known local login: dev@example.test / password.
         // Pinned to seeded Department 1 — letting the factory mint its own
@@ -27,6 +29,18 @@ class DatabaseSeeder extends Seeder
             'FirstName' => 'Dev',
             'LastName' => 'User',
             'DepartmentID' => 1,
+        ]);
+
+        // Known local login belonging to the SSO Organization (933) / SSO
+        // Department (3) — the local-idp SAML client's org. Used for
+        // exercising the admin portal's SSO grants panel, which requires
+        // the granted user's department to belong to the client's
+        // organization (SsoGrantController::replace).
+        User::factory()->create([
+            'Login' => 'dev-sso@example.test',
+            'FirstName' => 'Dev',
+            'LastName' => 'SsoUser',
+            'DepartmentID' => 3,
         ]);
     }
 }

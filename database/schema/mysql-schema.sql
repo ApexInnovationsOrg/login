@@ -1693,7 +1693,7 @@ CREATE TABLE `MCSUserData` (
   KEY `DepartmentName` (`DepartmentName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='Table stores all MCS user data for monthly data report';
 
-CREATE TABLE `migrations` (
+CREATE TABLE `migrations_login` (
   `migration` varchar(255) COLLATE utf8mb3_unicode_ci NOT NULL,
   `batch` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;

@@ -2,9 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
+use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\SamlDepartmentRule;
+use App\Models\SamlOrgRule;
+use App\Models\System;
 use App\Saml\SamlClientManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -19,9 +25,12 @@ class SamlClientManagerTest extends TestCase
 
     public function test_create_with_minimal_input_slugs_the_name(): void
     {
+        $org = Organization::factory()->create();
+
         $client = $this->manager()->create([
             'name' => 'Health System One',
-            'organization_id' => 1,
+            'owner_type' => 'organization',
+            'owner_id' => $org->ID,
         ]);
 
         $this->assertSame('health-system-one', $client->slug);
@@ -44,7 +53,7 @@ class SamlClientManagerTest extends TestCase
 
         $this->expectException(ValidationException::class);
 
-        $this->manager()->create(['name' => 'Acme', 'slug' => 'acme', 'organization_id' => 1]);
+        $this->manager()->create(['name' => 'Acme', 'slug' => 'acme', 'owner_id' => 1]);
     }
 
     public function test_update_from_idp_metadata_fills_idp_fields(): void
@@ -91,8 +100,10 @@ class SamlClientManagerTest extends TestCase
 
     public function test_domains_are_normalized_on_create(): void
     {
+        $org = Organization::factory()->create();
+
         $client = $this->manager()->create([
-            'name' => 'Acme', 'organization_id' => 1,
+            'name' => 'Acme', 'owner_type' => 'organization', 'owner_id' => $org->ID,
             'email_domains' => [' @MDAnderson.ORG ', 'mdanderson.org'],
         ]);
 
@@ -104,7 +115,7 @@ class SamlClientManagerTest extends TestCase
         $this->expectException(ValidationException::class);
 
         $this->manager()->create([
-            'name' => 'Acme', 'organization_id' => 1,
+            'name' => 'Acme', 'owner_id' => 1,
             'email_domains' => ['not a domain'],
         ]);
     }
@@ -116,7 +127,7 @@ class SamlClientManagerTest extends TestCase
         $this->expectException(ValidationException::class);
 
         $this->manager()->create([
-            'name' => 'Acme', 'organization_id' => 1,
+            'name' => 'Acme', 'owner_id' => 1,
             'email_domains' => ['mdanderson.org'],
         ]);
     }
@@ -130,5 +141,138 @@ class SamlClientManagerTest extends TestCase
         ]);
 
         $this->assertSame(['mdanderson.org', 'mdacc.org'], $updated->email_domains);
+    }
+
+    public function test_update_with_explicit_null_department_id_clears_it(): void
+    {
+        $dept = Department::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $dept->OrganizationID, 'department_id' => $dept->ID]);
+
+        $updated = $this->manager()->update($client, ['department_id' => null]);
+
+        $this->assertNull($updated->department_id);
+    }
+
+    public function test_create_rejects_unknown_owner(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->create(['name' => 'X', 'owner_type' => 'organization', 'owner_id' => 999999]);
+    }
+
+    public function test_default_department_must_belong_to_owning_org(): void
+    {
+        $org = Organization::factory()->create();
+        $otherOrgDept = Department::factory()->create(); // factory mints its own org
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->create([
+            'name' => 'X', 'owner_type' => 'organization', 'owner_id' => $org->ID,
+            'department_id' => $otherOrgDept->ID,
+        ]);
+    }
+
+    public function test_reparent_to_system_with_default_department_is_rejected(): void
+    {
+        $dept = Department::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $dept->OrganizationID, 'department_id' => $dept->ID]);
+        $system = System::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $system->ID]);
+    }
+
+    public function test_update_rejects_owner_type_without_owner_id(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['owner_type' => 'system']);
+    }
+
+    public function test_update_rejects_owner_id_without_owner_type(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['owner_id' => 42]);
+    }
+
+    public function test_reparent_with_org_rules_present_is_rejected(): void
+    {
+        $system = System::factory()->create();
+        $client = SamlClient::factory()->forSystem($system->ID)->create();
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id]);
+        $otherSystem = System::factory()->create();
+
+        try {
+            app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $otherSystem->ID]);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('owner_id', $e->errors());
+            $this->assertSame('Clear routing rules before re-parenting this client.', $e->errors()['owner_id'][0]);
+        }
+    }
+
+    public function test_reparent_with_department_rules_present_is_rejected(): void
+    {
+        $org = Organization::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $org->ID]);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id]);
+        $otherOrg = Organization::factory()->create();
+
+        try {
+            app(SamlClientManager::class)->update($client, ['owner_type' => 'organization', 'owner_id' => $otherOrg->ID]);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('owner_id', $e->errors());
+            $this->assertSame('Clear routing rules before re-parenting this client.', $e->errors()['owner_id'][0]);
+        }
+    }
+
+    public function test_reparent_after_clearing_rules_succeeds(): void
+    {
+        $system = System::factory()->create();
+        $client = SamlClient::factory()->forSystem($system->ID)->create();
+        SamlOrgRule::factory()->create(['saml_client_id' => $client->id]);
+        $otherSystem = System::factory()->create();
+
+        DB::table('saml_org_rules')->where('saml_client_id', $client->id)->delete();
+
+        $updated = app(SamlClientManager::class)->update($client, ['owner_type' => 'system', 'owner_id' => $otherSystem->ID]);
+
+        $this->assertSame($otherSystem->ID, $updated->owner_id);
+    }
+
+    public function test_non_owner_update_with_rules_present_is_unaffected(): void
+    {
+        $org = Organization::factory()->create();
+        $client = SamlClient::factory()->create(['owner_id' => $org->ID, 'name' => 'Old Name']);
+        SamlDepartmentRule::factory()->create(['saml_client_id' => $client->id]);
+
+        $updated = app(SamlClientManager::class)->update($client, ['name' => 'New Name']);
+
+        $this->assertSame('New Name', $updated->name);
+    }
+
+    public function test_known_attributes_are_trimmed_and_deduped(): void
+    {
+        $client = SamlClient::factory()->create();
+
+        app(SamlClientManager::class)->update($client, ['known_attributes' => [' department ', 'department', 'groups']]);
+
+        $this->assertSame(['department', 'groups'], $client->fresh()->known_attributes);
+    }
+
+    public function test_known_attributes_reject_non_string_entries(): void
+    {
+        $client = SamlClient::factory()->create();
+        $this->expectException(ValidationException::class);
+
+        app(SamlClientManager::class)->update($client, ['known_attributes' => ['ok', 123]]);
     }
 }

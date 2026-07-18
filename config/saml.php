@@ -13,4 +13,8 @@ return [
     // Cache store + TTL for assertion-ID replay protection
     'replay_store' => env('SAML_REPLAY_STORE', 'redis'),
     'replay_ttl' => env('SAML_REPLAY_TTL', 300),
+
+    // Admin portal SSO handoff (docs/specs/2026-07-09-admin-portal-sso.md)
+    'admin_portal_url' => env('ADMIN_PORTAL_URL', 'https://www.apexinnovations.com/admin'),
+    'admin_handoff_ttl' => env('ADMIN_HANDOFF_TTL', 60),
 ];

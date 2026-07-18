@@ -24,6 +24,6 @@ class System extends LegacyModel
             'OrganizationID',
             'ID',
             'ID',
-        );
+        )->using(SystemOrganization::class);
     }
 }

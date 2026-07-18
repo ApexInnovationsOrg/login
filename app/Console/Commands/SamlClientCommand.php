@@ -5,6 +5,9 @@ namespace App\Console\Commands;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\SamlClient;
+use App\Models\SamlDepartmentRule;
+use App\Models\SamlOrgRule;
+use App\Models\System;
 use App\Saml\SamlClientManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -13,22 +16,30 @@ use InvalidArgumentException;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\search;
+use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
 class SamlClientCommand extends Command
 {
     protected $signature = 'saml:client
-        {action : list, describe, create, update, enable, or disable}
+        {action : list, describe, create, update, enable, disable, or routing}
         {slug? : client slug (all actions except list/create)}
         {--name= : display name}
         {--slug= : explicit slug (create only; defaults to slugged name)}
-        {--org= : Apex organization ID}
+        {--org= : owning organization ID (exactly one of --org/--system)}
+        {--system= : owning system ID (exactly one of --org/--system)}
         {--department= : default department ID (omit for the finish-account flow)}
+        {--no-department : clear the default department (update only; conflicts with --department)}
         {--jit : enable just-in-time provisioning}
         {--no-jit : disable just-in-time provisioning}
         {--metadata= : path to an IdP metadata XML file}
         {--domains= : comma-separated email domains for SP-initiated SSO routing (replaces the list)}
-        {--wizard : create a client interactively (create action only)}';
+        {--admin-portal : mark the client as asserting admin-portal (Employee) identities}
+        {--no-admin-portal : clear the admin-portal marker}
+        {--wizard : create a client interactively (create action only)}
+        {--set= : inline JSON object with org_rules/department_rules keys (routing action only)}
+        {--set-file= : path to a JSON file with org_rules/department_rules keys (routing action only)}
+        {--clear : replace routing rules with empty lists (routing action only)}';
 
     protected $description = 'Manage SAML SSO client configurations';
 
@@ -49,7 +60,8 @@ class SamlClientCommand extends Command
                 'update' => $this->updateClient($manager),
                 'enable' => $this->toggle($manager, true),
                 'disable' => $this->toggle($manager, false),
-                default => $this->failWith('Unknown action. Use: list, describe, create, update, enable, disable.'),
+                'routing' => $this->routingAction($manager),
+                default => $this->failWith('Unknown action. Use: list, describe, create, update, enable, disable, routing.'),
             };
         } catch (ValidationException $e) {
             foreach ($e->errors() as $messages) {
@@ -76,7 +88,8 @@ class SamlClientCommand extends Command
                 $client->name,
                 $client->enabled ? 'yes' : 'no',
                 $client->jit_enabled ? 'yes' : 'no',
-                $client->organization_id,
+                $client->admin_portal ? 'yes' : '',
+                ($client->ownedByOrganization() ? 'org #' : 'system #').$client->owner_id,
                 $client->department_id ?? '-',
                 implode(', ', $client->email_domains ?? []),
                 $cert['expires_at']?->toDateString() ?? '-',
@@ -84,7 +97,7 @@ class SamlClientCommand extends Command
             ];
         });
 
-        $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Org', 'Dept', 'Domains', 'Cert expires', ''], $rows->all());
+        $this->table(['Slug', 'Name', 'Enabled', 'JIT', 'Admin', 'Owner', 'Dept', 'Domains', 'Cert expires', ''], $rows->all());
 
         return self::SUCCESS;
     }
@@ -98,7 +111,8 @@ class SamlClientCommand extends Command
         $this->line("Slug: {$client->slug}");
         $this->line('Enabled: '.($client->enabled ? 'yes' : 'no'));
         $this->line('JIT provisioning: '.($client->jit_enabled ? 'yes' : 'no'));
-        $this->line("Organization ID: {$client->organization_id}");
+        $this->line('Admin portal: '.($client->admin_portal ? 'yes' : 'no'));
+        $this->line('Owner: '.$client->owner_type.' '.$client->owner_id.' ('.($client->ownerName() ?? 'unknown').')');
         $this->line('Department ID: '.($client->department_id ?? 'none (users select their department at finish-account)'));
         $this->line('Email domains: '.(implode(', ', $client->email_domains ?? []) ?: 'none (IdP-initiated only)'));
         $this->line('ACS URL: '.$client->acsUrl());
@@ -109,23 +123,34 @@ class SamlClientCommand extends Command
         if ($cert['expiring']) {
             $this->warn('IdP certificate is expiring soon!');
         }
+        $this->line('Org rules: '.$client->orgRules()->count());
+        $this->line('Department rules: '.$client->departmentRules()->count());
 
         return self::SUCCESS;
     }
 
     private function createClient(SamlClientManager $manager): int
     {
-        $input = $this->option('wizard')
-            ? $this->runWizard()
-            : array_filter([
+        if ($this->option('wizard')) {
+            $input = $this->runWizard();
+        } else {
+            $input = array_filter([
                 'name' => $this->option('name'),
                 'slug' => $this->option('slug'),
-                'organization_id' => $this->option('org'),
                 'department_id' => $this->option('department'),
             ], fn ($v) => $v !== null);
 
+            if (! $this->mergeOwnerOption($input)) {
+                return $this->failWith('Provide exactly one of --org or --system.');
+            }
+        }
+
         if (! $this->option('wizard') && ($domains = $this->domainsOption()) !== null) {
             $input['email_domains'] = $domains;
+        }
+
+        if (! $this->option('wizard') && $this->option('admin-portal')) {
+            $input['admin_portal'] = true;
         }
 
         $client = $manager->create($input);
@@ -146,7 +171,7 @@ class SamlClientCommand extends Command
     /**
      * Gather client-creation input interactively.
      *
-     * @return array{name: string, slug: string, organization_id: int,
+     * @return array{name: string, slug: string, owner_type: string, owner_id: int,
      *               department_id: int|null, jit_enabled: bool, attribute_map?: array}
      */
     private function runWizard(): array
@@ -162,18 +187,34 @@ class SamlClientCommand extends Command
             required: true,
         );
 
-        $organizationId = (int) search(
-            label: 'Organization',
-            options: fn (string $value) => $this->wizardOrganizationOptions($value),
-            placeholder: 'Type to search organizations',
+        $ownerType = select(
+            label: 'Owned by',
+            options: ['organization' => 'Organization', 'system' => 'System (spans its organizations)'],
+            default: 'organization',
         );
 
-        $departmentChoice = search(
-            label: 'Default department',
-            options: fn (string $value) => $this->wizardDepartmentOptions($organizationId, $value),
-            placeholder: 'Type to search, or choose None',
-        );
-        $departmentId = $departmentChoice === self::NO_DEPARTMENT ? null : (int) $departmentChoice;
+        if ($ownerType === 'system') {
+            $ownerId = (int) search(
+                label: 'System',
+                options: fn (string $value) => $this->wizardSystemOptions($value),
+                placeholder: 'Type to search systems',
+            );
+
+            $departmentId = null;
+        } else {
+            $ownerId = (int) search(
+                label: 'Organization',
+                options: fn (string $value) => $this->wizardOrganizationOptions($value),
+                placeholder: 'Type to search organizations',
+            );
+
+            $departmentChoice = search(
+                label: 'Default department',
+                options: fn (string $value) => $this->wizardDepartmentOptions($ownerId, $value),
+                placeholder: 'Type to search, or choose None',
+            );
+            $departmentId = $departmentChoice === self::NO_DEPARTMENT ? null : (int) $departmentChoice;
+        }
 
         $jit = confirm(
             label: 'Auto-create unknown users on first login?',
@@ -183,7 +224,8 @@ class SamlClientCommand extends Command
         $input = [
             'name' => $name,
             'slug' => $slug,
-            'organization_id' => $organizationId,
+            'owner_type' => $ownerType,
+            'owner_id' => $ownerId,
             'department_id' => $departmentId,
             'jit_enabled' => $jit,
         ];
@@ -217,9 +259,22 @@ class SamlClientCommand extends Command
 
         $fields = array_filter([
             'name' => $this->option('name'),
-            'organization_id' => $this->option('org'),
             'department_id' => $this->option('department'),
         ], fn ($v) => $v !== null);
+
+        if ($this->option('org') !== null || $this->option('system') !== null) {
+            if (! $this->mergeOwnerOption($fields)) {
+                return $this->failWith('Provide exactly one of --org or --system.');
+            }
+        }
+
+        if ($this->option('no-department') && $this->option('department') !== null) {
+            return $this->failWith('Provide --department or --no-department, not both.');
+        }
+
+        if ($this->option('no-department')) {
+            $fields['department_id'] = null;
+        }
 
         if (($domains = $this->domainsOption()) !== null) {
             $fields['email_domains'] = $domains;
@@ -259,6 +314,115 @@ class SamlClientCommand extends Command
         return self::SUCCESS;
     }
 
+    private function routingAction(SamlClientManager $manager): int
+    {
+        $client = $this->resolveClient();
+        if (! $client) {
+            return self::FAILURE;
+        }
+
+        if ($this->option('clear') || $this->option('set') !== null || $this->option('set-file') !== null) {
+            return $this->replaceRoutingRules($manager, $client);
+        }
+
+        $this->renderRoutingRules($client);
+
+        return self::SUCCESS;
+    }
+
+    private function replaceRoutingRules(SamlClientManager $manager, SamlClient $client): int
+    {
+        if ($this->option('clear')) {
+            $orgRules = [];
+            $departmentRules = [];
+        } else {
+            $json = $this->option('set') !== null
+                ? $this->option('set')
+                : $this->readSetFile((string) $this->option('set-file'));
+
+            if ($json === null) {
+                return self::FAILURE;
+            }
+
+            $decoded = json_decode($json, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+                $this->error('Invalid JSON: '.json_last_error_msg());
+
+                return self::FAILURE;
+            }
+
+            $orgRules = $decoded['org_rules'] ?? [];
+            $departmentRules = $decoded['department_rules'] ?? [];
+        }
+
+        $manager->replaceRoutingRules($client, $orgRules, $departmentRules);
+
+        $this->info("Routing rules replaced for {$client->slug}.");
+
+        return self::SUCCESS;
+    }
+
+    private function readSetFile(string $path): ?string
+    {
+        if (! is_file($path)) {
+            $this->error("Routing rules file not found: $path");
+
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            $this->error("Could not read routing rules file: $path");
+
+            return null;
+        }
+
+        return $contents;
+    }
+
+    private function renderRoutingRules(SamlClient $client): void
+    {
+        $orgRules = $client->orgRules;
+        $departmentRules = $client->departmentRules;
+
+        if ($orgRules->isEmpty()) {
+            $this->line('Org rules: none');
+        } else {
+            $orgNames = Organization::whereIn('ID', $orgRules->pluck('organization_id')->unique())->pluck('Name', 'ID');
+
+            $this->line('Org rules:');
+            foreach ($orgRules as $index => $rule) {
+                $orgLabel = ($orgNames->get($rule->organization_id) ?? 'unknown')." ({$rule->organization_id})";
+                $this->line('org '.($index + 1).'. '.$this->describeRuleSentence($rule, $orgLabel));
+            }
+        }
+
+        if ($departmentRules->isEmpty()) {
+            $this->line('Department rules: none');
+        } else {
+            $this->line('Department rules:');
+            foreach ($departmentRules as $index => $rule) {
+                $this->line('dept '.($index + 1).'. '.$this->describeRuleSentence($rule, "\"{$rule->department_name}\""));
+            }
+        }
+    }
+
+    /**
+     * @param  SamlOrgRule|SamlDepartmentRule  $rule
+     */
+    private function describeRuleSentence($rule, string $target): string
+    {
+        if ($rule->isCatchAll()) {
+            return 'everyone →';
+        }
+
+        $operator = str_replace('_', ' ', $rule->operator->value);
+
+        return "{$rule->attribute} {$operator} \"{$rule->value}\" → {$target}";
+    }
+
     private function applyCommonOptions(SamlClientManager $manager, SamlClient $client): SamlClient
     {
         if ($this->option('jit')) {
@@ -267,8 +431,42 @@ class SamlClientCommand extends Command
         if ($this->option('no-jit')) {
             $client = $manager->update($client, ['jit_enabled' => false]);
         }
+        if ($this->option('admin-portal')) {
+            $client = $manager->update($client, ['admin_portal' => true]);
+        }
+        if ($this->option('no-admin-portal')) {
+            $client = $manager->update($client, ['admin_portal' => false]);
+        }
 
         return $client;
+    }
+
+    /**
+     * Resolve --org/--system into an owner_type/owner_id pair and merge it
+     * into $input, shared by create (where exactly one is required) and
+     * update (where re-parenting is optional, but both is still an error).
+     * Both call sites emit the same "Provide exactly one of --org or
+     * --system." failure via failWith() when this returns false; neither
+     * call site distinguishes "neither given" from "both given" in the
+     * message.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    private function mergeOwnerOption(array &$input): bool
+    {
+        $org = $this->option('org');
+        $system = $this->option('system');
+
+        if (($org === null) === ($system === null)) {
+            return false;
+        }
+
+        $input += [
+            'owner_type' => $org !== null ? 'organization' : 'system',
+            'owner_id' => $org ?? $system,
+        ];
+
+        return true;
     }
 
     /**
@@ -304,6 +502,19 @@ class SamlClientCommand extends Command
     protected function wizardOrganizationOptions(string $search): array
     {
         return Organization::query()
+            ->when($search !== '', fn ($q) => $q->where('Name', 'like', '%'.$search.'%'))
+            ->orderBy('Name')
+            ->limit(25)
+            ->pluck('Name', 'ID')
+            ->all();
+    }
+
+    /**
+     * @return array<int, string> Systems.ID => Name, filtered by search.
+     */
+    protected function wizardSystemOptions(string $search): array
+    {
+        return System::query()
             ->when($search !== '', fn ($q) => $q->where('Name', 'like', '%'.$search.'%'))
             ->orderBy('Name')
             ->limit(25)
