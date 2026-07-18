@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\SamlClient;
 use App\Models\User;
+use App\Saml\AdminSsoHandoff;
+use App\Saml\AttributeRouter;
+use App\Saml\KnownAttributeCollector;
 use App\Saml\SamlClientManager;
 use App\Saml\SamlLoginRejected;
 use App\Saml\SamlSettingsFactory;
@@ -21,6 +24,9 @@ class SamlController extends Controller
     public function __construct(
         private SamlSettingsFactory $settings,
         private SamlUserProvisioner $provisioner,
+        private AdminSsoHandoff $adminHandoff,
+        private AttributeRouter $router,
+        private KnownAttributeCollector $attributeCollector,
     ) {}
 
     public function acs(Request $request, string $slug)
@@ -65,11 +71,10 @@ class SamlController extends Controller
             return $this->reject($client, ['reason' => 'no_email_attribute']);
         }
 
-        try {
-            $user = $this->provisioner->provision($client, $email, $firstName, $lastName);
-        } catch (SamlLoginRejected $e) {
-            return $this->reject($client, $e->logContext, $e->publicMessage);
-        }
+        // Record which attribute names this IdP asserts, for the routing rule
+        // editor. Names only; the collector skips admin-portal clients and can
+        // never break a login (spec: known attributes).
+        $this->attributeCollector->capture($client, array_keys($auth->getAttributes()));
 
         // Spec: warn while assertions still validate but the IdP cert nears expiry
         $certStatus = app(SamlClientManager::class)->certificateStatus($client);
@@ -80,7 +85,30 @@ class SamlController extends Controller
             ]);
         }
 
-        $this->establishSession($request, $user, $client);
+        // Admin-portal clients assert Employee identities: no JIT, no Users
+        // lookup, no Laravel session — hand off to the portal's own session
+        // world via a single-use token (spec: admin portal SSO).
+        if ($client->admin_portal) {
+            try {
+                $redirect = $this->adminHandoff->initiate($client, $email);
+            } catch (SamlLoginRejected $e) {
+                return $this->reject($client, $e->logContext, $e->publicMessage);
+            }
+
+            return redirect()->away($redirect);
+        }
+
+        // Deliberately a separate read from the provisioner's own lookup: routing needs the fallback org before the disabled/JIT guards run.
+        $existing = User::where('Login', $email)->first();
+        $placement = $this->router->route($client, $auth->getAttributes(), $existing?->department?->OrganizationID);
+
+        try {
+            $user = $this->provisioner->provision($client, $email, $firstName, $lastName, $placement, $existing);
+        } catch (SamlLoginRejected $e) {
+            return $this->reject($client, $e->logContext, $e->publicMessage);
+        }
+
+        $this->establishSession($request, $user, $client, $placement, $existing === null);
 
         if ($user->DepartmentID == null || $user->CredentialID == null) { // loose: matches 0
             return redirect('/finishAccountCreation');
@@ -160,7 +188,10 @@ class SamlController extends Controller
         ];
     }
 
-    private function establishSession(Request $request, User $user, SamlClient $client): void
+    /**
+     * @param  array{organization_id: int, department_id: ?int}|null  $placement
+     */
+    private function establishSession(Request $request, User $user, SamlClient $client, ?array $placement = null, bool $wasJitCreated = false): void
     {
         Auth::login($user);
         $request->session()->regenerate();
@@ -173,8 +204,21 @@ class SamlController extends Controller
         $request->session()->put('userID', $user->ID);
         $request->session()->put('userName', $user->FirstName.' '.$user->LastName);
         $request->session()->put('Username', $user->FirstName.' '.$user->LastName);
-        // finishAccountCreation lists departments from this key
-        $request->session()->put('Organization', $client->organization_id);
+        // finishAccountCreation lists departments from this key. Org-owned
+        // clients offer their org; system-owned users carry their department's
+        // org. Edge: an existing dept-less user (DepartmentID 0) on a
+        // system-owned client gets null here — FinishUserCreation renders an
+        // empty department list until routing (milestone 5) places them.
+        // A placement's org only wins when it was actually applied to this
+        // user: a resolved department (provisioner moved/placed them there)
+        // or a fresh JIT creation (the placement is the only org they've
+        // ever had). An existing user whose department rule didn't resolve
+        // was left untouched by the provisioner, so the session should
+        // reflect their real (unmoved) department's org, not the routed one.
+        $placementApplied = $placement !== null && ($placement['department_id'] !== null || $wasJitCreated);
+        $request->session()->put('Organization', $placementApplied
+            ? $placement['organization_id']
+            : ($client->ownedByOrganization() ? $client->owner_id : $user->department?->OrganizationID));
         // dashboard route uses a plain 302 for SAML sessions (IdPs can't follow Inertia 409s)
         $request->session()->put('SAML', true);
 

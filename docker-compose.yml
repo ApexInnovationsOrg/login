@@ -15,6 +15,8 @@ services:
             - '.:/var/www/html'
         networks:
             - sail
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
         depends_on:
             mysql:
                 condition: service_healthy
@@ -27,6 +29,18 @@ services:
         image: apex-website-local/app
         ports:
             - '${WEBSITE_PORT:-8091}:80'
+            # Also publish on bare :80. website_admin/SESSIONCONFIG.php builds
+            # the admin session cookie's Domain from $_SERVER['HTTP_HOST'] when
+            # the host matches /local/i, and a port in that value (e.g.
+            # "localhost:8091") produces an invalid Domain attribute that
+            # browsers silently drop. Dusk must hit the admin portal via
+            # http://localhost/admin (no port) for the session cookie to
+            # persist; :8091 is unaffected and remains the documented URL
+            # for the rest of the site (MyCurriculum.php etc).
+            # NOTE: the login service defaults to '${APP_PORT:-80}:80' — APP_PORT
+            # and WEBSITE_ADMIN_PORT must never both fall back to :80 at once.
+            # The documented env (make setup) always sets APP_PORT=8090.
+            - '${WEBSITE_ADMIN_PORT:-80}:80'
         volumes:
             - '../website_root:/var/www/html'
             # Submodules of website_root that exist as sibling checkouts
@@ -52,9 +66,19 @@ services:
         ports:
             - '${MOCK_IDP_PORT:-8092}:8080'
         environment:
-            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/metadata'
+            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/local-idp/metadata'
             SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: 'http://localhost:8090/saml/local-idp/acs'
             SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE: 'http://localhost:8090/saml/local-idp/acs'
+        networks:
+            - sail
+    mock-idp-admin:
+        image: 'kristophjunge/test-saml-idp'
+        ports:
+            - '${MOCK_IDP_ADMIN_PORT:-8093}:8080'
+        environment:
+            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/local-admin-idp/metadata'
+            SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: 'http://localhost:8090/saml/local-admin-idp/acs'
+            SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE: 'http://localhost:8090/saml/local-admin-idp/acs'
         networks:
             - sail
     mysql:
@@ -85,6 +109,13 @@ services:
             - '${FORWARD_MAILHOG_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+    selenium:
+        image: 'selenium/standalone-chrome'
+        # Host networking (Linux): Chrome inside must reach the apps as
+        # http://localhost:809x — the admin session cookie is Secure+SameSite=None
+        # and Chrome only accepts that over http on localhost.
+        network_mode: host
+        shm_size: '2gb'
 networks:
     sail:
         driver: bridge

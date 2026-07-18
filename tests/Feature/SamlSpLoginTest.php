@@ -41,7 +41,7 @@ class SamlSpLoginTest extends TestCase
 
         $this->assertStringContainsString('AuthnRequest', $xml);
         $this->assertStringContainsString(url('/saml/acme/acs'), $xml);
-        $this->assertStringContainsString(config('saml.sp.entity_id'), $xml);
+        $this->assertStringContainsString(url('/saml/acme/metadata'), $xml);
     }
 
     public function test_unknown_slug_404s(): void

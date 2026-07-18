@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Organization extends LegacyModel
 {
@@ -21,15 +21,15 @@ class Organization extends LegacyModel
         return $this->hasMany(Department::class, 'OrganizationID', 'ID');
     }
 
-    public function systems(): BelongsToMany
+    public function system(): HasOneThrough
     {
-        return $this->belongsToMany(
+        return $this->hasOneThrough(
             System::class,
-            'SystemOrganizations',
-            'OrganizationID',
+            SystemOrganization::class,
+            'OrganizationID', // FK on SystemOrganizations → Organizations.ID
+            'ID',             // key on Systems matched to SystemOrganizations.SystemID
+            'ID',             // local key on Organizations
             'SystemID',
-            'ID',
-            'ID',
         );
     }
 }

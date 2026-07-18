@@ -20,3 +20,6 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+/tests/Browser/console
+/tests/Browser/screenshots
+/tests/Browser/source

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Department;
 use App\Models\Organization;
+use App\Models\System;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -38,6 +39,14 @@ class ReferenceDataSeeder extends Seeder
         Department::factory()->create(['ID' => 1, 'OrganizationID' => 1, 'Name' => 'General']);
         Department::factory()->create(['ID' => 2, 'OrganizationID' => 2, 'Name' => 'Strict Department']);
         Department::factory()->create(['ID' => 3, 'OrganizationID' => 933, 'Name' => 'SSO Department']);
+
+        // Local system spanning orgs 1 and 2 so system-owned clients are
+        // testable locally; org 933 stays system-less (degenerate case).
+        System::factory()->create(['ID' => 1, 'Name' => 'Local Health System']);
+        DB::table('SystemOrganizations')->insert([
+            ['SystemID' => 1, 'OrganizationID' => 1],
+            ['SystemID' => 1, 'OrganizationID' => 2],
+        ]);
 
         DB::table('Credentials')->insert([
             ['ID' => 1, 'Name' => 'RN'],

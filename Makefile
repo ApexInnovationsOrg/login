@@ -9,7 +9,7 @@ EXEC         = $(COMPOSE) exec -T login
 WEBSITE_ROOT = ../website_root
 COMPOSER_IMG = docker run --rm --entrypoint sh -v $(CURDIR)/..:/repos composer:2 -c
 
-.PHONY: help setup env deps up db users test e2e lint fix down destroy logs
+.PHONY: help setup env deps up db users test dusk e2e lint fix down destroy logs
 
 help:
 	@echo "Targets:"
@@ -20,6 +20,7 @@ help:
 	@echo "  db       migrate:fresh, seed, and create the local user hierarchy"
 	@echo "  users    (re)run the local user hierarchy command only"
 	@echo "  test     run the phpunit suite (MySQL test database)"
+	@echo "  dusk     run Laravel Dusk browser tests (needs 'make db' state + selenium up)"
 	@echo "  lint     check code style (pint --test)"
 	@echo "  fix      fix code style (pint)"
 	@echo "  e2e      run the login -> MyCurriculum session handoff test"
@@ -52,18 +53,30 @@ up:
 	$(COMPOSE) up -d --build
 
 db:
-	$(EXEC) php artisan migrate:fresh --seed
+	# Wipe explicitly instead of migrate:fresh: fresh only wipes when the
+	# migration repository table exists, and ours is the app-specific
+	# migrations_login (shared prod DB) — on a DB built before the rename,
+	# fresh would skip the wipe and collide with the schema dump.
+	$(EXEC) php artisan db:wipe --force
+	$(EXEC) php artisan migrate --seed
 	$(EXEC) php artisan local:users
 	$(EXEC) sh -c "curl -sf -H 'Host: localhost:$${MOCK_IDP_PORT:-8092}' http://mock-idp:8080/simplesaml/saml2/idp/metadata.php -o /tmp/mock-idp-metadata.xml \
 		&& php artisan saml:client update local-idp --metadata=/tmp/mock-idp-metadata.xml \
 		&& php artisan saml:client enable local-idp" \
 		|| echo "mock-idp not reachable; SAML client left disabled (run 'docker compose up -d mock-idp' then 'make db')"
+	$(EXEC) sh -c "curl -sf -H 'Host: localhost:$${MOCK_IDP_ADMIN_PORT:-8093}' http://mock-idp-admin:8080/simplesaml/saml2/idp/metadata.php -o /tmp/mock-idp-admin-metadata.xml \
+		&& php artisan saml:client update local-admin-idp --metadata=/tmp/mock-idp-admin-metadata.xml \
+		&& php artisan saml:client enable local-admin-idp" \
+		|| echo "mock-idp-admin not reachable; admin SSO client left disabled (run 'docker compose up -d mock-idp-admin' then 'make db')"
 
 users:
 	$(EXEC) php artisan local:users
 
 test:
 	$(EXEC) php artisan test
+
+dusk:
+	$(EXEC) php artisan dusk
 
 lint:
 	$(EXEC) vendor/bin/pint --test

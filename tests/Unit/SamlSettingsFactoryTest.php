@@ -29,6 +29,7 @@ class SamlSettingsFactoryTest extends TestCase
         $settings = new Settings(app(SamlSettingsFactory::class)->forClient($this->client()));
 
         $this->assertSame('https://idp.acme.test/metadata', $settings->getIdPData()['entityId']);
+        $this->assertStringEndsWith('/saml/acme/metadata', $settings->getSPData()['entityId']);
         $this->assertStringEndsWith('/saml/acme/acs', $settings->getSPData()['assertionConsumerService']['url']);
         $this->assertTrue($settings->getSecurityData()['wantAssertionsSigned']);
     }

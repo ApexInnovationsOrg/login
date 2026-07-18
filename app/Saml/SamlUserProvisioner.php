@@ -5,13 +5,20 @@ namespace App\Saml;
 use App\Models\SamlClient;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SamlUserProvisioner
 {
-    public function provision(SamlClient $client, string $email, ?string $firstName, ?string $lastName): User
+    /**
+     * @param  array{organization_id: int, department_id: ?int}|null  $placement
+     * @param  ?User  $existing  Pre-fetched by the caller (e.g. SamlController::acs()
+     *                           already reads this for routing) — skips the internal
+     *                           re-query when provided.
+     */
+    public function provision(SamlClient $client, string $email, ?string $firstName, ?string $lastName, ?array $placement = null, ?User $existing = null): User
     {
-        $user = User::where('Login', $email)->first();
+        $user = $existing ?? User::where('Login', $email)->first();
 
         if ($user && $user->Disabled === 'Y') {
             throw new SamlLoginRejected(
@@ -21,7 +28,21 @@ class SamlUserProvisioner
         }
 
         if ($user) {
-            return $this->syncName($user, $firstName, $lastName);
+            $user = $this->syncName($user, $firstName, $lastName);
+
+            $routedDepartment = $placement['department_id'] ?? null;
+
+            if ($routedDepartment !== null && $routedDepartment !== (int) $user->DepartmentID) {
+                $from = $user->DepartmentID;
+                $user->DepartmentID = $routedDepartment;
+                $user->save();
+
+                Log::info('SAML routed user to department', [
+                    'client' => $client->slug, 'user_id' => $user->ID, 'from' => $from, 'to' => $routedDepartment,
+                ]);
+            }
+
+            return $user;
         }
 
         if (! $client->jit_enabled) {
@@ -31,13 +52,27 @@ class SamlUserProvisioner
             );
         }
 
+        if ($placement === null && ! $client->ownedByOrganization()) {
+            // A system-owned client has no home org to aim the finish-account
+            // flow at, and no routing rule (incl. catch-all) claimed this
+            // login — reject fail-closed rather than guess a placement.
+            throw new SamlLoginRejected(
+                'Your account could not be placed automatically. Please contact your administrator.',
+                ['reason' => 'unrouted_user', 'login' => $email],
+            );
+        }
+
         $user = User::factory()->newModel()->forceFill([
             'Login' => $email,
             // Placeholder when the IdP omitted a name; SamlController logs that misconfiguration.
             'FirstName' => $firstName ?? 'FirstName',
             'LastName' => $lastName ?? 'LastName',
             // Legacy schema: DepartmentID is NOT NULL; 0 routes through finishAccountCreation
-            'DepartmentID' => $client->department_id ?? 0,
+            // A resolved department rule wins; otherwise org-owned clients
+            // keep their static default, and system-owned placements land in
+            // the finish flow of the placed org (DepartmentID 0).
+            'DepartmentID' => $placement['department_id']
+                ?? ($client->ownedByOrganization() ? ($client->department_id ?? 0) : 0),
             'CredentialID' => 0,
             'Password' => Hash::make(Str::random(40)),
             'CreationDate' => now()->format('Y-m-d H:i:s'),
