@@ -2,9 +2,3 @@ FROM 685265542736.dkr.ecr.us-east-1.amazonaws.com/base-php-fpm
 COPY --chown=www-data:www-data . /var/www/html/
 COPY .php.ini /usr/local/etc/php/conf.d/apex-php.ini
 COPY .env.empty /var/www/html/.env
-# Migrate-on-start: history is isolated in migrations_login, so this is safe
-# against the shared database. CMD assumes the base image serves via php-fpm.
-COPY .docker-entrypoint.sh /usr/local/bin/login-entrypoint.sh
-RUN chmod +x /usr/local/bin/login-entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/login-entrypoint.sh"]
-CMD ["php-fpm"]
