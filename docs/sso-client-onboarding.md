@@ -211,13 +211,15 @@ application and the admin portal's application need `ADMIN_API_TOKEN` set
 calls. The CLI (`saml:client ...`) remains fully equivalent to the portal for
 every operation the portal supports — use whichever is more convenient.
 
-**Rollout note:** migrations run automatically when a login container starts
-(the image entrypoint runs `php artisan migrate --force --isolated`). This is
-safe against the shared database because the login app tracks its migration
-history in its own `migrations_login` table — the shared `migrations` table
-belongs to other applications and is never read or written. No manual
-migration step is needed; a failed migration stops the new container before
-it serves, leaving the previous deployment running.
+**Rollout note:** the deployed image cannot run migrations itself — the
+production base image (`base-php-fpm`) is a distroless build that ships only
+the `php-fpm` binary, with no shell and no `php` CLI. Run
+`php artisan migrate --force` against the target environment's database as a
+separate step when a release adds migrations. This is safe against the shared
+database because the login app tracks its migration history in its own
+`migrations_login` table (`config/database.php` `'migrations'`) — the shared
+`migrations` table belongs to other applications and is never read or
+written.
 
 ## Attribute-based routing
 
