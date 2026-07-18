@@ -30,7 +30,7 @@ fail() { echo "FAIL: $1"; FAILURES=$((FAILURES + 1)); }
 pass() { echo "ok:   $1"; }
 
 # 1. Kick off IdP-initiated SSO for our SP entity
-SSO_START="$IDP_URL/simplesaml/saml2/idp/SSOService.php?spentityid=$LOGIN_URL/saml/metadata"
+SSO_START="$IDP_URL/simplesaml/saml2/idp/SSOService.php?spentityid=$LOGIN_URL/saml/local-idp/metadata"
 LOGIN_PAGE=$(curl -s -L -c "$JAR" -b "$JAR" "$SSO_START")
 
 AUTH_STATE=$(echo "$LOGIN_PAGE" | grep -o 'name="AuthState" value="[^"]*"' | sed 's/.*value="//; s/"$//' | head -1)

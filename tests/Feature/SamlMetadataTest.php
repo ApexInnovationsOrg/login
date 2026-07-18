@@ -30,7 +30,7 @@ class SamlMetadataTest extends TestCase
         $response->assertHeader('content-type', 'application/xml; charset=UTF-8');
         $response->assertSee('AssertionConsumerService', false);
         $response->assertSee('/saml/acme/acs', false);
-        $response->assertSee(config('saml.sp.entity_id'), false);
+        $response->assertSee('entityID="'.url('/saml/acme/metadata').'"', false);
     }
 
     public function test_unknown_client_404s(): void

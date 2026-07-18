@@ -81,6 +81,20 @@ class SamlLoginTest extends TestCase
         $response->assertRedirect('https://www.apexinnovations.com/MyCurriculum.php');
     }
 
+    public function test_audience_is_the_client_metadata_url(): void
+    {
+        $this->acs(['audience' => url('/saml/acme/metadata')]);
+
+        $this->assertAuthenticated();
+    }
+
+    public function test_shared_legacy_audience_is_rejected(): void
+    {
+        $this->acs(['audience' => url('/saml/metadata')]);
+
+        $this->assertGuest();
+    }
+
     public function test_replayed_assertion_is_rejected(): void
     {
         $fixed = ['assertionId' => '_replay-me-once'];

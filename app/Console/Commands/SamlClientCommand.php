@@ -162,7 +162,7 @@ class SamlClientCommand extends Command
         $this->info("Created {$client->name} ({$client->slug}). Give the customer:");
         $this->line('  ACS URL:      '.$client->acsUrl());
         $this->line('  Metadata URL: '.$client->metadataUrl());
-        $this->line('  Entity ID:    '.config('saml.sp.entity_id'));
+        $this->line('  Entity ID:    '.$client->metadataUrl());
         $this->line('Then: saml:client update '.$client->slug.' --metadata=<their-metadata.xml> && saml:client enable '.$client->slug);
 
         return self::SUCCESS;

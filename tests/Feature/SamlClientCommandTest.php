@@ -23,6 +23,7 @@ class SamlClientCommandTest extends TestCase
         $this->artisan('saml:client', ['action' => 'create', '--name' => 'Acme Health', '--org' => $org->ID])
             ->expectsOutputToContain('/saml/acme-health/acs')
             ->expectsOutputToContain('/saml/acme-health/metadata')
+            ->expectsOutput('  Entity ID:    '.url('/saml/acme-health/metadata'))
             ->assertSuccessful();
 
         $this->assertDatabaseHas('saml_clients', ['slug' => 'acme-health', 'enabled' => false]);

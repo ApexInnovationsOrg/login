@@ -15,7 +15,10 @@ class SamlSettingsFactory
         return [
             'strict' => true,
             'sp' => [
-                'entityId' => config('saml.sp.entity_id'),
+                // Entity ID == metadata URL, per convention. Per-client because
+                // Entra enforces Identifier uniqueness per tenant, and it scopes
+                // the audience restriction to the one client the assertion is for.
+                'entityId' => $client->metadataUrl(),
                 'assertionConsumerService' => [
                     'url' => $client->acsUrl(),
                 ],

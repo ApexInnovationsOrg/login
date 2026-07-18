@@ -17,7 +17,6 @@ class SamlResponseFactory
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $config = $overrides + [
             'destination' => url('/saml/acme/acs'),
-            'audience' => config('saml.sp.entity_id'),
             'issuer' => 'https://idp.acme.test/metadata',
             'nameId' => 'sso.user@acme.test',
             'attributes' => [
@@ -30,6 +29,10 @@ class SamlResponseFactory
             'signedKeyPath' => base_path('tests/Fixtures/saml/idp.key'),
             'signedCertPath' => base_path('tests/Fixtures/saml/idp.crt'),
         ];
+
+        // Each client's entity ID is its metadata URL, so the audience a real
+        // IdP asserts follows the ACS it posts to unless a test says otherwise.
+        $config += ['audience' => preg_replace('#/acs$#', '/metadata', $config['destination'])];
 
         $issueInstant = $now->format('Y-m-d\TH:i:s\Z');
         $notOnOrAfter = \DateTimeImmutable::createFromInterface($config['notOnOrAfter'])
