@@ -66,7 +66,7 @@ services:
         ports:
             - '${MOCK_IDP_PORT:-8092}:8080'
         environment:
-            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/metadata'
+            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/local-idp/metadata'
             SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: 'http://localhost:8090/saml/local-idp/acs'
             SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE: 'http://localhost:8090/saml/local-idp/acs'
         networks:
@@ -76,7 +76,7 @@ services:
         ports:
             - '${MOCK_IDP_ADMIN_PORT:-8093}:8080'
         environment:
-            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/metadata'
+            SIMPLESAMLPHP_SP_ENTITY_ID: '${APP_URL:-http://localhost:8090}/saml/local-admin-idp/metadata'
             SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE: 'http://localhost:8090/saml/local-admin-idp/acs'
             SIMPLESAMLPHP_SP_SINGLE_LOGOUT_SERVICE: 'http://localhost:8090/saml/local-admin-idp/acs'
         networks:

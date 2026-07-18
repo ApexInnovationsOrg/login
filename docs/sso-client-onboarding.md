@@ -62,7 +62,7 @@ The command prints the information the customer's IT admin needs:
 Created Acme Health (acme-health). Give the customer:
   ACS URL:      <APP_URL>/saml/acme-health/acs
   Metadata URL: <APP_URL>/saml/acme-health/metadata
-  Entity ID:    <saml.sp.entity_id>
+  Entity ID:    <APP_URL>/saml/acme-health/metadata
 Then: saml:client update acme-health --metadata=<their-metadata.xml> && saml:client enable acme-health
 ```
 
@@ -149,7 +149,8 @@ login to confirm end to end before rolling out broadly.
    - **Single sign-on URL**: the client's ACS URL from `saml:client create`
      (e.g. `https://login.apexinnovations.com/saml/acme-health/acs`).
    - **Audience URI (SP Entity ID)**: the Entity ID from `saml:client create`
-     (the value of `saml.sp.entity_id`, shared by all clients).
+     (the client's metadata URL — per-client, so one customer tenant can
+     register more than one of our clients without an Identifier collision).
    - Leave "Use this for Recipient URL and Destination URL" checked (default) —
      these should match the ACS URL.
 3. Attribute Statements — map these exactly, since they are the app's default
