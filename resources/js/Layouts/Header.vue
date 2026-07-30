@@ -13,13 +13,13 @@
 				</button>
 			</div>
 			<div class="w-full lg:flex lg:items-center lg:w-auto mr-5" :class="{ 'block' : showMenu , 'hidden' : !showMenu}">
-				<div class="text-md font-semibold lg:flex-grow lg:flex lg:items-center">					
+				<div class="text-md font-semibold lg:flex-grow lg:flex lg:items-center ">					
 					
 					<a href="https://www.apexinnovations.com/MyCurriculum.php" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5" v-if="showMyCurriculum">
 						MY CURRICULUM
 					</a>
 					
-					<a href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+					<a href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full text-center whitespace-nowrap bg-transparent lg:self-start">
 						LOGIN
 					</a>
 
@@ -30,7 +30,7 @@
 					
 					
 					<div>
-						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('education')" ref="btnDropdownRefEducation">
+						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 px-2 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('education')" ref="btnDropdownRefEducation">
 							EDUCATION <span class="caret" :class="{'rotate': dropdownPopoverEducationShow}"></span>
 						</button>
 						<div v-bind:class="{'hidden': !dropdownPopoverEducationShow, 'block': dropdownPopoverEducationShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownEducationRef">							
@@ -62,7 +62,7 @@
 					</div>
 					
 					<div>
-						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('about')" ref="btnDropdownRefAbout">
+						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 px-2 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('about')" ref="btnDropdownRefAbout">
 							ABOUT <span class="caret" :class="{'rotate': dropdownPopoverAboutShow}"></span>
 						</button>
 						<div v-bind:class="{'hidden': !dropdownPopoverAboutShow, 'block': dropdownPopoverAboutShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAboutRef">
