@@ -19,19 +19,14 @@
 						MY CURRICULUM
 					</a>
 					
-					<div>
-						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('account')" ref="btnDropdownRefAccount">
-							ACCOUNT <span class="caret" :class="{'rotate': dropdownPopoverAccountShow}"></span>
-						</button>
-						<div v-bind:class="{'hidden': !dropdownPopoverAccountShow, 'block': dropdownPopoverAccountShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAccountRef">
-							<a href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
-								LOGIN
-							</a>
-							<a href="https://www.apexinnovations.com/CreateAccountLanding.php" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
-								CREATE ACCOUNT
-							</a>
-						</div>
-					</div>
+					<a href="#" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+						LOGIN
+					</a>
+
+					<a href="https://www.apexinnovations.com/CreateAccountLanding.php" class="hover:bg-gray-200 text-center font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
+						CREATE 
+						<br/>ACCOUNT
+					</a>
 					
 					
 					<div>
@@ -60,21 +55,17 @@
 							<a href="https://www.apexinnovations.com/products.html#bundles"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
 								COURSEWARE BUNDLES
 							</a>
+							<a href="https://www.apexinnovations.com/products.html#nihss"  class="hover:bg-gray-200 py-2 px-4 block w-full whitespace-nowrap bg-transparent">
+								NIHSS+
+							</a>
 						</div>
 					</div>
-					
-					<a href="https://www.apexinnovations.com/op.html" class="hover:text-gray-400 block mt-4 lg:inline-block lg:mt-0 mr-5">
-						COMPETENCY VALIDATION
-					</a>
 					
 					<div>
 						<button class="font-semibold outline-none focus:outline-none hover:text-gray-400 mt-4 mr-5 block lg:inline-block lg:mt-0" type="button" v-on:click="toggleDropdown('about')" ref="btnDropdownRefAbout">
 							ABOUT <span class="caret" :class="{'rotate': dropdownPopoverAboutShow}"></span>
 						</button>
 						<div v-bind:class="{'hidden': !dropdownPopoverAboutShow, 'block': dropdownPopoverAboutShow}" class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1" style="min-width:12rem" ref="popoverDropdownAboutRef">
-							<a href="https://www.apexinnovations.com/careers.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
-								CAREERS
-							</a>
 							<a href="https://www.apexinnovations.com/contactUs.html" class="hover:bg-gray-200 font-semibold py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent">
 								CONTACT US
 							</a>
