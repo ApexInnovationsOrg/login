@@ -11,7 +11,7 @@
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.186",
         "guzzlehttp/guzzle": "^7.0.1",
-        "inertiajs/inertia-laravel": "^2.0",
+        "inertiajs/inertia-laravel": "^3.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.7",
         "monolog/monolog": "^3.0",
